@@ -649,7 +649,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-1</small></span></div>
+  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-2</small></span></div>
 </footer>
 
 <script>
@@ -853,6 +853,7 @@
         setMemberKey(r.token);
         clearFeed();
         if (r.feed) setFeed(r.feed);
+        if (afterLogin) { const to = afterLogin; afterLogin = ''; if (to === 'layover') lyOpen = true; return navigate(to); }   // 체크인에서 왔으면 체크인으로 돌아감
         showList();
       } catch (e) { fail(e.message || e); }
     }
@@ -1809,12 +1810,13 @@
   function localInput(d) { const z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; }
 
   let lyOpen = false;   // 체크인 양식 펼침 여부
+  let afterLogin = '';  // 입장한 뒤 돌아갈 화면 (체크인에서 입장하러 간 경우)
   async function loadLayover() {
     const box = document.getElementById('layover-app');
     const fill = (...k) => box.replaceChildren(...k.flat(Infinity).filter(x => x != null && x !== false));
     if (!memberKey) {
       return fill(el('div', { class: 'ly-card' }, el('p', {}, '레이오버 체크인은 회원만 볼 수 있어요. 개인 입장 코드로 입장해 주세요.'),
-        el('a', { class: 'btn btn-accent', href: '#' + BOARDS[0].id }, '입장하기')));
+        el('a', { class: 'btn btn-accent', href: '#' + BOARDS[0].id, onclick: () => { afterLogin = 'layover'; } }, '입장하기')));
     }
     if (!box.firstChild) fill(el('p', { class: 'muted' }, '불러오는 중…'));
     let r;
@@ -1893,7 +1895,7 @@
     } else {
       formSec = el('section', { class: 'ly-sec' }, el('div', { class: 'ly-card' },
         el('p', {}, '체크인과 만나요는 개인 입장 코드로 입장한 회원만 할 수 있어요. 지금은 현황만 볼 수 있어요.'),
-        el('button', { class: 'ghost small', onclick: () => { setMemberKey(''); clearFeed(); navigate(BOARDS[0].id); } }, '개인 코드로 입장')));
+        el('button', { class: 'ghost small', onclick: () => { setMemberKey(''); clearFeed(); afterLogin = 'layover'; navigate(BOARDS[0].id); } }, '개인 코드로 입장')));
     }
 
     // 3) 내 체크인
@@ -2051,6 +2053,7 @@
     const isAdmin = route === 'admin';
     const isAbout = route === 'about';
     const isLay = route === 'layover';
+    if (!b && !isLay) afterLogin = '';   // 입장 안 하고 다른 곳으로 가면 돌아가기 취소
     document.getElementById('view-home').hidden = !!b || isAdmin || isAbout || isLay;
     document.getElementById('view-layover').hidden = !isLay;
     document.getElementById('view-about').hidden = !isAbout;
