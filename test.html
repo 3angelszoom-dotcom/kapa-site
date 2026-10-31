@@ -176,7 +176,9 @@
   .ly-kind { display: flex; gap: 18px; flex-wrap: wrap; }
   .ly-kind label { display: flex; align-items: center; gap: 6px; font-size: 14px; }
   .ly-kind input { width: 18px !important; height: 18px; min-height: 0 !important; padding: 0 !important; margin: 0; flex: none; accent-color: var(--ink); }
-  .ly-grid label[hidden] { display: none; }
+  .ly-grid label[hidden], .ly-field[hidden] { display: none; }
+  .ly-check { display: flex; align-items: center; gap: 8px; margin: 4px 0 2px; font-size: 14px; color: var(--text); }
+  .ly-check input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--ink); }
   .ly-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .ly-grid label, .ly-field { display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); }
   .ly-grid input, .ly-field input { font: inherit; font-size: 15px; color: var(--text); padding: 10px 12px; min-height: 44px; border: 1px solid var(--field, #D4D4D1); border-radius: 0; background: var(--card); width: 100%; }
@@ -655,7 +657,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-4</small></span></div>
+  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-5</small></span></div>
 </footer>
 
 <script>
@@ -1819,6 +1821,7 @@
   function localInput(d) { const z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; }
 
   let lyOpen = false;   // 체크인 양식 펼침 여부
+  const lyPage = () => /test\.html$/.test(location.pathname) ? 'test' : '';   // 알림 메일 링크를 테스트 페이지로 보낼지
   async function loadLayover() {
     const box = document.getElementById('layover-app');
     const fill = (...k) => box.replaceChildren(...k.flat(Infinity).filter(x => x != null && x !== false));
@@ -1853,8 +1856,8 @@
         el('div', { class: 'ly-act' },
           m.status === '수락' ? el('span', {}, '연락처 ', el('span', { class: 'ly-kakao' }, m.contact || '(없음)')) : null,
           m.dir === 'in' && m.status === '요청' ? [
-            el('button', { class: 'primary small', onclick: e => act('answerMeet', [memberKey, m.id, true], e.currentTarget) }, '수락'),
-            el('button', { class: 'ghost', onclick: e => act('answerMeet', [memberKey, m.id, false], e.currentTarget) }, '거절')] : null)))) : null;
+            el('button', { class: 'primary small', onclick: e => act('answerMeet', [memberKey, m.id, true, lyPage()], e.currentTarget) }, '수락'),
+            el('button', { class: 'ghost', onclick: e => act('answerMeet', [memberKey, m.id, false, lyPage()], e.currentTarget) }, '거절')] : null)))) : null;
 
     // 2) 체크인하기
     let formSec;
@@ -1870,6 +1873,15 @@
       const memo = el('input', { id: 'ly-memo', placeholder: '예: 저녁 같이 드실 분 / 공항 라운지에 있어요', maxlength: '100' });
       const contact = el('input', { id: 'ly-contact', placeholder: '예: 카톡 abc123 / 전화 415-000-0000', maxlength: '60' });
       contact.value = store.get('pc_ly_contact') || (r.me.kakao ? '카톡 ' + r.me.kakao : '');
+      // 이메일 알림: 만나요가 오거나 내 만나요가 수락되면 메일로 알려 줌 (주소는 본인만 봄)
+      const notifyOn = el('input', { type: 'checkbox', id: 'ly-notify-on' });
+      const notify = el('input', { id: 'ly-notify', type: 'email', inputmode: 'email', autocomplete: 'email', placeholder: 'you@example.com', maxlength: '120', 'aria-label': '알림 받을 이메일' });
+      notify.value = store.get('pc_ly_email') || r.me.email || '';
+      notifyOn.checked = store.get('pc_ly_notify') !== '0';
+      const notifyBox = el('label', { class: 'ly-field' }, '알림 받을 이메일 (다른 회원에게는 보이지 않아요)', notify);
+      const syncNotify = () => { notifyBox.hidden = !notifyOn.checked; };
+      notifyOn.addEventListener('change', () => { syncNotify(); if (notifyOn.checked) notify.focus(); });
+      syncNotify();
       const msg = el('p', { class: 'msg' });
       const syncKind = () => { gateBox.hidden = !kindAir.checked; };
       kindAir.addEventListener('change', syncKind); kindLay.addEventListener('change', syncKind);
@@ -1878,10 +1890,14 @@
         msg.textContent = '';
         if (start.value && end.value && start.value >= end.value) { msg.textContent = '끝 시간이 시작 시간보다 뒤여야 해요.'; return; }
         if (!contact.value.trim()) { msg.textContent = '만나요가 수락됐을 때 보여줄 연락처를 넣어 주세요.'; contact.focus(); return; }
+        const mail = notify.value.trim();
+        if (notifyOn.checked && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { msg.textContent = '알림 받을 이메일 주소를 넣어 주세요. 알림이 필요 없으면 체크를 빼 주세요.'; notify.focus(); return; }
         btn.disabled = true;
         try {
-          await call('addCheckin', { key: memberKey, kind: kindAir.checked ? 'airport' : 'layover', place: place.value, start: start.value, end: end.value, gate: gate.value, memo: memo.value, contact: contact.value });
+          await call('addCheckin', { key: memberKey, kind: kindAir.checked ? 'airport' : 'layover', place: place.value, start: start.value, end: end.value, gate: gate.value, memo: memo.value, contact: contact.value, notify: notifyOn.checked ? mail : '' });
           store.set('pc_ly_contact', contact.value.trim());
+          store.set('pc_ly_notify', notifyOn.checked ? '1' : '0');
+          if (mail) store.set('pc_ly_email', mail);
           lyOpen = false;
           reload();
         } catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; btn.disabled = false; } }
@@ -1893,6 +1909,8 @@
             el('label', {}, '시작 (현지 시간)', start), el('label', {}, '끝 (현지 시간)', end)),
           el('label', { class: 'ly-field' }, '한 줄 메모 (선택)', memo),
           el('label', { class: 'ly-field' }, '연락처 (만나요를 수락한 회원에게만 보여요)', contact),
+          el('label', { class: 'ly-check' }, notifyOn, '이메일로 알림 받기 (만나요가 오거나, 내 만나요가 수락됐을 때)'),
+          notifyBox,
           el('p', { class: 'hint' }, '편명·호텔 이름은 적지 마세요. 시간이 지나면 자동으로 사라져요.'),
           btn, msg);
       // 체크인 버튼: 누르면 양식이 펼쳐짐 (첫 화면 "체크인하기"로 오면 펼친 채로)
@@ -1932,7 +1950,7 @@
             el('div', { class: 'ly-act' },
               c.meet === '수락' ? el('span', { class: 'ly-tag on' }, '만나요 성사')
               : c.meet === '요청' ? el('span', { class: 'ly-tag' }, '만나요 대기 중')
-              : personal && c.overlapWith.length ? el('button', { class: 'primary small', onclick: e => act('requestMeet', [memberKey, c.overlapWith[0], c.id], e.currentTarget) }, '만나요')
+              : personal && c.overlapWith.length ? el('button', { class: 'primary small', onclick: e => act('requestMeet', [memberKey, c.overlapWith[0], c.id, lyPage()], e.currentTarget) }, '만나요')
               : null))));
       }) : el('p', { class: 'muted' }, '아직 체크인한 회원이 없어요. 첫 체크인을 남겨 보세요!'));
 
