@@ -178,6 +178,9 @@
   .ly-kind input { width: 18px !important; height: 18px; min-height: 0 !important; padding: 0 !important; margin: 0; flex: none; accent-color: var(--ink); }
   .ly-grid label[hidden], .ly-field[hidden] { display: none; }
   .ly-check { display: flex; align-items: center; gap: 8px; margin: 4px 0 2px; font-size: 14px; color: var(--text); }
+  .ly-direct { grid-column: 1 / -1; display: grid; gap: 10px; margin-top: 6px; padding: 14px; border: 1px solid var(--line); background: var(--card); }
+  .ly-direct .hint { margin: 0; }
+  .ly-direct-btns { display: flex; gap: 8px; align-items: center; }
   .ly-check input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--ink); }
   .ly-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .ly-grid label, .ly-field { display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); }
@@ -657,7 +660,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-5</small></span></div>
+  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-6</small></span></div>
 </footer>
 
 <script>
@@ -1852,7 +1855,7 @@
         el('div', {}, el('b', {}, m.name), ` · ${m.place}`,
           el('span', { class: 'ly-tag' + (m.status === '수락' ? ' on' : '') },
             m.status === '수락' ? '만나요 성사' : m.status === '거절' ? (m.dir === 'out' ? '어려워요' : '거절함') : m.dir === 'in' ? '새 요청' : '기다리는 중')),
-        el('div', { class: 'ly-sub' }, `상대 ${fmtRange(m.start, m.end)} · 나 ${fmtRange(m.myStart, m.myEnd)}`),
+        el('div', { class: 'ly-sub' }, [m.start ? `상대 ${fmtRange(m.start, m.end)}` : '', m.myStart ? `나 ${fmtRange(m.myStart, m.myEnd)}` : (m.dir === 'out' ? '체크인 없이 보낸 만나요' : '')].filter(Boolean).join(' · ')),
         el('div', { class: 'ly-act' },
           m.status === '수락' ? el('span', {}, '연락처 ', el('span', { class: 'ly-kakao' }, m.contact || '(없음)')) : null,
           m.dir === 'in' && m.status === '요청' ? [
@@ -1951,8 +1954,44 @@
               c.meet === '수락' ? el('span', { class: 'ly-tag on' }, '만나요 성사')
               : c.meet === '요청' ? el('span', { class: 'ly-tag' }, '만나요 대기 중')
               : personal && c.overlapWith.length ? el('button', { class: 'primary small', onclick: e => act('requestMeet', [memberKey, c.overlapWith[0], c.id, lyPage()], e.currentTarget) }, '만나요')
+              : personal ? el('button', { class: 'primary small', onclick: e => directMeet(c, e.currentTarget) }, '만나요')
               : null))));
       }) : el('p', { class: 'muted' }, '아직 체크인한 회원이 없어요. 첫 체크인을 남겨 보세요!'));
+
+    // 바로 만나요: 내 체크인이 없거나 시간이 안 겹쳐도 전체 현황에서 바로 보냄. 수락되면 보여줄 연락처와 알림 이메일만 받음
+    function directMeet(c, btn) {
+      const row = btn.closest('.ly-row');
+      if (row.querySelector('.ly-direct')) return;
+      const contact = el('input', { placeholder: '예: 카톡 abc123 / 전화 415-000-0000', maxlength: '60', 'aria-label': '내 연락처' });
+      contact.value = store.get('pc_ly_contact') || (r.me.kakao ? '카톡 ' + r.me.kakao : '');
+      const on = el('input', { type: 'checkbox' }); on.checked = store.get('pc_ly_notify') !== '0';
+      const mail = el('input', { type: 'email', inputmode: 'email', autocomplete: 'email', placeholder: 'you@example.com', maxlength: '120', 'aria-label': '알림 받을 이메일' });
+      mail.value = store.get('pc_ly_email') || r.me.email || '';
+      const mailBox = el('label', { class: 'ly-field' }, '알림 받을 이메일', mail);
+      const sync = () => { mailBox.hidden = !on.checked; }; on.addEventListener('change', sync); sync();
+      const msg = el('p', { class: 'msg' });
+      const send = el('button', { class: 'primary small' }, '만나요 보내기');
+      const box = el('div', { class: 'ly-direct' },
+        el('p', { class: 'hint' }, c.name + '님에게 만나요를 보내요. 수락하면 서로의 연락처가 보여요.'),
+        el('label', { class: 'ly-field' }, '내 연락처 (수락한 회원에게만 보여요)', contact),
+        el('label', { class: 'ly-check' }, on, '수락되면 이메일로 알림 받기'), mailBox,
+        el('div', { class: 'ly-direct-btns' }, send, el('button', { class: 'ghost', onclick: () => { box.remove(); btn.hidden = false; } }, '취소')), msg);
+      send.addEventListener('click', async () => {
+        msg.textContent = '';
+        const ct = contact.value.trim(), em = mail.value.trim();
+        if (!ct) { msg.textContent = '상대가 수락하면 보여줄 연락처를 넣어 주세요.'; contact.focus(); return; }
+        if (on.checked && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { msg.textContent = '알림 받을 이메일 주소를 넣어 주세요. 필요 없으면 체크를 빼 주세요.'; mail.focus(); return; }
+        send.disabled = true;
+        try {
+          await call('requestMeet', memberKey, '', c.id, lyPage(), { contact: ct, notify: on.checked ? em : '' });
+          store.set('pc_ly_contact', ct); store.set('pc_ly_notify', on.checked ? '1' : '0'); if (em) store.set('pc_ly_email', em);
+          reload();
+        } catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; send.disabled = false; } }
+      });
+      btn.hidden = true;
+      row.append(box);
+      contact.focus();
+    }
 
     fill(meetsSec, formSec, mineSec, allSec);
   }
