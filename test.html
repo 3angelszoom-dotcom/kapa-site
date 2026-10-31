@@ -43,7 +43,7 @@
     text-decoration: none; padding: 13px 15px; border: 1px solid transparent; transition: border-color .2s; }
   .nav a:hover { border-color: rgba(22, 22, 22, .25); }
   .nav a[aria-current="page"] { border-color: var(--text); }
-  /* 오른쪽 위 체크인 버튼: 다크 유리 질감 + 초록 테두리, 반투명 핀 뒤로 노란 해 */
+  /* 오른쪽 위 체크인 버튼: 다크 유리 질감 + 초록 테두리, 반투명 유리 핀 */
   .ck-btn { position: relative; display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px 9px 11px; border-radius: 18px;
     background: radial-gradient(120% 90% at 30% 0%, rgba(255, 255, 255, .14), rgba(255, 255, 255, 0) 55%),
       linear-gradient(180deg, #2B3648 0%, #151D2B 55%, #0B1220 100%);
@@ -442,11 +442,9 @@
       <a href="#guide" data-route="guide">이용 안내</a>
     </nav>
     <a class="ck-btn" href="#layover" data-ly-open id="ck-btn" aria-label="레이오버 체크인">
-      <svg class="ck-ico" viewBox="0 0 32 32" aria-hidden="true"><defs>
-        <radialGradient id="ckSun" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#FFE9A3"/><stop offset=".55" stop-color="#FFC93C"/><stop offset="1" stop-color="#F2A50C"/></radialGradient>
+      <svg class="ck-ico" viewBox="-2.5 0 32 32" aria-hidden="true"><defs>
         <linearGradient id="ckGlass" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".92"/><stop offset="1" stop-color="#D9FBEA" stop-opacity=".62"/></linearGradient>
         <linearGradient id="ckDot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient></defs>
-        <circle cx="21.5" cy="10.5" r="7.5" fill="url(#ckSun)"/>
         <path d="M13.5 30s-9.5-7.9-9.5-15.2a9.5 9.5 0 0 1 19 0C23 22.1 13.5 30 13.5 30z" fill="url(#ckGlass)" stroke="#FFFFFF" stroke-opacity=".85" stroke-width=".9"/>
         <circle cx="13.5" cy="14.6" r="3.4" fill="url(#ckDot)"/></svg>
       <span>체크인</span>
@@ -678,7 +676,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-11</small></span></div>
+  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-12</small></span></div>
 </footer>
 
 <script>
