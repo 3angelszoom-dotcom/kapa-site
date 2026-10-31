@@ -181,6 +181,9 @@
   .ly-direct { grid-column: 1 / -1; display: grid; gap: 10px; margin-top: 6px; padding: 14px; border: 1px solid var(--line); background: var(--card); }
   .ly-direct .hint { margin: 0; }
   .ly-direct-btns { display: flex; gap: 8px; align-items: center; }
+  .ly-geo-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .ly-geo { padding: 2px 8px; min-height: 0; border: 1px solid var(--line); background: var(--card); color: var(--text); font-size: 12px; border-radius: 999px; }
+  .ly-geo-note { font-size: 12px; color: var(--muted); min-height: 1em; }
   .ly-check input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--ink); }
   .ly-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .ly-grid label, .ly-field { display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); }
@@ -660,7 +663,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-6</small></span></div>
+  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-7</small></span></div>
 </footer>
 
 <script>
@@ -1824,6 +1827,35 @@
   function localInput(d) { const z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; }
 
   let lyOpen = false;   // 체크인 양식 펼침 여부
+  let geoTried = false; // 이 페이지에서 위치로 공항 찾기를 이미 해 봤는지
+  // 공항 목록 (airports.txt: 'ORD41.98,-87.90;' 형식, 정기 노선이 있는 공항, 출처 OurAirports 공개 데이터)
+  let airportsP = null;
+  function loadAirports() {
+    if (!airportsP) airportsP = fetch('airports.txt').then(r => { if (!r.ok) throw new Error(); return r.text(); })
+      .then(t => t.split(';').filter(Boolean).map(x => { const [lat, lon] = x.slice(3).split(','); return [x.slice(0, 3), +lat, +lon]; }))
+      .catch(e => { airportsP = null; throw new Error('공항 목록을 불러오지 못했어요. 공항 코드를 직접 넣어 주세요.'); });
+    return airportsP;
+  }
+  function myPosition() {
+    return new Promise((ok, no) => {
+      if (!navigator.geolocation) return no(new Error('이 기기에서는 위치를 쓸 수 없어요. 공항 코드를 직접 넣어 주세요.'));
+      navigator.geolocation.getCurrentPosition(p => ok(p.coords), e => no(new Error(e.code === 1
+        ? '위치 사용이 꺼져 있어요. 설정에서 이 사이트의 위치 사용을 허용하거나, 공항 코드를 직접 넣어 주세요.'
+        : '위치를 찾지 못했어요. 공항 코드를 직접 넣어 주세요.')), { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+    });
+  }
+  async function nearestAirport() {
+    const [c, list] = await Promise.all([myPosition(), loadAirports()]);
+    const rad = d => d * Math.PI / 180;
+    let best = null;
+    for (const [code, lat, lon] of list) {
+      const a = Math.sin(rad(lat - c.latitude) / 2) ** 2 + Math.cos(rad(c.latitude)) * Math.cos(rad(lat)) * Math.sin(rad(lon - c.longitude) / 2) ** 2;
+      const km = 12742 * Math.asin(Math.sqrt(a));
+      if (!best || km < best.km) best = { code, km };
+    }
+    if (!best) throw new Error('가까운 공항을 찾지 못했어요.');
+    return best;
+  }
   const lyPage = () => /test\.html$/.test(location.pathname) ? 'test' : '';   // 알림 메일 링크를 테스트 페이지로 보낼지
   async function loadLayover() {
     const box = document.getElementById('layover-app');
@@ -1865,10 +1897,22 @@
     // 2) 체크인하기
     let formSec;
     if (personal) {
-      const now = new Date(); now.setMinutes(0, 0, 0);
+      const now = new Date(); now.setMinutes(Math.floor(now.getMinutes() / 15) * 15, 0, 0);   // 휴대폰 시계 기준 지금 (15분 단위)
       const kindAir = el('input', { type: 'radio', name: 'ly-kind', value: 'airport' });
       const kindLay = el('input', { type: 'radio', name: 'ly-kind', value: 'layover' }); kindLay.checked = true;
       const place = el('input', { id: 'ly-place', placeholder: 'ORD', maxlength: '4', autocapitalize: 'characters', 'aria-label': '공항 코드' });
+      const geoNote = el('span', { class: 'ly-geo-note' });
+      const geoBtn = el('button', { type: 'button', class: 'ly-geo', title: '내 위치에서 가장 가까운 공항' }, '📍 내 위치');
+      const fillNearest = async quiet => {
+        geoBtn.disabled = true; geoNote.textContent = '위치 찾는 중…';
+        try {
+          const n = await nearestAirport();
+          place.value = n.code;
+          geoNote.textContent = n.km < 80 ? `가장 가까운 공항 ${n.code} (${Math.round(n.km)}km)` : `가장 가까운 공항이 ${Math.round(n.km)}km 떨어져 있어요. 맞는지 확인해 주세요.`;
+        } catch (e) { geoNote.textContent = quiet ? '' : e.message; }
+        geoBtn.disabled = false;
+      };
+      geoBtn.addEventListener('click', () => fillNearest(false));
       const start = el('input', { id: 'ly-start', type: 'datetime-local' }); start.value = localInput(now);
       const end = el('input', { id: 'ly-end', type: 'datetime-local' }); end.value = localInput(new Date(now.getTime() + 12 * 3600e3));
       const gate = el('input', { id: 'ly-gate', placeholder: 'B12', maxlength: '12' });
@@ -1908,7 +1952,7 @@
       const formCard = el('div', { class: 'ly-card form' },
           el('div', { class: 'ly-kind' }, el('label', {}, kindLay, '레이오버 (도시에서 묵어요)'), el('label', {}, kindAir, '공항 대기 (공항에서 기다려요)')),
           el('div', { class: 'ly-grid' },
-            el('label', {}, '공항 코드', place), gateBox,
+            el('label', {}, el('span', { class: 'ly-geo-row' }, '공항 코드', geoBtn), place, geoNote), gateBox,
             el('label', {}, '시작 (현지 시간)', start), el('label', {}, '끝 (현지 시간)', end)),
           el('label', { class: 'ly-field' }, '한 줄 메모 (선택)', memo),
           el('label', { class: 'ly-field' }, '연락처 (만나요를 수락한 회원에게만 보여요)', contact),
@@ -1922,6 +1966,10 @@
       openBtn.addEventListener('click', () => { lyOpen = !lyOpen; formCard.hidden = !lyOpen; openBtn.textContent = lyOpen ? '닫기' : '＋ 체크인하기'; if (lyOpen) place.focus(); });
       formSec = el('section', { class: 'ly-sec' }, openBtn, formCard);
       if (lyOpen) setTimeout(() => place.focus(), 50);
+      // 양식을 처음 열 때 한 번: 휴대폰 위치로 가장 가까운 공항을 채움 (위치 허용을 안 하면 그냥 비워 둠)
+      const tryGeo = () => { if (!place.value && !geoTried && !GAS) { geoTried = true; fillNearest(true); } };
+      if (lyOpen) tryGeo();
+      openBtn.addEventListener('click', () => { if (lyOpen) tryGeo(); });
     } else {
       formSec = el('section', { class: 'ly-sec' }, el('div', { class: 'ly-card' },
         el('p', {}, '체크인과 만나요는 개인 입장 코드로 입장한 회원만 할 수 있어요. 지금은 현황만 볼 수 있어요.'),
