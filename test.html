@@ -663,7 +663,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-8</small></span></div>
+  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-9</small></span></div>
 </footer>
 
 <script>
@@ -1827,6 +1827,13 @@
   function localInput(d) { const z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; }
 
   let lyOpen = false;   // 체크인 양식 펼침 여부
+  // 취소 버튼: 한 번 누르면 "정말 취소?"로 바뀌고, 한 번 더 누르면 취소 (실수 방지, 알림창 없이)
+  function confirmCancel(btn) {
+    if (btn.dataset.sure) return true;
+    btn.dataset.sure = '1'; btn.textContent = '정말 취소?';
+    setTimeout(() => { if (btn.isConnected) { delete btn.dataset.sure; btn.textContent = '취소'; } }, 4000);
+    return false;
+  }
   let geoTried = false; // 이 페이지에서 위치로 공항 찾기를 이미 해 봤는지
   // 공항 목록 (airports.txt: 'ORD41.98,-87.90;' 형식, 정기 노선이 있는 공항, 출처 OurAirports 공개 데이터)
   let airportsP = null;
@@ -1892,7 +1899,8 @@
           m.status === '수락' ? el('span', {}, '연락처 ', el('span', { class: 'ly-kakao' }, m.contact || '(없음)')) : null,
           m.dir === 'in' && m.status === '요청' ? [
             el('button', { class: 'primary small', onclick: e => act('answerMeet', [memberKey, m.id, true, lyPage()], e.currentTarget) }, '수락'),
-            el('button', { class: 'ghost', onclick: e => act('answerMeet', [memberKey, m.id, false, lyPage()], e.currentTarget) }, '거절')] : null)))) : null;
+            el('button', { class: 'ghost', onclick: e => act('answerMeet', [memberKey, m.id, false, lyPage()], e.currentTarget) }, '거절')] : null,
+          m.dir === 'out' && (m.status === '요청' || m.status === '수락') ? el('button', { class: 'ghost', onclick: e => { if (confirmCancel(e.currentTarget)) act('cancelMeet', [memberKey, m.id], e.currentTarget); } }, '취소') : null)))) : null;
 
     // 2) 체크인하기
     let formSec;
