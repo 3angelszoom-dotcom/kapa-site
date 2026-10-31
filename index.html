@@ -586,7 +586,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1031-4</small></span></div>
+  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1031-5</small></span></div>
 </footer>
 
 <script>
@@ -708,7 +708,9 @@
     get(cb) { const p = Object.fromEntries(new URLSearchParams(location.search)); setTimeout(() => cb({ parameter: p, hash: location.hash.slice(1) }), 0); },
   };
   function syncUrl(route, replace) {
-    const params = isToken(memberKey) && keepMe ? { m: memberKey } : {};
+    // 입장 열쇠를 주소(?m=)에 붙이는 건 Apps Script 화면에서만 (아이폰이 안쪽 창 저장소를 지우는 문제 대비).
+    // 내 도메인에서는 기기 저장소가 잘 유지되니까 주소는 항상 깔끔하게 (https://kapausa.org/#게시판)
+    const params = GAS && isToken(memberKey) && keepMe ? { m: memberKey } : {};
     try { nav.set(route, params, replace); } catch (_) {}
   }
 
@@ -1896,6 +1898,7 @@
       const old = memberKey;
       rawCall('checkMember', old).then(t => { if (typeof t === 'string') setMemberKey(t); else if (!t) { setMemberKey(''); render(currentRoute); } }, () => {});
     } else if (memberKey && p.m !== memberKey) syncUrl(route, true);   // 저장된 열쇠가 있으면 주소에도 넣어 둠
+    if (!GAS && location.search) syncUrl(route, true);                  // 내 도메인: ?m= 같은 꼬리는 읽은 뒤 주소에서 지움
   });
 </script>
 </body>
