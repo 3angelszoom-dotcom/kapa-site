@@ -204,6 +204,19 @@
   .ly-push-ico { font-size: 18px; }
   .ly-push-steps { margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); }
   .ly-push-btns { display: flex; gap: 8px; }
+  .a2hs { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 60; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .a2hs[hidden], .a2hs-sheet[hidden] { display: none; }
+  .a2hs-btn { display: inline-flex; align-items: center; gap: 7px; padding: 11px 16px 11px 13px; border-radius: 999px; border: 1px solid rgba(52, 211, 153, .5);
+    background: linear-gradient(180deg, #2B3648 0%, #151D2B 55%, #0B1220 100%); color: #fff; font: 700 13.5px/1 var(--display); letter-spacing: .03em;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, .16), 0 2px 4px rgba(15, 23, 42, .18), 0 10px 24px -6px rgba(15, 23, 42, .45); cursor: pointer; }
+  .a2hs-x { position: absolute; right: -6px; bottom: 30px; width: 20px; height: 20px; padding: 0; border-radius: 50%; border: 0; background: #fff; color: #555;
+    font: 700 14px/20px var(--body); box-shadow: 0 1px 4px rgba(0, 0, 0, .25); cursor: pointer; }
+  .a2hs-sheet { width: min(300px, calc(100vw - 32px)); padding: 16px 18px; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .25); font-size: 14px; display: grid; gap: 8px; }
+  .a2hs-sheet ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+  .a2hs-sheet p { margin: 0; color: var(--muted); font-size: 13px; }
+  .a2hs-share { display: inline-block; padding: 0 5px; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; color: #0A84FF; }
+  .a2hs-row { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; }
   .ly-check input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--ink); }
   .ly-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .ly-grid label, .ly-field { display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); }
@@ -440,7 +453,7 @@
 </style>
 </head>
 <body>
-<div style="position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#B45309;color:#fff;text-align:center;font:600 13px/1.4 system-ui,sans-serif;padding:8px 12px">테스트 페이지 · 관리자 시험용 (회원에게 공유하지 마세요)</div>
+<div style="position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#B45309;color:#fff;text-align:center;font:600 13px/1.4 system-ui,sans-serif;padding:8px 12px">테스트 페이지 · 관리자 시험용 (회원에게 공유하지 마세요)</div><style>.a2hs{bottom:calc(52px + env(safe-area-inset-bottom))}</style>
 <div class="page">
 <header class="site-head">
   <div class="container">
@@ -689,7 +702,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-13</small></span></div>
+  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-14</small></span></div>
 </footer>
 
 <script>
@@ -790,6 +803,35 @@
     syncUrl(currentRoute, true);
   }
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  // ===== 화면 아래 구석 "앱으로 설치" 버튼 =====
+  // 안드로이드·크롬: 누르면 바로 설치 창 / 아이폰: 애플이 바로 설치를 막아 둬서 "공유 → 홈 화면에 추가" 안내를 띄움
+  (function installButton() {
+    if (GAS) return;
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    if (standalone || store.get('pc_a2hs_hide') === '1') return;
+    let deferred = null;
+    const wrap = el('div', { class: 'a2hs', hidden: true });
+    const sheet = el('div', { class: 'a2hs-sheet', hidden: true, role: 'dialog', 'aria-label': '홈 화면에 추가하는 방법' },
+      el('b', {}, '홈 화면에 KAPA 앱 추가'),
+      el('ol', {}, el('li', {}, '화면 아래쪽 ', el('span', { class: 'a2hs-share', 'aria-label': '공유' }, '□↑'), ' 공유 버튼을 눌러요.'),
+        el('li', {}, '아래로 내려서 "홈 화면에 추가"를 눌러요.'), el('li', {}, '오른쪽 위 "추가"를 누르면 끝!')),
+      el('p', {}, '홈 화면의 KAPA 아이콘으로 열면 앱처럼 쓰고, 만나요 알림도 받을 수 있어요.'),
+      el('div', { class: 'a2hs-row' },
+        el('button', { class: 'ghost small', onclick: () => { store.set('pc_a2hs_hide', '1'); wrap.remove(); } }, '다시 보지 않기'),
+        el('button', { class: 'primary small', onclick: () => { sheet.hidden = true; } }, '알겠어요')));
+    const btn = el('button', { class: 'a2hs-btn', type: 'button' }, el('span', { 'aria-hidden': 'true' }, '📲'), '앱으로 설치');
+    const close = el('button', { class: 'a2hs-x', type: 'button', 'aria-label': '닫기', title: '닫기' }, '×');
+    close.addEventListener('click', () => { store.set('pc_a2hs_hide', '1'); wrap.remove(); });
+    btn.addEventListener('click', async () => {
+      if (deferred) { deferred.prompt(); const r = await deferred.userChoice.catch(() => null); deferred = null; if (r && r.outcome === 'accepted') wrap.remove(); return; }
+      sheet.hidden = !sheet.hidden;
+    });
+    wrap.append(sheet, btn, close);
+    document.body.append(wrap);
+    if (isIOS) wrap.hidden = false;   // 아이폰·아이패드: 안내 방식
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; wrap.hidden = false; });   // 안드로이드·크롬: 바로 설치
+    window.addEventListener('appinstalled', () => wrap.remove());
+  })();
   // 주소에는 비밀번호가 아니라 비밀번호에서 만든 입장 열쇠(m + 24자)만 넣음
   // m… = 공용 비밀번호 열쇠, p<회원번호>.… = 개인 입장 코드 열쇠 (실명)
   const isToken = k => /^([ma][A-Za-z0-9]{20,}|p[A-Za-z0-9]+\.[A-Za-z0-9]{20,})$/.test(String(k || ''));
