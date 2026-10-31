@@ -43,16 +43,22 @@
     text-decoration: none; padding: 13px 15px; border: 1px solid transparent; transition: border-color .2s; }
   .nav a:hover { border-color: rgba(22, 22, 22, .25); }
   .nav a[aria-current="page"] { border-color: var(--text); }
-  /* 오른쪽 위 초록 3D 체크인 버튼 */
-  .ck-btn { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 11px 18px 11px 14px; border-radius: 14px;
-    background: linear-gradient(180deg, #4ADE80 0%, #22C55E 45%, #16A34A 100%); color: #fff; text-decoration: none;
-    font: 700 14px/1 var(--display); letter-spacing: .06em; text-shadow: 0 1px 0 rgba(0, 0, 0, .18);
-    box-shadow: 0 5px 0 #0E7A35, 0 10px 18px rgba(14, 122, 53, .35), inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -2px 0 rgba(0, 0, 0, .08);
-    transform: translateY(0); transition: transform .08s ease, box-shadow .08s ease; white-space: nowrap; }
-  .ck-btn svg { width: 18px; height: 18px; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .2)); }
-  .ck-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 0 #0E7A35, 0 12px 20px rgba(14, 122, 53, .4), inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -2px 0 rgba(0, 0, 0, .08); color: #fff; }
-  .ck-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #0E7A35, 0 3px 8px rgba(14, 122, 53, .35), inset 0 1px 0 rgba(255, 255, 255, .4); }
-  .ck-btn:focus-visible { outline: 3px solid #86EFAC; outline-offset: 3px; }
+  /* 오른쪽 위 체크인 버튼: 다크 유리 질감 + 초록 테두리, 반투명 핀 뒤로 노란 해 */
+  .ck-btn { position: relative; display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px 9px 11px; border-radius: 18px;
+    background: radial-gradient(120% 90% at 30% 0%, rgba(255, 255, 255, .14), rgba(255, 255, 255, 0) 55%),
+      linear-gradient(180deg, #2B3648 0%, #151D2B 55%, #0B1220 100%);
+    color: #fff; text-decoration: none; border: 1px solid rgba(52, 211, 153, .5);
+    font: 700 14px/1 var(--display); letter-spacing: .04em; white-space: nowrap;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, .18), inset 0 -6px 12px rgba(0, 0, 0, .25),
+      0 1px 2px rgba(15, 23, 42, .18), 0 6px 14px rgba(15, 23, 42, .18), 0 16px 30px -8px rgba(15, 23, 42, .45), 0 0 0 3px rgba(16, 185, 129, .12);
+    transform: translateY(0); transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+  .ck-btn .ck-ico { width: 30px; height: 30px; flex: none; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .35)); }
+  .ck-btn:hover { color: #fff; transform: translateY(-2px); border-color: rgba(52, 211, 153, .75);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, .2), inset 0 -6px 12px rgba(0, 0, 0, .25),
+      0 2px 4px rgba(15, 23, 42, .16), 0 10px 20px rgba(15, 23, 42, .2), 0 22px 40px -10px rgba(15, 23, 42, .5), 0 0 0 4px rgba(16, 185, 129, .16); }
+  .ck-btn:active { transform: translateY(1px); transition-duration: .05s;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, .14), inset 0 -4px 10px rgba(0, 0, 0, .3), 0 1px 2px rgba(15, 23, 42, .2), 0 3px 8px rgba(15, 23, 42, .18), 0 0 0 3px rgba(16, 185, 129, .14); }
+  .ck-btn:focus-visible { outline: 3px solid #6EE7B7; outline-offset: 3px; }
   .ck-btn .nav-dot { position: absolute; top: -7px; right: -7px; margin: 0; box-shadow: 0 0 0 2px #fff; }
   @media (min-width: 641px) {   /* 넓은 화면: 머리글 오른쪽 위에 고정하고, 메뉴가 버튼 밑으로 들어가지 않게 자리 비움 */
     .site-head .container { position: relative; padding-right: 150px; }
@@ -249,7 +255,8 @@
   @media (max-width: 640px) {
     .container { padding-inline: 18px; }
     .site-head .container { min-height: 70px; gap: 0 16px; }
-    .ck-btn { order: 2; padding: 9px 14px 9px 11px; font-size: 13px; border-radius: 12px; }
+    .ck-btn { order: 2; padding: 7px 15px 7px 9px; font-size: 13px; border-radius: 16px; }
+    .ck-btn .ck-ico { width: 26px; height: 26px; }
     .nav { order: 3; width: 100%; }
     .logo { font-size: 16px; }
     .logo img { height: 44px; }
@@ -435,7 +442,13 @@
       <a href="#guide" data-route="guide">이용 안내</a>
     </nav>
     <a class="ck-btn" href="#layover" data-ly-open id="ck-btn" aria-label="레이오버 체크인">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.6"/></svg>
+      <svg class="ck-ico" viewBox="0 0 32 32" aria-hidden="true"><defs>
+        <radialGradient id="ckSun" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#FFE9A3"/><stop offset=".55" stop-color="#FFC93C"/><stop offset="1" stop-color="#F2A50C"/></radialGradient>
+        <linearGradient id="ckGlass" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".92"/><stop offset="1" stop-color="#D9FBEA" stop-opacity=".62"/></linearGradient>
+        <linearGradient id="ckDot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient></defs>
+        <circle cx="21.5" cy="10.5" r="7.5" fill="url(#ckSun)"/>
+        <path d="M13.5 30s-9.5-7.9-9.5-15.2a9.5 9.5 0 0 1 19 0C23 22.1 13.5 30 13.5 30z" fill="url(#ckGlass)" stroke="#FFFFFF" stroke-opacity=".85" stroke-width=".9"/>
+        <circle cx="13.5" cy="14.6" r="3.4" fill="url(#ckDot)"/></svg>
       <span>체크인</span>
     </a>
   </div>
@@ -665,7 +678,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-10</small></span></div>
+  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-11</small></span></div>
 </footer>
 
 <script>
