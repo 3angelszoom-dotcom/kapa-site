@@ -649,7 +649,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-2</small></span></div>
+  <div class="container"><b>PILOT COMMUNITY</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-3</small></span></div>
 </footer>
 
 <script>
@@ -826,6 +826,10 @@
 
   function showLogin(note) {
     newView();
+    put(loginBox(note, () => showList()));
+  }
+  // 입장 양식 (게시판·체크인 화면에서 같이 씀). onDone: 입장 성공 뒤 할 일
+  function loginBox(note, onDone, title, intro) {
     // 아이폰·맥의 암호 저장(iCloud 키체인)이 알아보도록 진짜 로그인 양식 모양으로 만듦:
     // 처음 입장할 때 "암호 저장"을 누르면 다음부터 코드 칸에 자동으로 채워져요 (사이트 저장소가 지워져도 남음)
     const user = el('input', { class: 'sr-user', type: 'text', name: 'username', autocomplete: 'username', value: 'KAPA 게시판', tabindex: '-1', 'aria-hidden': 'true' });
@@ -853,18 +857,17 @@
         setMemberKey(r.token);
         clearFeed();
         if (r.feed) setFeed(r.feed);
-        if (afterLogin) { const to = afterLogin; afterLogin = ''; if (to === 'layover') lyOpen = true; return navigate(to); }   // 체크인에서 왔으면 체크인으로 돌아감
-        showList();
+        onDone();
       } catch (e) { fail(e.message || e); }
     }
     const form = el('form', { method: 'post', action: '#', autocomplete: 'on' }, user, pw,
       el('label', { class: 'keep' }, keep, '이 기기에서 코드 기억하기 (여러 사람이 쓰는 기기면 체크를 빼 주세요)'),
       btn, msg);
     form.addEventListener('submit', e => { e.preventDefault(); go(); });
-    put(el('div', { class: 'post login' },
+    return (el('div', { class: 'post login' },
       el('div', { class: 'lock', html: svg('<rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path>') }),
-      el('h2', {}, '회원 전용 게시판'),
-      el('p', { class: 'muted' }, '승인 메일로 받은 개인 입장 코드(예: ABCD-EFGH)를 넣으면 내 이름(실명)으로 글을 쓸 수 있어요. 카톡방 공지의 회원 비밀번호로도 들어갈 수 있어요.'),
+      el('h2', {}, title || '회원 전용 게시판'),
+      el('p', { class: 'muted' }, intro || '승인 메일로 받은 개인 입장 코드(예: ABCD-EFGH)를 넣으면 내 이름(실명)으로 글을 쓸 수 있어요. 카톡방 공지의 회원 비밀번호로도 들어갈 수 있어요.'),
       isIOS ? el('p', { class: 'muted' }, '아이폰: 입장 후 Safari가 "암호를 저장할까요?"라고 물으면 저장을 눌러 두세요. 다음에 코드 칸을 누르면 키보드 위에 코드가 떠서 한 번에 채워져요.') : null,
       form));
   }
@@ -1810,13 +1813,13 @@
   function localInput(d) { const z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; }
 
   let lyOpen = false;   // 체크인 양식 펼침 여부
-  let afterLogin = '';  // 입장한 뒤 돌아갈 화면 (체크인에서 입장하러 간 경우)
   async function loadLayover() {
     const box = document.getElementById('layover-app');
     const fill = (...k) => box.replaceChildren(...k.flat(Infinity).filter(x => x != null && x !== false));
     if (!memberKey) {
-      return fill(el('div', { class: 'ly-card' }, el('p', {}, '레이오버 체크인은 회원만 볼 수 있어요. 개인 입장 코드로 입장해 주세요.'),
-        el('a', { class: 'btn btn-accent', href: '#' + BOARDS[0].id, onclick: () => { afterLogin = 'layover'; } }, '입장하기')));
+      // 체크인 화면 안에서 바로 입장 (게시판으로 보내지 않음)
+      return fill(loginBox('', () => { lyOpen = true; loadLayover(); }, '회원 입장',
+        '승인 메일로 받은 개인 입장 코드(예: ABCD-EFGH)를 넣으면 체크인과 만나요를 쓸 수 있어요. 카톡방 공지의 회원 비밀번호로 들어오면 현황만 볼 수 있어요.'));
     }
     if (!box.firstChild) fill(el('p', { class: 'muted' }, '불러오는 중…'));
     let r;
@@ -1895,7 +1898,7 @@
     } else {
       formSec = el('section', { class: 'ly-sec' }, el('div', { class: 'ly-card' },
         el('p', {}, '체크인과 만나요는 개인 입장 코드로 입장한 회원만 할 수 있어요. 지금은 현황만 볼 수 있어요.'),
-        el('button', { class: 'ghost small', onclick: () => { setMemberKey(''); clearFeed(); afterLogin = 'layover'; navigate(BOARDS[0].id); } }, '개인 코드로 입장')));
+        el('button', { class: 'ghost small', onclick: () => { setMemberKey(''); clearFeed(); loadLayover(); } }, '개인 코드로 입장')));
     }
 
     // 3) 내 체크인
@@ -2053,7 +2056,6 @@
     const isAdmin = route === 'admin';
     const isAbout = route === 'about';
     const isLay = route === 'layover';
-    if (!b && !isLay) afterLogin = '';   // 입장 안 하고 다른 곳으로 가면 돌아가기 취소
     document.getElementById('view-home').hidden = !!b || isAdmin || isAbout || isLay;
     document.getElementById('view-layover').hidden = !isLay;
     document.getElementById('view-about').hidden = !isAbout;
