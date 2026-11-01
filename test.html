@@ -557,6 +557,10 @@
   .a-tab { background: none; border: 0; border-radius: 8px; padding: 10px 14px; min-height: 44px; color: var(--muted); font: inherit; font-weight: 500; cursor: pointer; }
   .a-tab:hover { color: var(--text); }
   .a-tab.on { background: var(--hero); color: var(--hero-text); }
+  /* 새 가입 신청(대기) 개수 빨간 동그라미 */
+  .a-badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 6px; border-radius: 10px !important;
+    background: #DC2626; color: #fff; font-size: 12px; font-weight: 700; line-height: 1; vertical-align: 1px; }
+  .a-badge[hidden] { display: none; }
   .a-logout { margin-left: auto; background: none; border: 0; color: var(--muted); font: inherit; font-size: 13px; text-decoration: underline; padding: 10px 0; cursor: pointer; }
   .a-view { display: flex; flex-direction: column; gap: 16px; }
   .a-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
@@ -953,7 +957,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-51</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-52</small></span></div>
 </footer>
 
 <script>
@@ -1731,6 +1735,15 @@
       { id: 'live', label: '접속자', render: live },
     ];
     let tab = 'dash';
+    // 새 가입 신청(대기) 개수: 탭과 "대기" 버튼 옆에 빨간 숫자로 보여줌
+    let pendingN = 0;
+    const pendBadges = new Set();
+    const showPending = () => pendBadges.forEach(b => { if (!b.isConnected) { pendBadges.delete(b); return; } b.hidden = !pendingN; b.textContent = pendingN; });
+    const pendBadge = () => { const b = el('span', { class: 'a-badge', 'aria-label': '대기 신청 개수' }); b.hidden = !pendingN; b.textContent = pendingN; pendBadges.add(b); return b; };
+    async function refreshPending() {
+      try { const r = await api('adminListApplicants', '대기'); pendingN = (r || []).length; } catch (_) { return; }
+      showPending();
+    }
     const nav = el('div', { class: 'a-tabs', role: 'tablist', 'aria-label': '관리 메뉴' });
     const view = el('div', { class: 'a-view' });
 
@@ -1789,10 +1802,11 @@
     function shell() {
       nav.replaceChildren(...TABS.map(t => el('button', {
         class: 'a-tab' + (t.id === tab ? ' on' : ''), role: 'tab', 'aria-selected': String(t.id === tab),
-        onclick: () => { tab = t.id; shell(); } }, t.label)),
+        onclick: () => { tab = t.id; shell(); } }, t.label, t.id === 'apply' ? pendBadge() : null)),
         el('button', { class: 'a-logout', onclick: () => { setKey(''); login(); } }, '로그아웃'));
       root.replaceChildren(el('div', { class: 'a-wrap' }, nav, view));
       TABS.find(t => t.id === tab).render();
+      if (tab !== 'apply') refreshPending();   // 가입 신청 탭은 목록을 불러올 때 같이 셈
     }
 
     // ---- 대시보드 ----
@@ -1999,12 +2013,13 @@
     async function applicants() {
       const seg = el('div', { class: 'a-seg', role: 'group', 'aria-label': '상태' },
         [['대기', '대기'], ['승인', '승인'], ['보류', '보류'], ['거절', '거절'], ['all', '전체']].map(([v, l]) =>
-          el('button', { class: af.status === v ? 'on' : '', 'aria-pressed': String(af.status === v), onclick: () => { af.status = v; applicants(); } }, l)));
+          el('button', { class: af.status === v ? 'on' : '', 'aria-pressed': String(af.status === v), onclick: () => { af.status = v; applicants(); } }, l, v === '대기' ? pendBadge() : null)));
       const list = el('div', { class: 'a-list' }, loadingEl());
       view.replaceChildren(
         el('p', { class: 'a-muted' }, 'About Us의 인적사항 양식에서 들어온 신청이에요. 승인하면 초대 코드가 만들어지고, 신청자가 About Us 페이지의 "초대 코드 입력" 칸에 그 코드를 넣으면 카톡방 링크가 열려요.'),
         sheetBar(), el('div', { class: 'a-filters' }, seg), list);
       let rows; try { rows = await api('adminListApplicants', af.status); } catch (e) { return fail(e, list); }
+      if (af.status === '대기') { pendingN = rows.length; showPending(); } else refreshPending();
       if (!rows.length) { list.replaceChildren(el('p', { class: 'a-muted' }, '해당하는 신청이 없어요.')); return; }
       list.replaceChildren(...rows.map(appCard));
     }
@@ -2070,7 +2085,7 @@
           if (a.status !== '승인') a.redeemCount = 0;
           Object.assign(a, r, { status: '승인', siteOn: true });
           appFlash[a.id] = ['a-ok', a.email + ' 주소로 초대 코드와 개인 입장 코드를 보냈어요.'];
-          box.replaceWith(appCard(a));
+          box.replaceWith(appCard(a)); refreshPending();
         } catch (e) {
           if (e.message === '__auth') return;
           appFlash[a.id] = ['a-err', e.message];
@@ -2079,11 +2094,11 @@
       }
       async function approve() {
         msg.className = 'a-ok'; msg.textContent = '코드 만드는 중…';
-        try { const r = await api('adminApprove', a.id, roomSel.value); Object.assign(a, r, { status: '승인', redeemCount: 0, siteOn: true }); box.replaceWith(appCard(a)); }
+        try { const r = await api('adminApprove', a.id, roomSel.value); Object.assign(a, r, { status: '승인', redeemCount: 0, siteOn: true }); box.replaceWith(appCard(a)); refreshPending(); }
         catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
       }
       async function setStatus(st) {
-        try { await api('adminSetApplicantStatus', a.id, st); a.status = st; a.code = ''; a.siteOn = false; a.siteCode = ''; box.replaceWith(appCard(a)); }
+        try { await api('adminSetApplicantStatus', a.id, st); a.status = st; a.code = ''; a.siteOn = false; a.siteCode = ''; box.replaceWith(appCard(a)); refreshPending(); }
         catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
       }
       if (a.status === '승인' && a.code) {
