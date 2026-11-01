@@ -394,6 +394,19 @@
   .wm-back { border: 0; background: none; padding: 0; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; }
   .wm .post { box-shadow: none; border: 0; padding: 0; margin: 0; }
   body.wm-open { overflow: hidden; }
+  /* ---- 첫 화면: 그림 없이 짧게 + 새로 올라온 글 ---- */
+  .hero { min-height: 0 !important; background: linear-gradient(180deg, #9ea6ba 0%, #c3b4c2 60%, #dcc3bf 100%); }
+  .hero-art, .hero-photo { display: none !important; }
+  .hero .container { padding-block: 176px 44px !important; }
+  @media (max-width: 640px) { .hero .container { padding-block: 162px 28px !important; } }
+  #recent { padding-top: 28px; }
+  .recent-h { margin: 0 0 14px; font: 700 20px/1.3 var(--body); letter-spacing: 0; text-transform: none; display: flex; align-items: center; gap: 8px; }
+  .recent-row { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; padding: 12px 14px; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+  .recent-ico { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-size: 22px; background: #F4F5F7; }
+  .recent-main b { font-weight: 600; font-size: 15.5px; }
+  .recent-main small { font-size: 12.5px; }
+  .recent-side { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
+  .recent-side.zero { opacity: .45; }
   /* ---- admin page ---- */
   .a-wrap { display: flex; flex-direction: column; gap: 16px; }
   .a-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
@@ -590,11 +603,7 @@
     </section>
 
     <section class="section container" id="recent">
-      <div class="section-head">
-        <div class="eyebrow">Latest</div>
-        <h2>최신글</h2>
-        <p>모든 게시판의 새 글을 한눈에 모아 보여줘요.</p>
-      </div>
+      <h2 class="recent-h"><span aria-hidden="true">🆕</span> 새로 올라온 글</h2>
       <div class="recent-list" id="recent-list"><p class="recent-empty">불러오는 중…</p></div>
     </section>
 
@@ -782,7 +791,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-21</small></span></div>
+  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-22</small></span></div>
 </footer>
 
 <script>
@@ -1974,7 +1983,18 @@
     key ? shell() : login();
   }
 
-  // ===== 최신글 (메인 페이지) =====
+  // ===== 새로 올라온 글 (메인 페이지) =====
+  // 시간은 "방금 · 5분 전 · 3시간 전 · 2일 전", 일주일 넘으면 날짜
+  function ago(iso) {
+    const m = (Date.now() - new Date(iso)) / 60000;
+    if (!(m >= 0)) return fmt(iso);
+    if (m < 1) return '방금';
+    if (m < 60) return Math.floor(m) + '분 전';
+    if (m < 1440) return Math.floor(m / 60) + '시간 전';
+    if (m < 10080) return Math.floor(m / 1440) + '일 전';
+    return new Date(iso).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
+  }
+  const recentSide = n => el('span', { class: 'recent-side' + (n ? '' : ' zero'), 'aria-label': '댓글 ' + n }, '💬', String(n || 0));
   async function loadRecent() {
     const box = document.getElementById('recent-list');
     const fill = (...kids) => box.replaceChildren(...kids.flat().filter(Boolean));
@@ -1985,9 +2005,9 @@
       fill(posts.map(p => {
         const b = boardOf(p.board) || { code: '', name: '' };
         return el('button', { class: 'recent-row', onclick: () => openPost(p.board, p.id) },
-          el('span', { class: 'recent-code' }, b.code),
-          el('span', { class: 'recent-main' }, el('b', {}, p.title), el('small', {}, `${b.name} · ${p.author} · ${fmt(p.createdAt)}`)),
-          el('span', { class: 'recent-side' }, `댓글 ${p.comments}`));
+          el('span', { class: 'recent-ico', 'aria-hidden': 'true' }, b.ico || '📝'),
+          el('span', { class: 'recent-main' }, el('b', {}, p.title), el('small', {}, `${b.name} · ${p.author} · ${ago(p.createdAt)}`)),
+          recentSide(p.comments));
       }));
     };
     if (feed) draw();
@@ -2003,7 +2023,7 @@
       if (m === '__auth') return loadPublicRecent(box, fill);   // 예전 입장 정보는 지워졌으니 바로 로그인 전 화면(제목 가림)으로
       if (feed) return;
       fill(el('div', { class: 'recent-empty' },
-        el('span', {}, m === '__slow' ? '최신글을 불러오는 데 시간이 오래 걸리고 있어요.' : '최신글을 불러오지 못했어요: ' + m),
+        el('span', {}, m === '__slow' ? '글을 불러오는 데 시간이 오래 걸리고 있어요.' : '글을 불러오지 못했어요: ' + m),
         el('button', { class: 'btn', onclick: () => { fill(el('p', { class: 'recent-empty' }, '불러오는 중…')); loadRecent(); } }, '다시 시도')));
     } finally { clearTimeout(timer); }
   }
@@ -2020,10 +2040,10 @@
     const rows = (r.posts || []).map(p => {
       const b = boardOf(p.board) || { code: '', name: '' };
       return el('button', { class: 'recent-row', onclick: () => navigate(p.board) },
-        el('span', { class: 'recent-code' }, b.code),
+        el('span', { class: 'recent-ico', 'aria-hidden': 'true' }, b.ico || '📝'),
         el('span', { class: 'recent-main' }, el('b', { class: 'recent-lock' }, el('span', { html: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>' }), '회원 전용 글'),
-          el('small', {}, `${b.name} · ${p.author} · ${fmt(p.createdAt)}`)),
-        el('span', { class: 'recent-side' }, `댓글 ${p.comments}`));
+          el('small', {}, `${b.name} · ${p.author} · ${ago(p.createdAt)}`)),
+        recentSide(p.comments));
     });
     fill(rows.length ? rows : el('p', { class: 'recent-empty' }, '아직 글이 없어요.'));
   }
