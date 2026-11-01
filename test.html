@@ -407,6 +407,18 @@
   .recent-main small { font-size: 12.5px; }
   .recent-side { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
   .recent-side.zero { opacity: .45; }
+  /* ---- 레이오버 체크인 머리 (아이콘 분위기) ---- */
+  .ly-band { background: linear-gradient(180deg, #9ea6ba 0%, #c3b4c2 60%, #dcc3bf 100%); padding-block: 168px 34px !important; border-bottom: 0; }
+  .ly-band .container { gap: 10px; }
+  .ly-band-ico { width: 76px; height: 76px; border-radius: 24px; display: grid; place-items: center;
+    background: linear-gradient(180deg, #2B3648 0%, #0B1220 100%); box-shadow: 0 10px 24px -10px rgba(15, 23, 42, .7), inset 0 1px 0 rgba(255,255,255,.12); }
+  .ly-band-ico svg { width: 44px; height: 44px; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .4)); }
+  .ly-band h1 { font: 700 28px/1.2 var(--body) !important; letter-spacing: 0 !important; text-transform: none !important; margin-top: 4px !important; }
+  .ly-band p { color: #2B3648 !important; font-size: 16px; }
+  .ly-band-tips { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .ly-band-tips li { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 999px; font-size: 13px; color: #1F2937;
+    background: rgba(255, 255, 255, .55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+  @media (max-width: 640px) { .ly-band { padding-block: 150px 28px !important; } }
   /* ---- admin page ---- */
   .a-wrap { display: flex; flex-direction: column; gap: 16px; }
   .a-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
@@ -766,11 +778,16 @@
 
   <!-- LAYOVER: 레이오버·공항 대기 체크인과 만나요 -->
   <div id="view-layover" hidden>
-    <section class="page-band">
+    <section class="page-band ly-band">
       <div class="container">
-        <div class="eyebrow">LAY · Check-in</div>
+        <div class="ly-band-ico" aria-hidden="true"><svg viewBox="-2.5 0 32 32"><path d="M13.5 30s-9.5-7.9-9.5-15.2a9.5 9.5 0 0 1 19 0C23 22.1 13.5 30 13.5 30z" fill="url(#ckGlass)" stroke="#FFFFFF" stroke-opacity=".85" stroke-width=".9"/><circle cx="13.5" cy="14.6" r="3.4" fill="url(#ckDot)"/></svg></div>
         <h1>레이오버 체크인</h1>
-        <p>같은 시간, 같은 도시나 공항에 있는 카파 회원을 찾아요. 시간은 그 도시의 현지 시간으로 넣어 주세요. 편명이나 호텔은 적지 마세요.</p>
+        <p>같은 공항, 같은 시간에 있는 회원과 ☕ 커피 한잔</p>
+        <ul class="ly-band-tips">
+          <li><span aria-hidden="true">🕐</span>현지 시간으로</li>
+          <li><span aria-hidden="true">🔒</span>편명·호텔은 비밀</li>
+          <li><span aria-hidden="true">⏳</span>지나면 자동 삭제</li>
+        </ul>
       </div>
     </section>
     <div class="container ly-wrap"><div class="w" id="layover-app"></div></div>
@@ -791,7 +808,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-22</small></span></div>
+  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-23</small></span></div>
 </footer>
 
 <script>
