@@ -442,6 +442,14 @@
   .rf-btn svg { width: 20px; height: 20px; opacity: .75; }
   .rf-btn.spin svg { animation: rf-spin .8s linear infinite; }
   @keyframes rf-spin { to { transform: rotate(360deg); } }
+  /* ---- 왼쪽 아래: 페이지 맨 위로 버튼 (조금 내려가면 나타남) ---- */
+  .top-btn { position: fixed; left: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 60; width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center; padding: 0; cursor: pointer; color: #0B1220;
+    background: rgba(255, 255, 255, .38); border: 1px solid rgba(255, 255, 255, .6); box-shadow: 0 4px 14px rgba(15, 23, 42, .14);
+    -webkit-backdrop-filter: blur(10px) saturate(1.4); backdrop-filter: blur(10px) saturate(1.4);
+    opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .2s, transform .2s; }
+  .top-btn.show { opacity: 1; pointer-events: auto; transform: none; }
+  .top-btn svg { width: 20px; height: 20px; opacity: .75; }
   /* ---- 머리글 오른쪽 위: 글쓰기 · 체크인 (페이스북처럼 아이콘 + 아주 작은 글씨) ---- */
   .head-acts { display: flex; align-items: flex-start; gap: 14px; }
   .hd-act { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 2px 2px 0; border: 0; background: none;
@@ -696,7 +704,7 @@
 </style>
 </head>
 <body>
-<div style="position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#B45309;color:#fff;text-align:center;font:600 13px/1.4 system-ui,sans-serif;padding:8px 12px">테스트 페이지 · 관리자 시험용 (회원에게 공유하지 마세요)</div><style>.a2hs,.rf-btn{bottom:calc(52px + env(safe-area-inset-bottom))}</style>
+<div style="position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#B45309;color:#fff;text-align:center;font:600 13px/1.4 system-ui,sans-serif;padding:8px 12px">테스트 페이지 · 관리자 시험용 (회원에게 공유하지 마세요)</div><style>.a2hs,.rf-btn,.top-btn{bottom:calc(52px + env(safe-area-inset-bottom))}</style>
 <div class="page">
 <header class="site-head">
   <svg class="head-plane" viewBox="0 0 680 300" aria-hidden="true" focusable="false"><defs><linearGradient id="hd-trail" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94A3B8" stop-opacity="0"/><stop offset=".75" stop-color="#94A3B8" stop-opacity=".65"/><stop offset="1" stop-color="#94A3B8" stop-opacity=".95"/></linearGradient></defs><path d="M10,250 Q330,170 560,78" fill="none" stroke="url(#hd-trail)" stroke-width="5" stroke-linecap="round"/><path d="M10,262 Q330,182 560,87" fill="none" stroke="url(#hd-trail)" stroke-width="3.5" stroke-linecap="round" opacity=".7"/><path transform="translate(600,74) rotate(-21.8) scale(1.05)" d="M60,0 C58,-5 50,-7 40,-7 L-46,-6 L-58,-26 L-66,-26 L-60,-5 L-64,-4 L-64,4 L-60,5 L-66,26 L-58,26 L-46,6 L40,7 C50,7 58,5 60,0 Z M12,-6 L-14,-62 L-24,-62 L-10,-6 Z M12,6 L-14,62 L-24,62 L-10,6 Z M2,-24 h10 v-5 h-10 z M2,24 h10 v5 h-10 z" fill="#2e3440"/></svg>
@@ -942,7 +950,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-49</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-50</small></span></div>
 </footer>
 
 <script>
@@ -1147,6 +1155,16 @@
     // 저장된 예전 화면이 아니라 항상 새 화면을 받도록 주소 끝에 시간을 붙여서 다시 열기
     b.addEventListener('click', () => { b.classList.add('spin'); location.replace(location.pathname + '?r=' + Date.now() + location.hash); });
     document.body.append(b);
+  })();
+  // ===== 왼쪽 아래: 페이지 맨 위로 (모든 화면, 아래로 조금 내리면 나타남) =====
+  (function topButton() {
+    if (GAS) return;
+    const t = el('button', { class: 'top-btn', type: 'button', 'aria-label': '맨 위로', title: '맨 위로',
+      html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>' });
+    t.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    const upd = () => t.classList.toggle('show', window.scrollY > 300);
+    window.addEventListener('scroll', upd, { passive: true });
+    document.body.append(t); upd();
   })();
   // 주소에는 비밀번호가 아니라 비밀번호에서 만든 입장 열쇠(m + 24자)만 넣음
   // m… = 공용 비밀번호 열쇠, p<회원번호>.… = 개인 입장 코드 열쇠 (실명)
