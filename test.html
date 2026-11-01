@@ -204,6 +204,40 @@
   .ly-push-ico { font-size: 18px; }
   .ly-push-steps { margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); }
   .ly-push-btns { display: flex; gap: 8px; }
+  /* 레이오버 화면을 부드럽게: 둥근 카드, 연한 테두리, 아이콘 */
+  #view-layover .ly-card { border-radius: 18px; border-color: #E8E8E4; box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 24px -12px rgba(15, 23, 42, .12); }
+  #view-layover .ly-sec > h2 { letter-spacing: .06em; text-transform: none; font-size: 15px; }
+  #view-layover .ly-grid input, #view-layover .ly-field input { border-radius: 12px; border-color: #E2E2DE; background: #FAFAF8; }
+  #view-layover .ly-grid input:focus, #view-layover .ly-field input:focus { outline: none; border-color: #34D399; box-shadow: 0 0 0 3px rgba(52, 211, 153, .18); background: #fff; }
+  #view-layover input[type="datetime-local"] { -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%; box-sizing: border-box; text-align: left; }
+  #view-layover input[type="datetime-local"]::-webkit-date-and-time-value { text-align: left; }
+  #view-layover .ly-open { border-radius: 14px; background: linear-gradient(180deg, #2B3648 0%, #0B1220 100%); border: 1px solid rgba(52, 211, 153, .45);
+    box-shadow: 0 6px 16px -8px rgba(15, 23, 42, .5); }
+  #view-layover .ly-kind { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  #view-layover .ly-kind label { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 12px 8px; border: 1.5px solid #E2E2DE; border-radius: 14px; background: #FAFAF8; cursor: pointer; }
+  #view-layover .ly-kind label:has(input:checked) { border-color: #10B981; background: #ECFDF5; }
+  #view-layover .ly-kind input { position: absolute; opacity: 0; pointer-events: none; }
+  #view-layover .ly-kind-ico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #EFEFEC; color: #334155; margin-bottom: 2px; }
+  #view-layover .ly-kind-ico svg { width: 26px; height: 26px; }
+  #view-layover .ly-kind label:has(input:checked) .ly-kind-ico { background: #10B981; color: #fff; box-shadow: 0 4px 10px -4px rgba(16, 185, 129, .7); }
+  #view-layover #ly-submit { border-radius: 14px; background: linear-gradient(180deg, #2B3648 0%, #0B1220 100%); border: 1px solid rgba(52, 211, 153, .45); }
+  #view-layover .ly-kind b { display: block; font-size: 14px; }
+  #view-layover .ly-kind small { display: block; font-size: 12px; color: var(--muted); }
+  #view-layover .ly-check input { accent-color: #10B981; }
+  #view-layover button.primary.small, #view-layover button.ghost.small, #view-layover .ly-act button { border-radius: 999px; }
+  #view-layover .ly-place { border-top: 0; margin-top: 14px; }
+  #view-layover .ly-place > h3 { padding: 6px 4px 8px; font-size: 16px; }
+  #view-layover .ly-row { border-top: 0; border-radius: 14px; padding: 14px; margin-bottom: 8px; background: #fff; border: 1px solid #EEEEEA; }
+  #view-layover .ly-row.match { background: #F0FDF7; border-color: #BFEBD8; }
+  #view-layover .ly-tag { border-radius: 999px; padding: 2px 9px; background: #F3F3F1; border-color: transparent; }
+  #view-layover .ly-tag.on { background: #D1FAE5; color: #065F46; border-color: transparent; }
+  #view-layover .ly-prefs { border-radius: 12px; }
+  #view-layover .ly-direct { border-radius: 14px; }
+  .a-check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .ly-prefs { display: grid; gap: 6px; padding: 10px 12px; background: var(--soft); }
+  .ly-prefs-h { display: flex; justify-content: space-between; font-size: 13px; margin-top: 4px; }
+  .ly-prefs-note { font-weight: 400; color: var(--muted); font-size: 12px; }
+  .ly-prefs-boards { display: flex; flex-wrap: wrap; gap: 4px 16px; }
   .a2hs { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 60; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
   .a2hs[hidden], .a2hs-sheet[hidden] { display: none; }
   .a2hs-btn { display: inline-flex; align-items: center; gap: 7px; padding: 11px 16px 11px 13px; border-radius: 999px; border: 1px solid rgba(52, 211, 153, .5);
@@ -297,6 +331,46 @@
     .board-layout { padding-block: 40px 0; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  /* ===== 부드러운 테마 (전체): 둥근 카드, 연한 테두리, 은은한 그림자, 다크 버튼 ===== */
+  .btn { border-radius: 14px; }
+  .btn-accent { background: linear-gradient(180deg, #2B3648 0%, #0B1220 100%); border-color: #0B1220; box-shadow: 0 8px 20px -10px rgba(15, 23, 42, .6); }
+  .nav a { border-radius: 999px; }
+  .cards { gap: 14px; border: 0; }
+  .board-card { border: 1px solid #E8E8E4; border-radius: 20px; box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 10px 26px -16px rgba(15, 23, 42, .18); transition: transform .2s, box-shadow .2s, background .25s, color .25s; }
+  .board-card:hover { background: #0F172A; transform: translateY(-2px); }
+  .board-card .bc-ico { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 16px; background: #F3F4F1; font-size: 28px; line-height: 1; }
+  .board-card:hover .bc-ico { background: rgba(255, 255, 255, .12); }
+  .band-ico { font-size: 40px; line-height: 1; min-height: 1px; }
+  .band-ico:empty { display: none; }
+  .recent-list { border-top: 0; display: grid; gap: 8px; }
+  .recent-row { border: 1px solid #EEEEEA; border-radius: 16px; padding: 16px 14px; background: #fff; }
+  .recent-row:hover { background: #F7F7F5; }
+  .recent-empty { border: 1px dashed #E2E2DE; border-radius: 16px; padding: 18px; }
+  .aside-box { border-color: #E8E8E4; border-radius: 20px; box-shadow: 0 10px 26px -18px rgba(15, 23, 42, .25); }
+  .aside-dark { background: linear-gradient(180deg, #2B3648 0%, #0B1220 100%); border-color: #0B1220; }
+  .chat-band { border-radius: 24px; background: linear-gradient(180deg, #2B3648 0%, #0B1220 100%); }
+  .w input, .w textarea { border-radius: 12px; border-color: #E2E2DE; background: #FAFAF8; }
+  .w input:focus, .w textarea:focus { border-color: #34D399; box-shadow: 0 0 0 3px rgba(52, 211, 153, .18); background: #fff; }
+  .w-toolbar { border-bottom: 0; padding-bottom: 14px; }
+  .search-btn { border-radius: 12px; border-color: #E2E2DE; }
+  .search-btn:hover { background: #0B1220; border-color: #0B1220; }
+  .primary { border-radius: 14px; background: linear-gradient(180deg, #2B3648 0%, #0B1220 100%); border-color: #0B1220; letter-spacing: .06em; }
+  .primary.small { border-radius: 999px; }
+  .primary:hover { background: linear-gradient(180deg, #334155 0%, #0F172A 100%); }
+  .post-card { border: 1px solid #EEEEEA; border-radius: 18px; background: #fff; padding: 18px 18px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, .03); transition: transform .15s, box-shadow .15s; }
+  .post-card:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 10px 22px -14px rgba(15, 23, 42, .3); }
+  .post { border-color: #E8E8E4; border-radius: 22px; box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 14px 32px -20px rgba(15, 23, 42, .25); }
+  .comment { border-top: 0; background: #F7F7F5; border-radius: 16px; padding: 12px 16px; margin: 8px 0; }
+  .comments h4 { letter-spacing: .06em; text-transform: none; font-size: 14px; }
+  .w-notice { border: 0; border-radius: 16px; background: #FFF7E6; color: #5B3B00; }
+  .w-notice b { display: inline-block; margin-right: 10px; padding: 2px 8px; border-radius: 999px; background: #FDE7B0; letter-spacing: .04em; font-size: 11.5px; }
+  .who-bar { border-radius: 14px; }
+  .as-who, .ios-tip { border-radius: 14px; }
+  .badge { border-radius: 999px; }
+  .file-link, .attach img, .pdf iframe { border-radius: 12px; }
+  .login { border-radius: 22px; }
+  .lock { border-radius: 50%; border-color: #E2E2DE; background: #F7F7F5; }
+  .vf { background: #10B981; }
   /* ---- admin page ---- */
   .a-wrap { display: flex; flex-direction: column; gap: 16px; }
   .a-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
@@ -511,11 +585,11 @@
         <p>채용 소식, 면접 후기, 공항 정보까지. 카톡방에서 흘러가던 정보를 주제별로 모아 오래 남겨요.</p>
       </div>
       <div class="cards" id="board-cards">
-        <a class="board-card" href="#hiring"><span class="bc-code">HIR</span><b>Airlines Hiring News</b><span>항공사 채용 공고, 최소 자격 변경, 잡페어 일정을 빠르게 공유해요.</span><em>Enter →</em></a>
-        <a class="board-card" href="#interview"><span class="bc-code">INT</span><b>My Interview Tips</b><span>회사별 면접 후기와 준비 자료. 나의 경험이 다음 사람의 합격이 돼요.</span><em>Enter →</em></a>
-        <a class="board-card" href="#free"><span class="bc-code">FRE</span><b>자유게시판</b><span>비행 이야기, 베이스 생활 정보, 궁금한 것 무엇이든 편하게.</span><em>Enter →</em></a>
-        <a class="board-card" href="#longsit"><span class="bc-code">APT</span><b>Airport Info</b><span>라운지, 맛집, 쉴 곳, 교통까지 공항별 정보를 모아요.</span><em>Enter →</em></a>
-        <a class="board-card" href="#anon"><span class="bc-code">ANO</span><b>익명 상담소</b><span>이름 없이 고민을 털어놓고 조언을 구해요. 누가 썼는지 아무도 볼 수 없어요. 웹사이트 관리자도 볼 수 없어요.</span><em>Enter →</em></a>
+        <a class="board-card" href="#hiring"><span class="bc-ico" aria-hidden="true">💼</span><span class="bc-code">HIR</span><b>Airlines Hiring News</b><span>항공사 채용 공고, 최소 자격 변경, 잡페어 일정을 빠르게 공유해요.</span><em>Enter →</em></a>
+        <a class="board-card" href="#interview"><span class="bc-ico" aria-hidden="true">🎤</span><span class="bc-code">INT</span><b>My Interview Tips</b><span>회사별 면접 후기와 준비 자료. 나의 경험이 다음 사람의 합격이 돼요.</span><em>Enter →</em></a>
+        <a class="board-card" href="#free"><span class="bc-ico" aria-hidden="true">💬</span><span class="bc-code">FRE</span><b>자유게시판</b><span>비행 이야기, 베이스 생활 정보, 궁금한 것 무엇이든 편하게.</span><em>Enter →</em></a>
+        <a class="board-card" href="#longsit"><span class="bc-ico" aria-hidden="true">🛫</span><span class="bc-code">APT</span><b>Airport Info</b><span>라운지, 맛집, 쉴 곳, 교통까지 공항별 정보를 모아요.</span><em>Enter →</em></a>
+        <a class="board-card" href="#anon"><span class="bc-ico" aria-hidden="true">🤫</span><span class="bc-code">ANO</span><b>익명 상담소</b><span>이름 없이 고민을 털어놓고 조언을 구해요. 누가 썼는지 아무도 볼 수 없어요. 웹사이트 관리자도 볼 수 없어요.</span><em>Enter →</em></a>
       </div>
     </section>
 
@@ -653,6 +727,7 @@
   <div id="view-board" hidden>
     <section class="page-band">
       <div class="container">
+        <div class="band-ico" id="band-ico" aria-hidden="true"></div>
         <div class="eyebrow" id="band-code"></div>
         <h1 id="band-title"></h1>
         <p id="band-desc"></p>
@@ -702,7 +777,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-15</small></span></div>
+  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-19</small></span></div>
 </footer>
 
 <script>
@@ -717,15 +792,15 @@
 
   // 게시판 화면용 정보 (id는 Code.gs의 BOARDS와 같아야 함)
   const META = {
-    hiring:    { code: 'HIR', nav: 'Hiring News',      tag: '채용 공고 · 자격 요건 · 잡페어', desc: '항공사 채용 공고, 최소 자격 변경, 잡페어 일정을 빠르게 공유해요.',
+    hiring:    { ico: '💼', code: 'HIR', nav: 'Hiring News',      tag: '채용 공고 · 자격 요건 · 잡페어', desc: '항공사 채용 공고, 최소 자격 변경, 잡페어 일정을 빠르게 공유해요.',
       icon: '<rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M3 13h18"></path>' },
-    interview: { code: 'INT', nav: 'Interview Tips',   tag: '회사별 면접 후기 · 준비 자료', desc: '회사별 면접 후기와 준비 자료. 나의 경험이 다음 사람의 합격이 돼요.',
+    interview: { ico: '🎤', code: 'INT', nav: 'Interview Tips',   tag: '회사별 면접 후기 · 준비 자료', desc: '회사별 면접 후기와 준비 자료. 나의 경험이 다음 사람의 합격이 돼요.',
       icon: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 9h8"></path><path d="M8 13h5"></path>' },
-    free:      { code: 'FRE', nav: '자유게시판',        tag: '비행 이야기 · 생활 정보 · 무엇이든', desc: '비행 이야기, 베이스 생활 정보, 궁금한 것 무엇이든 편하게.',
+    free:      { ico: '💬', code: 'FRE', nav: '자유게시판',        tag: '비행 이야기 · 생활 정보 · 무엇이든', desc: '비행 이야기, 베이스 생활 정보, 궁금한 것 무엇이든 편하게.',
       icon: '<circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path><path d="M21.5 20a6.5 6.5 0 0 0-4-6"></path>' },
-    longsit:   { code: 'APT', nav: 'Airport Info', tag: '공항별 라운지 · 맛집 · 교통 · 쉴 곳', desc: '라운지, 맛집, 쉴 곳, 교통까지 공항별 정보를 모아요.',
+    longsit:   { ico: '🛫', code: 'APT', nav: 'Airport Info', tag: '공항별 라운지 · 맛집 · 교통 · 쉴 곳', desc: '라운지, 맛집, 쉴 곳, 교통까지 공항별 정보를 모아요.',
       icon: '<path d="M17 8h1a4 4 0 0 1 0 8h-1"></path><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"></path><path d="M6 2v3"></path><path d="M10 2v3"></path><path d="M14 2v3"></path>' },
-    anon:      { code: 'ANO', nav: '익명 상담소', tag: '익명 · 고민 · 조언', desc: '이름 없이 고민을 털어놓고 조언을 구해요. 누가 썼는지 아무도 볼 수 없어요. 웹사이트 관리자도 볼 수 없어요.',
+    anon:      { ico: '🤫', code: 'ANO', nav: '익명 상담소', tag: '익명 · 고민 · 조언', desc: '이름 없이 고민을 털어놓고 조언을 구해요. 누가 썼는지 아무도 볼 수 없어요. 웹사이트 관리자도 볼 수 없어요.',
       icon: '<path d="M12 3a7 7 0 0 0-7 7v4l-2 3h18l-2-3v-4a7 7 0 0 0-7-7z"></path><path d="M9 20a3 3 0 0 0 6 0"></path>' },
   };
   const DEFAULT_ICON = '<rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M8 9h8"></path><path d="M8 13h8"></path>';
@@ -757,7 +832,7 @@
     if (GAS) return new Promise((resolve, reject) =>
       google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn](...args));
     // 내 도메인: Apps Script 데이터 창구로 POST (text/plain이라 추가 확인 요청 없이 바로 감, 구글 로그인과 무관)
-    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args }), redirect: 'follow' })
+    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, page: /test\.html$/.test(location.pathname) ? 'test' : '' }), redirect: 'follow' })
       .then(r => { if (!r.ok) throw new Error('서버에 연결하지 못했어요 (' + r.status + '). 잠시 후 다시 시도해 주세요.'); return r.json(); },
             () => { throw new Error('인터넷 연결을 확인해 주세요.'); })
       .then(j => { if (!j || !j.ok) throw new Error((j && j.error) || '서버 오류'); return j.data; });
@@ -982,7 +1057,7 @@
 
   function drawList(posts) {
     const notice = feed ? feed.notice : '';
-    const search = el('input', { id: 'search', type: 'search', placeholder: '검색 (제목·내용·이름)', 'aria-label': '검색' });
+    const search = el('input', { id: 'search', type: 'search', placeholder: '🔍 검색 (제목·내용·이름)', 'aria-label': '검색' });
     search.value = state.q;
     const doSearch = () => { state.q = search.value.trim(); showList(); };
     search.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
@@ -1001,18 +1076,18 @@
       : null;
     put(
       tip,
-      notice ? el('div', { class: 'w-notice' }, el('b', {}, '공지'), notice) : null,
+      notice ? el('div', { class: 'w-notice' }, el('b', {}, '📢 공지'), notice) : null,
       state.board === ANON ? el('div', { class: 'w-notice' }, el('b', {}, '익명'), '이 게시판의 글과 댓글은 모두 익명이에요. 누가 썼는지 아무도 볼 수 없어요. 웹사이트 관리자도 볼 수 없어요.') : null,
       whoBar,
       el('div', { class: 'w-toolbar' },
         el('div', { class: 'search-row' }, search,
           el('button', { class: 'search-btn', onclick: doSearch }, '검색')),
-        el('button', { class: 'primary write-btn', onclick: showWrite }, '글쓰기')),
+        el('button', { class: 'primary write-btn', onclick: showWrite }, '✏️ 글쓰기')),
       state.q ? el('button', { class: 'ghost', onclick: () => { state.q = ''; showList(); } }, '← 전체 목록') : null,
       posts.length
         ? posts.map(p => el('button', { class: 'post-card', onclick: () => showPost(p.id) },
             el('h3', {}, p.title), el('p', { class: 'preview' }, p.preview),
-            el('div', { class: 'meta' }, p.author, vf(p.verified), ` · ${fmt(p.createdAt)} · 댓글 ${p.comments}${p.attachments ? ' · 첨부 ' + p.attachments : ''}`)))
+            el('div', { class: 'meta' }, p.author, vf(p.verified), ` · ${fmt(p.createdAt)} · 💬 ${p.comments}${p.attachments ? ' · 📎 ' + p.attachments : ''}`)))
         : el('p', { class: 'muted' }, state.q ? '검색 결과가 없어요.' : '아직 글이 없어요. 첫 글을 남겨보세요!'),
       el('button', { class: 'logout', onclick: () => { setMemberKey(''); clearFeed(); showLogin(); } }, '이 기기에서 로그아웃'));
   }
@@ -1759,9 +1834,12 @@
         preview.replaceChildren(el('b', {}, '공지 '), ta.value || '(공지 없음, 게시판에 표시되지 않아요)');
       };
       ta.addEventListener('input', sync); sync();
+      const pushOn = el('input', { type: 'checkbox', id: 'a-notice-push' });
       const save = async text => {
         msg.className = 'a-ok'; msg.textContent = '';
-        try { await api('adminSetNotice', text); ta.value = text; sync(); msg.textContent = text ? '저장했어요. 게시판 상단에 바로 보여요.' : '공지를 내렸어요.'; }
+        try { const r = await api('adminSetNotice', text, pushOn.checked && !!text); ta.value = text; sync();
+          msg.textContent = text ? '저장했어요. 게시판 상단에 바로 보여요.' + (pushOn.checked ? (r && r.sent != null ? ' 폰 알림 ' + r.sent + '대에 보냈어요.' : '') : '') : '공지를 내렸어요.';
+          pushOn.checked = false; }
         catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
       };
       view.replaceChildren(el('section', { class: 'a-card' },
@@ -1769,6 +1847,7 @@
         el('p', { class: 'a-muted' }, '모든 게시판 맨 위에 보이는 한 줄 공지예요.'),
         el('label', { class: 'a-field' }, el('span', { class: 'a-row-between' }, '공지 내용', count), ta),
         el('div', {}, el('span', { class: 'a-label' }, '미리보기'), preview),
+        el('label', { class: 'a-check' }, pushOn, ' 저장할 때 회원들에게 폰 알림도 보내기 (공지 알림을 켠 회원만)'),
         el('div', { class: 'a-actions' },
           el('button', { class: 'a-btn', onclick: () => save(ta.value.trim()) }, '저장'),
           el('button', { class: 'a-btn ghost', onclick: () => save('') }, '공지 내리기')),
@@ -1816,7 +1895,7 @@
         catch (e) { if (e.message !== '__auth') { m.className = 'a-err'; m.textContent = e.message; } } };
       return el('section', { class: 'a-card' },
         el('h3', {}, '폰 앱 알림 설정 (Firebase)'),
-        el('p', { class: 'a-muted' }, '회원이 체크인 화면에서 "폰 알림 켜기"를 누르면 만나요가 올 때 폰으로 바로 알림이 가요. 아래 세 가지를 넣으면 켜져요.'),
+        el('p', { class: 'a-muted' }, '회원이 체크인 화면에서 "폰 알림 켜기"를 누르면 커피 한잔 요청 같은 소식이 폰으로 바로 가요. 아래 세 가지를 넣으면 켜져요.'),
         stat,
         el('label', { class: 'a-field' }, '1. Firebase 웹앱 설정 (firebaseConfig 통째로)', cfg),
         el('label', { class: 'a-field' }, '2. 웹 푸시 공개 키 (Cloud Messaging → Web Push certificates → Key pair)', vapid),
@@ -1907,7 +1986,7 @@
       const a = document.getElementById(id);
       if (!a) return;
       const old = a.querySelector('.nav-dot'); if (old) old.remove();
-      if (n > 0) a.append(el('span', { class: 'nav-dot', 'aria-label': '받은 만나요 ' + n + '개' }, String(n)));
+      if (n > 0) a.append(el('span', { class: 'nav-dot', 'aria-label': '받은 커피 한잔 요청 ' + n + '개' }, String(n)));
     });
   }
   const WD = ['일', '월', '화', '수', '목', '금', '토'];
@@ -1920,6 +1999,11 @@
   function localInput(d) { const z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; }
 
   let lyOpen = false;   // 체크인 양식 펼침 여부
+  // 레이오버(침대) / 공항 대기(게이트 의자) 선 아이콘
+  const LY_ICO = {
+    bed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6v13M3 15h18v4M21 15v-3.5A3.5 3.5 0 0 0 17.5 8H11v7"/><circle cx="7" cy="11" r="2"/><path d="M15.5 3.5h3l-3 3h3" stroke-width="1.4"/></svg>',
+    seat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12V7.5A2.5 2.5 0 0 1 8.5 5h7A2.5 2.5 0 0 1 18 7.5V12"/><path d="M4 12.5a1.8 1.8 0 0 1 3.6 0V15h8.8v-2.5a1.8 1.8 0 0 1 3.6 0V18H4z"/><path d="M6.5 18v2M17.5 18v2"/></svg>',
+  };
   // ===== 폰 앱 알림 (홈 화면에 추가한 웹앱 + Firebase 푸시) =====
   const FB = 'https://www.gstatic.com/firebasejs/10.12.2/';
   const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
@@ -1946,6 +2030,25 @@
     if (tok) { try { await call('removePushToken', memberKey, tok); } catch (e) {} }
     store.set('pc_push_tok', '');
   }
+  // 알림 종류 고르기 (공지 / 내 글에 댓글 / 새 글 받을 게시판). 바꾸면 바로 저장
+  function prefsBox() {
+    const box = el('div', { class: 'ly-prefs' }, el('p', { class: 'muted' }, '알림 설정 불러오는 중…'));
+    call('getPushPrefs', memberKey).then(p => {
+      const ck = (on, label) => { const i = el('input', { type: 'checkbox' }); i.checked = !!on; return [i, el('label', { class: 'ly-check' }, i, label)]; };
+      const [nI, nL] = ck(p.notice, '공지사항');
+      const [cI, cL] = ck(p.comments, '내 글에 댓글');
+      const bs = p.allBoards.map(b => ({ id: b.id, c: ck(p.boards.indexOf(b.id) >= 0, b.name) }));
+      const note = el('span', { class: 'ly-prefs-note' });
+      let t = null;
+      const save = () => { clearTimeout(t); note.textContent = '저장 중…'; t = setTimeout(async () => {
+        try { await call('setPushPrefs', memberKey, { notice: nI.checked, comments: cI.checked, boards: bs.filter(b => b.c[0].checked).map(b => b.id) }); note.textContent = '저장됨 ✓'; }
+        catch (e) { if (e.message !== '__auth') note.textContent = e.message; } }, 500); };
+      [nI, cI, ...bs.map(b => b.c[0])].forEach(i => i.addEventListener('change', save));
+      box.replaceChildren(el('b', { class: 'ly-prefs-h' }, '받을 알림', note), nL, cL,
+        el('b', { class: 'ly-prefs-h' }, '새 글 알림 받을 게시판'), el('div', { class: 'ly-prefs-boards' }, bs.map(b => b.c[1])));
+    }, e => { box.replaceChildren(el('p', { class: 'msg' }, e.message === '__auth' ? '' : '알림 설정을 불러오지 못했어요.')); });
+    return box;
+  }
   function pushCard() {
     if (!PUSH || GAS) return null;
     const box = el('section', { class: 'ly-sec ly-push' });
@@ -1955,7 +2058,7 @@
       const head = el('div', { class: 'ly-push-head' }, el('span', { class: 'ly-push-ico', 'aria-hidden': 'true' }, '🔔'), el('b', {}, '폰 알림'));
       let body;
       if (isIOS && !isStandalone()) {
-        body = [el('p', {}, '아이폰은 KAPA를 홈 화면에 추가해야 알림을 받을 수 있어요. 만나요가 오면 앱처럼 바로 알려 드려요.'),
+        body = [el('p', {}, '아이폰은 KAPA를 홈 화면에 추가해야 알림을 받을 수 있어요. 커피 한잔 요청이 오면 앱처럼 바로 알려 드려요.'),
           el('ol', { class: 'ly-push-steps' }, el('li', {}, 'Safari 아래쪽 공유 버튼(□↑)을 눌러요.'), el('li', {}, '"홈 화면에 추가"를 눌러요.'),
             el('li', {}, '홈 화면의 KAPA 아이콘으로 열고, 개인 코드로 입장한 뒤 여기서 "폰 알림 켜기"를 눌러요.'))];
       } else if (!pushSupported()) {
@@ -1969,12 +2072,12 @@
           catch (e) { if (e.message !== '__auth') msg.textContent = e.message; } test.disabled = false; });
         const off = el('button', { class: 'ghost small' }, '끄기');
         off.addEventListener('click', async () => { off.disabled = true; await disablePush(); draw(); });
-        body = [el('p', {}, '✓ 이 기기로 알림이 와요. 만나요를 받거나 내 만나요가 수락되면 바로 알려 드려요.'), el('div', { class: 'ly-push-btns' }, test, off)];
+        body = [el('p', {}, '✓ 이 기기로 알림이 와요. 커피 한잔 알림은 항상 와요. 아래에서 다른 알림을 고를 수 있어요.'), prefsBox(), el('div', { class: 'ly-push-btns' }, test, off)];
       } else {
         const on = el('button', { class: 'primary small' }, '폰 알림 켜기');
         on.addEventListener('click', async () => { on.disabled = true; on.textContent = '켜는 중…'; msg.textContent = '';
           try { await enablePush(); draw(); } catch (e) { if (e.message !== '__auth') msg.textContent = e.message || String(e); on.disabled = false; on.textContent = '폰 알림 켜기'; } });
-        body = [el('p', {}, '만나요가 오거나 내 만나요가 수락되면 이 기기로 바로 알림이 와요.'), on];
+        body = [el('p', {}, '커피 한잔 요청이 오거나 내 요청이 수락되면 이 기기로 바로 알림이 와요.'), on];
       }
       box.replaceChildren(el('div', { class: 'ly-card' }, head, body, msg));
     };
@@ -2024,7 +2127,7 @@
     if (!memberKey) {
       // 체크인 화면 안에서 바로 입장 (게시판으로 보내지 않음)
       return fill(loginBox('', () => { lyOpen = true; loadLayover(); }, '회원 입장',
-        '승인 메일로 받은 개인 입장 코드(예: ABCD-EFGH)를 넣으면 체크인과 만나요를 쓸 수 있어요. 카톡방 공지의 회원 비밀번호로 들어오면 현황만 볼 수 있어요.'));
+        '승인 메일로 받은 개인 입장 코드(예: ABCD-EFGH)를 넣으면 체크인과 커피 한잔을 쓸 수 있어요. 카톡방 공지의 회원 비밀번호로 들어오면 현황만 볼 수 있어요.'));
     }
     if (!box.firstChild) fill(el('p', { class: 'muted' }, '불러오는 중…'));
     let r;
@@ -2047,12 +2150,12 @@
 
     // 1) 만나요
     const hasIn = r.meets.some(m => m.dir === 'in'), hasOut = r.meets.some(m => m.dir !== 'in');
-    const meetsSec = r.meets.length ? el('section', { class: 'ly-sec' }, el('h2', {}, hasIn && hasOut ? '받은 요청 · 보낸 요청' : hasIn ? '받은 요청' : '보낸 요청'),
+    const meetsSec = r.meets.length ? el('section', { class: 'ly-sec' }, el('h2', {}, '☕ ' + (hasIn && hasOut ? '받은 요청 · 보낸 요청' : hasIn ? '받은 요청' : '보낸 요청')),
       r.meets.map(m => el('div', { class: 'ly-row' + (m.status === '수락' ? ' match' : '') },
         el('div', {}, el('b', {}, m.name), ` · ${m.place}`,
           el('span', { class: 'ly-tag' + (m.status === '수락' ? ' on' : '') },
-            m.status === '수락' ? '만나요 성사' : m.status === '거절' ? (m.dir === 'out' ? '어려워요' : '거절함') : m.dir === 'in' ? '새 요청' : '기다리는 중')),
-        el('div', { class: 'ly-sub' }, [m.start ? `상대 ${fmtRange(m.start, m.end)}` : '', m.myStart ? `나 ${fmtRange(m.myStart, m.myEnd)}` : (m.dir === 'out' ? '체크인 없이 보낸 만나요' : '')].filter(Boolean).join(' · ')),
+            m.status === '수락' ? '☕ 커피 약속 성사' : m.status === '거절' ? (m.dir === 'out' ? '어려워요' : '거절함') : m.dir === 'in' ? '새 요청' : '기다리는 중')),
+        el('div', { class: 'ly-sub' }, [m.start ? `상대 ${fmtRange(m.start, m.end)}` : '', m.myStart ? `나 ${fmtRange(m.myStart, m.myEnd)}` : (m.dir === 'out' ? '체크인 없이 보낸 요청' : '')].filter(Boolean).join(' · ')),
         el('div', { class: 'ly-act' },
           m.status === '수락' ? el('span', {}, '연락처 ', el('span', { class: 'ly-kakao' }, m.contact || '(없음)')) : null,
           m.dir === 'in' && m.status === '요청' ? [
@@ -2082,7 +2185,7 @@
       const start = el('input', { id: 'ly-start', type: 'datetime-local' }); start.value = localInput(now);
       const end = el('input', { id: 'ly-end', type: 'datetime-local' }); end.value = localInput(new Date(now.getTime() + 12 * 3600e3));
       const gate = el('input', { id: 'ly-gate', placeholder: 'B12', maxlength: '12' });
-      const gateBox = el('label', {}, '게이트 (선택)', gate); gateBox.hidden = true;
+      const gateBox = el('label', {}, '🚪 게이트 (선택)', gate); gateBox.hidden = true;
       const memo = el('input', { id: 'ly-memo', placeholder: '예: 저녁 같이 드실 분 / 공항 라운지에 있어요', maxlength: '100' });
       const contact = el('input', { id: 'ly-contact', placeholder: '예: 카톡 abc123 / 전화 415-000-0000', maxlength: '60' });
       contact.value = store.get('pc_ly_contact') || (r.me.kakao ? '카톡 ' + r.me.kakao : '');
@@ -2091,7 +2194,7 @@
       const notify = el('input', { id: 'ly-notify', type: 'email', inputmode: 'email', autocomplete: 'email', placeholder: 'you@example.com', maxlength: '120', 'aria-label': '알림 받을 이메일' });
       notify.value = store.get('pc_ly_email') || r.me.email || '';
       notifyOn.checked = store.get('pc_ly_notify') !== '0';
-      const notifyBox = el('label', { class: 'ly-field' }, '알림 받을 이메일 (다른 회원에게는 보이지 않아요)', notify);
+      const notifyBox = el('label', { class: 'ly-field' }, '✉️ 알림 받을 이메일 (다른 회원에게는 보이지 않아요)', notify);
       const syncNotify = () => { notifyBox.hidden = !notifyOn.checked; };
       notifyOn.addEventListener('change', () => { syncNotify(); if (notifyOn.checked) notify.focus(); });
       syncNotify();
@@ -2102,7 +2205,7 @@
       btn.addEventListener('click', async () => {
         msg.textContent = '';
         if (start.value && end.value && start.value >= end.value) { msg.textContent = '끝 시간이 시작 시간보다 뒤여야 해요.'; return; }
-        if (!contact.value.trim()) { msg.textContent = '만나요가 수락됐을 때 보여줄 연락처를 넣어 주세요.'; contact.focus(); return; }
+        if (!contact.value.trim()) { msg.textContent = '커피 한잔이 수락됐을 때 보여줄 연락처를 넣어 주세요.'; contact.focus(); return; }
         const mail = notify.value.trim();
         if (notifyOn.checked && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { msg.textContent = '알림 받을 이메일 주소를 넣어 주세요. 알림이 필요 없으면 체크를 빼 주세요.'; notify.focus(); return; }
         btn.disabled = true;
@@ -2116,20 +2219,21 @@
         } catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; btn.disabled = false; } }
       });
       const formCard = el('div', { class: 'ly-card form' },
-          el('div', { class: 'ly-kind' }, el('label', {}, kindLay, '레이오버 (도시에서 묵어요)'), el('label', {}, kindAir, '공항 대기 (공항에서 기다려요)')),
+          el('div', { class: 'ly-kind' }, el('label', {}, kindLay, el('span', { class: 'ly-kind-ico', html: LY_ICO.bed }), el('b', {}, '레이오버')),
+            el('label', {}, kindAir, el('span', { class: 'ly-kind-ico', html: LY_ICO.seat }), el('b', {}, '공항 대기'))),
           el('div', { class: 'ly-grid' },
-            el('label', {}, el('span', { class: 'ly-geo-row' }, '공항 코드', geoBtn), place, geoNote), gateBox,
-            el('label', {}, '시작 (현지 시간)', start), el('label', {}, '끝 (현지 시간)', end)),
-          el('label', { class: 'ly-field' }, '한 줄 메모 (선택)', memo),
-          el('label', { class: 'ly-field' }, '연락처 (만나요를 수락한 회원에게만 보여요)', contact),
-          el('label', { class: 'ly-check' }, notifyOn, '이메일로 알림 받기 (만나요가 오거나, 내 만나요가 수락됐을 때)'),
+            el('label', {}, el('span', { class: 'ly-geo-row' }, '✈️ 공항 코드', geoBtn), place, geoNote), gateBox,
+            el('label', {}, '🕐 시작 (현지 시간)', start), el('label', {}, '🕓 끝 (현지 시간)', end)),
+          el('label', { class: 'ly-field' }, '💬 한 줄 메모 (선택)', memo),
+          el('label', { class: 'ly-field' }, '📱 연락처 (커피 한잔을 수락한 회원에게만 보여요)', contact),
+          el('label', { class: 'ly-check' }, notifyOn, '이메일로 알림 받기 (커피 한잔 요청이 오거나, 내 요청이 수락됐을 때)'),
           notifyBox,
-          el('p', { class: 'hint' }, '편명·호텔 이름은 적지 마세요. 시간이 지나면 자동으로 사라져요.'),
+          el('p', { class: 'hint' }, '🔒 편명·호텔 이름은 적지 마세요. 시간이 지나면 자동으로 사라져요.'),
           btn, msg);
       // 체크인 버튼: 누르면 양식이 펼쳐짐 (첫 화면 "체크인하기"로 오면 펼친 채로)
       formCard.hidden = !lyOpen;
-      const openBtn = el('button', { class: 'primary ly-open', id: 'ly-open' }, lyOpen ? '닫기' : '＋ 체크인하기');
-      openBtn.addEventListener('click', () => { lyOpen = !lyOpen; formCard.hidden = !lyOpen; openBtn.textContent = lyOpen ? '닫기' : '＋ 체크인하기'; if (lyOpen) place.focus(); });
+      const openBtn = el('button', { class: 'primary ly-open', id: 'ly-open' }, lyOpen ? '접기 ▲' : '✈️ 체크인하기');
+      openBtn.addEventListener('click', () => { lyOpen = !lyOpen; formCard.hidden = !lyOpen; openBtn.textContent = lyOpen ? '접기 ▲' : '✈️ 체크인하기'; if (lyOpen) place.focus(); });
       formSec = el('section', { class: 'ly-sec' }, openBtn, formCard);
       if (lyOpen) setTimeout(() => place.focus(), 50);
       // 양식을 처음 열 때 한 번: 휴대폰 위치로 가장 가까운 공항을 채움 (위치 허용을 안 하면 그냥 비워 둠)
@@ -2138,12 +2242,12 @@
       openBtn.addEventListener('click', () => { if (lyOpen) tryGeo(); });
     } else {
       formSec = el('section', { class: 'ly-sec' }, el('div', { class: 'ly-card' },
-        el('p', {}, '체크인과 만나요는 개인 입장 코드로 입장한 회원만 할 수 있어요. 지금은 현황만 볼 수 있어요.'),
+        el('p', {}, '체크인과 커피 한잔은 개인 입장 코드로 입장한 회원만 할 수 있어요. 지금은 현황만 볼 수 있어요.'),
         el('button', { class: 'ghost small', onclick: () => { setMemberKey(''); clearFeed(); loadLayover(); } }, '개인 코드로 입장')));
     }
 
     // 3) 내 체크인
-    const mineSec = mine.length ? el('section', { class: 'ly-sec' }, el('h2', {}, '내 체크인'),
+    const mineSec = mine.length ? el('section', { class: 'ly-sec' }, el('h2', {}, '🧳 내 체크인'),
       mine.map(c => {
         const n = r.checkins.filter(o => !o.mine && o.overlapWith.indexOf(c.id) >= 0).length;
         return el('div', { class: 'ly-row' + (n ? ' match' : '') },
@@ -2156,19 +2260,19 @@
     // 4) 전체 현황 (공항별)
     const others = r.checkins.filter(c => !c.mine);
     const places = [...new Set(others.map(c => c.place))];
-    const allSec = el('section', { class: 'ly-sec' }, el('h2', {}, '전체 현황'),
+    const allSec = el('section', { class: 'ly-sec' }, el('h2', {}, '🗺️ 전체 현황'),
       others.length ? places.map(pl => {
         const list = others.filter(c => c.place === pl);
-        return el('div', { class: 'ly-place' }, el('h3', {}, pl, el('small', {}, `${list.length}명`)),
+        return el('div', { class: 'ly-place' }, el('h3', {}, el('span', {}, '📍 ' + pl), el('small', {}, `${list.length}명`)),
           list.map(c => el('div', { class: 'ly-row' + (c.overlapWith.length ? ' match' : '') },
             el('div', {}, el('b', {}, c.name), vf(true), ` · ${kindName(c)}`, c.overlapWith.length ? el('span', { class: 'ly-tag on' }, '나와 겹쳐요') : null),
             el('div', { class: 'ly-sub' }, fmtRange(c.start, c.end)),
             c.memo ? el('div', { class: 'ly-memo' }, c.memo) : null,
             el('div', { class: 'ly-act' },
-              c.meet === '수락' ? el('span', { class: 'ly-tag on' }, '만나요 성사')
-              : c.meet === '요청' ? el('span', { class: 'ly-tag' }, '만나요 대기 중')
-              : personal && c.overlapWith.length ? el('button', { class: 'primary small', onclick: e => act('requestMeet', [memberKey, c.overlapWith[0], c.id, lyPage()], e.currentTarget) }, '만나요')
-              : personal ? el('button', { class: 'primary small', onclick: e => directMeet(c, e.currentTarget) }, '만나요')
+              c.meet === '수락' ? el('span', { class: 'ly-tag on' }, '☕ 커피 약속 성사')
+              : c.meet === '요청' ? el('span', { class: 'ly-tag' }, '☕ 요청 중')
+              : personal && c.overlapWith.length ? el('button', { class: 'primary small', onclick: e => act('requestMeet', [memberKey, c.overlapWith[0], c.id, lyPage()], e.currentTarget) }, '☕ 커피 한잔?')
+              : personal ? el('button', { class: 'primary small', onclick: e => directMeet(c, e.currentTarget) }, '☕ 커피 한잔?')
               : null))));
       }) : el('p', { class: 'muted' }, '아직 체크인한 회원이 없어요. 첫 체크인을 남겨 보세요!'));
 
@@ -2184,9 +2288,9 @@
       const mailBox = el('label', { class: 'ly-field' }, '알림 받을 이메일', mail);
       const sync = () => { mailBox.hidden = !on.checked; }; on.addEventListener('change', sync); sync();
       const msg = el('p', { class: 'msg' });
-      const send = el('button', { class: 'primary small' }, '만나요 보내기');
+      const send = el('button', { class: 'primary small' }, '커피 한잔 보내기');
       const box = el('div', { class: 'ly-direct' },
-        el('p', { class: 'hint' }, c.name + '님에게 만나요를 보내요. 수락하면 서로의 연락처가 보여요.'),
+        el('p', { class: 'hint' }, c.name + '님에게 커피 한잔 하자고 보내요. 수락하면 서로의 연락처가 보여요.'),
         el('label', { class: 'ly-field' }, '내 연락처 (수락한 회원에게만 보여요)', contact),
         el('label', { class: 'ly-check' }, on, '수락되면 이메일로 알림 받기'), mailBox,
         el('div', { class: 'ly-direct-btns' }, send, el('button', { class: 'ghost', onclick: () => { box.remove(); btn.hidden = false; } }, '취소')), msg);
@@ -2326,6 +2430,9 @@
   // ===== 페이지 이동: #home, #hiring, #interview, #free, #longsit, #anon, #guide, #admin =====
   // 주소창(브라우저 뒤로가기 포함)과 맞추기 위해 nav(google.script.history 또는 브라우저 history) 사용
   function render(route) {
+    // 알림에서 온 글 바로가기: #게시판/p/글id → 그 게시판을 열고 그 글을 펼침
+    const pm = String(route || '').match(/^([\w-]+)\/p\/([\w-]+)$/);
+    if (pm && boardOf(pm[1])) { state.openId = pm[2]; route = pm[1]; syncUrl(route, true); }
     const changed = currentRoute !== route;
     currentRoute = route;
     if (changed || !lastPing) setTimeout(() => ping(true), 1500);   // 화면을 옮기면 기록 (게시판 로딩을 방해하지 않게 조금 뒤에)
@@ -2343,6 +2450,7 @@
     });
     if (b) {
       document.getElementById('band-code').textContent = b.code + ' · Boarding';
+      document.getElementById('band-ico').textContent = b.ico || '';
       document.getElementById('band-title').textContent = b.name;
       document.getElementById('band-desc').textContent = b.desc;
       if (state.board !== b.id) { state.board = b.id; state.q = ''; }
