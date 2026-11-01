@@ -419,6 +419,14 @@
   .ly-band-tips li { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 999px; font-size: 13px; color: #1F2937;
     background: rgba(255, 255, 255, .55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
   @media (max-width: 640px) { .ly-band { padding-block: 150px 28px !important; } }
+  /* ---- 홈 화면 앱: 오른쪽 아래 투명 새로고침 버튼 ---- */
+  .rf-btn { position: fixed; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 60; width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center; padding: 0; cursor: pointer; color: #0B1220;
+    background: rgba(255, 255, 255, .38); border: 1px solid rgba(255, 255, 255, .6); box-shadow: 0 4px 14px rgba(15, 23, 42, .14);
+    -webkit-backdrop-filter: blur(10px) saturate(1.4); backdrop-filter: blur(10px) saturate(1.4); }
+  .rf-btn svg { width: 20px; height: 20px; opacity: .75; }
+  .rf-btn.spin svg { animation: rf-spin .8s linear infinite; }
+  @keyframes rf-spin { to { transform: rotate(360deg); } }
   /* ---- admin page ---- */
   .a-wrap { display: flex; flex-direction: column; gap: 16px; }
   .a-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
@@ -575,7 +583,7 @@
 </style>
 </head>
 <body>
-<div style="position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#B45309;color:#fff;text-align:center;font:600 13px/1.4 system-ui,sans-serif;padding:8px 12px">테스트 페이지 · 관리자 시험용 (회원에게 공유하지 마세요)</div><style>.a2hs{bottom:calc(52px + env(safe-area-inset-bottom))}</style>
+<div style="position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#B45309;color:#fff;text-align:center;font:600 13px/1.4 system-ui,sans-serif;padding:8px 12px">테스트 페이지 · 관리자 시험용 (회원에게 공유하지 마세요)</div><style>.a2hs,.rf-btn{bottom:calc(52px + env(safe-area-inset-bottom))}</style>
 <div class="page">
 <header class="site-head">
   <div class="container">
@@ -808,7 +816,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-23</small></span></div>
+  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-24</small></span></div>
 </footer>
 
 <script>
@@ -937,6 +945,17 @@
     if (isIOS) wrap.hidden = false;   // 아이폰·아이패드: 안내 방식
     window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; wrap.hidden = false; });   // 안드로이드·크롬: 바로 설치
     window.addEventListener('appinstalled', () => wrap.remove());
+  })();
+  // ===== 홈 화면 앱으로 연 사람만: 오른쪽 아래 새로고침 버튼 (앱에는 브라우저 새로고침이 없어서) =====
+  (function refreshButton() {
+    if (GAS) return;
+    if (/[?&]r=\d+/.test(location.search)) { try { history.replaceState(history.state, '', location.pathname + location.hash); } catch (_) {} }   // 새로고침 표시(?r=) 지우기
+    if (!(window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true)) return;
+    const b = el('button', { class: 'rf-btn', type: 'button', 'aria-label': '새로고침', title: '새로고침',
+      html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>' });
+    // 저장된 예전 화면이 아니라 항상 새 화면을 받도록 주소 끝에 시간을 붙여서 다시 열기
+    b.addEventListener('click', () => { b.classList.add('spin'); location.replace(location.pathname + '?r=' + Date.now() + location.hash); });
+    document.body.append(b);
   })();
   // 주소에는 비밀번호가 아니라 비밀번호에서 만든 입장 열쇠(m + 24자)만 넣음
   // m… = 공용 비밀번호 열쇠, p<회원번호>.… = 개인 입장 코드 열쇠 (실명)
