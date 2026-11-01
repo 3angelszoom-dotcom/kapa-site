@@ -886,7 +886,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-46</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-47</small></span></div>
 </footer>
 
 <script>
@@ -2178,13 +2178,15 @@
         box.replaceChildren(cnt, q, list,
           el('div', { class: 'a-actions' }, el('button', { class: 'a-btn', onclick: async () => {
             msg.className = 'a-ok'; msg.textContent = '저장 중…';
-            try { const r2 = await api('adminSetAnonViewers', picked); msg.textContent = '저장했어요. ' + r2.viewers.length + '명이 모든 상담 글을 볼 수 있어요.'; }
+            try { const r2 = await api('adminSetAnonViewers', picked); msg.textContent = '저장했어요. ' + r2.viewers.length + '명이 모든 상담 글을 볼 수 있어요.'
+              + (r2.mailed && r2.mailed.length ? ' 새로 지정된 ' + r2.mailed.join(', ') + '님에게 안내 메일을 보냈어요.' : '')
+              + (r2.noMail && r2.noMail.length ? ' (' + r2.noMail.join(', ') + '님은 이메일 주소가 없거나 보내지 못했어요. 직접 알려 주세요.)' : ''); }
             catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } } } }, '저장')), msg);
       };
       api('adminGetAnonViewers').then(draw, e => { if (e.message !== '__auth') box.replaceChildren(el('p', { class: 'a-err' }, e.message)); });
       return el('section', { class: 'a-card' },
         el('h3', {}, '익명 상담소 담당 회원'),
-        el('p', { class: 'a-muted' }, '체크한 회원이 개인 입장 코드로 들어오면 익명 상담소의 모든 글을 볼 수 있어요. 다른 회원은 자기가 쓴 글과 그 답변만 보여요. 관리자 비밀번호로 들어오면 항상 볼 수 있어요. 글쓴이 이름은 담당 회원에게도 보이지 않아요.'),
+        el('p', { class: 'a-muted' }, '체크한 회원이 개인 입장 코드로 들어오면 익명 상담소의 모든 글을 볼 수 있어요. 새로 체크하고 저장하면 그 회원에게 안내 메일이 가요. 다른 회원은 자기가 쓴 글과 그 답변만 보여요. 관리자 비밀번호로 들어오면 항상 볼 수 있어요. 글쓴이 이름은 담당 회원에게도 보이지 않아요.'),
         box);
     }
     // 폰 앱 알림 (Firebase) 설정
