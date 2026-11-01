@@ -982,7 +982,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-63</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-64</small></span></div>
 </footer>
 
 <script>
@@ -2862,8 +2862,7 @@
         } catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; send.disabled = false; } }
       });
       btn.hidden = true;
-      row.append(box);
-      contact.focus();
+      row.append(box);   // 키보드가 저절로 뜨지 않게 칸을 자동 선택하지 않음
     }
 
     fill(formSec, pushSec, inSec, outSec, mineSec, allSec);   // 체크인하기를 맨 위에
