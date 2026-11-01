@@ -831,7 +831,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-28</small></span></div>
+  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-29</small></span></div>
 </footer>
 
 <script>
@@ -2252,7 +2252,7 @@
     const fill = (...k) => box.replaceChildren(...k.flat(Infinity).filter(x => x != null && x !== false));
     if (!memberKey) {
       // 체크인 화면 안에서 바로 입장 (게시판으로 보내지 않음)
-      return fill(loginBox('', () => { lyOpen = true; loadLayover(); }, '회원 입장',
+      return fill(loginBox('', () => { lyOpen = false; loadLayover(); }, '회원 입장',
         '승인 메일로 받은 개인 입장 코드(예: ABCD-EFGH)를 넣으면 체크인과 커피 한잔을 쓸 수 있어요. 카톡방 공지의 회원 비밀번호로 들어오면 현황만 볼 수 있어요.'));
     }
     // 지난번에 받은 현황을 먼저 바로 보여주고, 서버에서 새로 받아 바뀐 게 있으면 다시 그림 (서버 답이 2~3초 걸려서)
@@ -2631,7 +2631,7 @@
     const a = e.target.closest('a[href^="#"]');
     if (!a) return;
     e.preventDefault();
-    if (a.hasAttribute('data-ly-open')) lyOpen = true;   // 첫 화면 "체크인하기" → 체크인 양식을 펼친 채로
+    if (a.hasAttribute('data-ly-open')) lyOpen = false;   // 체크인 화면은 항상 "체크인하기"를 접은 채로 시작
     navigate(a.getAttribute('href').slice(1) || 'home');
   });
   nav.onChange(route => render(route));
