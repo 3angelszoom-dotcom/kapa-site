@@ -831,7 +831,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-27</small></span></div>
+  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-28</small></span></div>
 </footer>
 
 <script>
@@ -1010,7 +1010,7 @@
   let feedReq = null;
   let viewId = 0;
   const newView = () => ++viewId;
-  function clearFeed() { feed = null; store.set('pc_feed', ''); }
+  function clearFeed() { feed = null; store.set('pc_feed', ''); store.set('pc_ly', ''); }
   function markStale() { if (feed) feed.at = 0; }
   function fetchFeed() {
     if (!feedReq) {
@@ -2247,7 +2247,7 @@
     return best;
   }
   const lyPage = () => /test\.html$/.test(location.pathname) ? 'test' : '';   // 알림 메일 링크를 테스트 페이지로 보낼지
-  async function loadLayover() {
+  async function loadLayover(fresh) {   // fresh: 버튼을 누른 뒤 다시 불러올 때 (예전 현황을 먼저 보여주지 않음)
     const box = document.getElementById('layover-app');
     const fill = (...k) => box.replaceChildren(...k.flat(Infinity).filter(x => x != null && x !== false));
     if (!memberKey) {
@@ -2255,14 +2255,32 @@
       return fill(loginBox('', () => { lyOpen = true; loadLayover(); }, '회원 입장',
         '승인 메일로 받은 개인 입장 코드(예: ABCD-EFGH)를 넣으면 체크인과 커피 한잔을 쓸 수 있어요. 카톡방 공지의 회원 비밀번호로 들어오면 현황만 볼 수 있어요.'));
     }
-    if (!box.firstChild) fill(el('p', { class: 'muted' }, '불러오는 중…'));
+    // 지난번에 받은 현황을 먼저 바로 보여주고, 서버에서 새로 받아 바뀐 게 있으면 다시 그림 (서버 답이 2~3초 걸려서)
+    let cached = null;
+    try { cached = JSON.parse(store.get('pc_ly') || 'null'); } catch (_) {}
+    if (fresh || !cached || cached.k !== memberKey) cached = null;
+    const my = ++lyReq;
+    if (cached) await drawLayover(cached.r);
+    else if (!box.firstChild || !box.querySelector('.ly-sec')) fill(el('p', { class: 'muted' }, '불러오는 중…'));
     let r;
     try { r = await call('getLayovers', memberKey); }
-    catch (e) { if (e.message === '__auth') return loadLayover(); return fill(el('p', { class: 'msg' }, '불러오지 못했어요: ' + e.message)); }
+    catch (e) { if (e.message === '__auth') return loadLayover(); if (cached) return; return fill(el('p', { class: 'msg' }, '불러오지 못했어요: ' + e.message)); }
+    if (my !== lyReq) return;   // 그사이 더 새로 불러오는 중이면 이건 버림
+    try { store.set('pc_ly', JSON.stringify({ k: memberKey, r })); } catch (_) {}
+    if (cached && JSON.stringify(cached.r) === JSON.stringify(r)) return;
+    // 이미 펼친 체크인 양식에 뭔가 쓰고 있으면 그 내용을 잃지 않게 다시 그리기를 잠깐 미룸
+    const typing = () => { const a = document.activeElement; return a && box.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName); };
+    if (cached && typing()) { const once = () => { box.removeEventListener('focusout', once); setTimeout(() => { if (my === lyReq && !typing()) drawLayover(r); }, 300); }; box.addEventListener('focusout', once); return; }
+    await drawLayover(r);
+  }
+  let lyReq = 0;
+  async function drawLayover(r) {
+    const box = document.getElementById('layover-app');
+    const fill = (...k) => box.replaceChildren(...k.flat(Infinity).filter(x => x != null && x !== false));
     const personal = r.me.type === 'personal';
     const mine = r.checkins.filter(c => c.mine);
     meetBadge(r.meets.filter(m => m.dir === 'in' && m.status === '요청').length);
-    const reload = () => loadLayover();
+    const reload = () => loadLayover(true);
     const act = async (fn, args, btn, msgEl) => {
       if (btn) btn.disabled = true;
       try { await call(fn, ...args); reload(); }
