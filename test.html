@@ -459,6 +459,11 @@
   .hero { background: linear-gradient(180deg, #EAF3FB 0%, #F6FAFD 100%) !important; border-bottom: 1px solid #E3ECF5; }
   .hero-plane { top: 50px !important; right: auto !important; left: calc(50% + 175px) !important; width: 125px !important; opacity: .85; }
   @media (max-width: 640px) { .hero-plane { top: 86px !important; left: auto !important; right: 8px !important; width: 82px !important; } }
+  /* ---- 한 줄 맞춤: 화면 폭에 맞게 글씨 크기를 줄여서 한 줄로 (너무 작아지면 그냥 줄바꿈) ---- */
+  .fit1 { white-space: nowrap; overflow: hidden; max-width: 100%; }
+  .fit1.wrap { white-space: normal; overflow: visible; }
+  .site-foot b.fit1 { flex: 1 1 auto; min-width: 0; }
+  #band-title.fit1, #band-desc.fit1 { width: 100%; }
   /* ---- admin page ---- */
   .a-wrap { display: flex; flex-direction: column; gap: 16px; }
   .a-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
@@ -797,8 +802,8 @@
       <div class="container">
         <div class="band-ico" id="band-ico" aria-hidden="true"></div>
         <div class="eyebrow" id="band-code"></div>
-        <h1 id="band-title"></h1>
-        <p id="band-desc"></p>
+        <h1 id="band-title" class="fit1"></h1>
+        <p id="band-desc" class="fit1" data-min="11"></p>
       </div>
     </section>
     <div class="container board-layout">
@@ -850,7 +855,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-32</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-33</small></span></div>
 </footer>
 
 <script>
@@ -980,6 +985,26 @@
     window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; wrap.hidden = false; });   // 안드로이드·크롬: 바로 설치
     window.addEventListener('appinstalled', () => wrap.remove());
   })();
+  // ===== 한 줄 맞춤 (.fit1): 화면 폭에 맞춰 글씨를 줄여 한 줄로. data-min(기본 14px)보다 작아져야 하면 원래 크기로 줄바꿈 =====
+  function fitAll() {
+    document.querySelectorAll('.fit1').forEach(e => {
+      if (!e.offsetParent && e !== document.body) return;   // 안 보이는 화면은 건너뜀
+      e.style.fontSize = ''; e.classList.remove('wrap');
+      const w = e.clientWidth; if (!w) return;
+      const base = parseFloat(getComputedStyle(e).fontSize), min = +(e.dataset.min || 14);
+      if (e.scrollWidth <= w + 1) return;
+      const size = Math.floor(base * w / e.scrollWidth * 10) / 10;
+      if (size < min) { e.classList.add('wrap'); return; }
+      e.style.fontSize = size + 'px';
+      for (let i = 0; i < 6 && e.scrollWidth > e.clientWidth + 1; i++) e.style.fontSize = (parseFloat(e.style.fontSize) - .5) + 'px';
+      if (e.scrollWidth > e.clientWidth + 1 || parseFloat(e.style.fontSize) < min) { e.style.fontSize = ''; e.classList.add('wrap'); }
+    });
+  }
+  { let t = 0; const later = () => { clearTimeout(t); t = setTimeout(fitAll, 40); };
+    new MutationObserver(later).observe(document.body, { childList: true, subtree: true, characterData: true });
+    window.addEventListener('resize', later);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
+    later(); }
   // ===== 홈 화면 앱으로 연 사람만: 오른쪽 아래 새로고침 버튼 (앱에는 브라우저 새로고침이 없어서) =====
   (function refreshButton() {
     if (GAS) return;
@@ -1160,7 +1185,7 @@
       : null;
     put(
       tip,
-      notice ? el('div', { class: 'w-notice' }, el('b', {}, '📢 공지'), notice) : null,
+      notice ? el('div', { class: 'w-notice' + (/\n/.test(notice) ? '' : ' fit1'), 'data-min': '10' }, el('b', {}, '📢 공지'), notice) : null,
       state.board === ANON ? el('div', { class: 'w-notice' }, el('b', {}, '익명'), '이 게시판의 글과 댓글은 모두 익명이에요. 누가 썼는지 아무도 볼 수 없어요. 웹사이트 관리자도 볼 수 없어요.') : null,
       whoBar,
       el('div', { class: 'w-toolbar' },
