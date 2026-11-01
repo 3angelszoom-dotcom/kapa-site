@@ -327,6 +327,7 @@
   .ios-tip button { flex-shrink: 0; white-space: nowrap; }
   .lock { width: 52px; height: 52px; border: 1px solid var(--ink); display: grid; place-items: center; }
   .logout { background: none; border: 0; color: var(--muted); font-size: 13px; padding: 16px 0; text-decoration: underline; }
+  .who-anon { flex-basis: 100%; font-size: 13px; font-weight: 600; color: #5B3B00; background: #FFF7E6; border-radius: 10px; padding: 6px 10px; }
   .w-notice { border: 1px solid var(--ink); padding: 14px 18px; margin-bottom: 20px; font-size: 14px; white-space: pre-wrap; }
   .w-notice b { font: 700 11px/1 var(--display); letter-spacing: .18em; margin-right: 12px; }
 
@@ -957,7 +958,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-52</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-53</small></span></div>
 </footer>
 
 <script>
@@ -1339,7 +1340,9 @@
     search.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
     const m = me();
     const whoBar = m.type === 'personal'
-      ? el('div', { class: 'who-bar' }, el('span', {}, el('b', {}, m.name), ' 님 · 실명으로 입장 중'), vf(true))
+      ? el('div', { class: 'who-bar' }, el('span', {}, el('b', {}, m.name), ' 님 · 실명으로 입장 중'), vf(true),
+          // 익명 상담소: 실명으로 입장해 있어도 글·댓글은 익명으로 올라간다고 한 번 더 알려줌
+          state.board === ANON ? el('span', { class: 'who-anon' }, '🕶️ 이 게시판의 글·댓글은 익명으로 올라가요') : null)
       : el('div', { class: 'who-bar' }, el('span', {}, '회원 비밀번호로 입장 중 · ',
           m.canWrite ? '개인 입장 코드로 입장하면 실명(✓)으로 글을 써요.' : '글쓰기는 개인 입장 코드로 입장해야 해요.'),
           el('button', { class: 'ghost small', onclick: () => { setMemberKey(''); clearFeed(); showLogin(); } }, '개인 코드로 입장'));
