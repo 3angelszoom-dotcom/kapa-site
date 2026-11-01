@@ -831,7 +831,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-29</small></span></div>
+  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-30</small></span></div>
 </footer>
 
 <script>
@@ -2381,9 +2381,8 @@
       // 체크인 버튼: 누르면 양식이 펼쳐짐 (첫 화면 "체크인하기"로 오면 펼친 채로)
       formCard.hidden = !lyOpen;
       const openBtn = el('button', { class: 'primary ly-open', id: 'ly-open' }, lyOpen ? '접기 ▲' : '✈️ 체크인하기');
-      openBtn.addEventListener('click', () => { lyOpen = !lyOpen; formCard.hidden = !lyOpen; openBtn.textContent = lyOpen ? '접기 ▲' : '✈️ 체크인하기'; if (lyOpen) place.focus(); });
+      openBtn.addEventListener('click', () => { lyOpen = !lyOpen; formCard.hidden = !lyOpen; openBtn.textContent = lyOpen ? '접기 ▲' : '✈️ 체크인하기'; });   // 키보드가 저절로 뜨지 않게 칸을 자동 선택하지 않음
       formSec = el('section', { class: 'ly-sec' }, openBtn, formCard);
-      if (lyOpen) setTimeout(() => place.focus(), 50);
       // 양식을 처음 열 때 한 번: 휴대폰 위치로 가장 가까운 공항을 채움 (위치 허용을 안 하면 그냥 비워 둠)
       const tryGeo = () => { if (!place.value && !geoTried && !GAS) { geoTried = true; fillNearest(true); } };
       if (lyOpen) tryGeo();
