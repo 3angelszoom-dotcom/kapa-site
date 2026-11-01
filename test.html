@@ -258,6 +258,11 @@
   #view-layover button.primary.small, #view-layover button.ghost.small, #view-layover .ly-act button { border-radius: 999px; }
   #view-layover .ly-place { border-top: 0; margin-top: 14px; }
   #view-layover .ly-place > h3 { padding: 6px 4px 8px; font-size: 16px; }
+  /* 전체 현황: 시작 날짜가 오늘부터 며칠 뒤인지 */
+  .ly-when { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; font: 700 11.5px/1.4 var(--body); letter-spacing: 0; vertical-align: 2px; background: #F1F5F9; color: #475569; }
+  .ly-when.d0 { background: #DCFCE7; color: #166534; }
+  .ly-when.d1 { background: #FEF3C7; color: #92400E; }
+  .ly-sub .ly-when { margin: 0 6px 0 0; vertical-align: 1px; }
   #view-layover .ly-row { border-top: 0; border-radius: 14px; padding: 14px; margin-bottom: 8px; background: #fff; border: 1px solid #EEEEEA; }
   #view-layover .ly-row.match { background: #F0FDF7; border-color: #BFEBD8; }
   #view-layover .ly-tag { border-radius: 999px; padding: 2px 9px; background: #F3F3F1; border-color: transparent; }
@@ -971,7 +976,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-56</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-57</small></span></div>
 </footer>
 
 <script>
@@ -2734,15 +2739,19 @@
       })) : null;
 
     // 4) 전체 현황 (공항별)
+    // 시작 날짜가 오늘(내 폰 날짜)부터 며칠 뒤인지: 진행 중 / 오늘 / 내일 / N일 후
+    const todayKey = (() => { const d = new Date(); return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()); })();
+    const daysOut = c => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(c.start || ''); return m ? Math.round((Date.UTC(+m[1], m[2] - 1, +m[3]) - todayKey) / 864e5) : 0; };
+    const whenTag = n => el('span', { class: 'ly-when' + (n <= 0 ? ' d0' : n === 1 ? ' d1' : '') }, n < 0 ? '진행 중' : n === 0 ? '오늘' : n === 1 ? '내일' : n + '일 후');
     const others = r.checkins.filter(c => !c.mine);
     const places = [...new Set(others.map(c => c.place))];
     const allSec = el('section', { class: 'ly-sec' }, el('h2', {}, '🗺️ 전체 현황'),
       others.length ? places.map(pl => {
         const list = others.filter(c => c.place === pl);
-        return el('div', { class: 'ly-place' }, el('h3', {}, el('span', {}, '📍 ' + pl), el('small', {}, `${list.length}명`)),
+        return el('div', { class: 'ly-place' }, el('h3', {}, el('span', {}, '📍 ' + pl, whenTag(Math.min(...list.map(daysOut)))), el('small', {}, `${list.length}명`)),
           list.map(c => el('div', { class: 'ly-row' + (c.overlapWith.length ? ' match' : '') },
             el('div', {}, el('b', {}, c.name), vf(true), ` · ${kindName(c)}`, c.overlapWith.length ? el('span', { class: 'ly-tag on' }, '나와 겹쳐요') : null),
-            el('div', { class: 'ly-sub' }, fmtRange(c.start, c.end)),
+            el('div', { class: 'ly-sub' }, whenTag(daysOut(c)), fmtRange(c.start, c.end)),
             c.memo ? el('div', { class: 'ly-memo' }, c.memo) : null,
             el('div', { class: 'ly-act' },
               c.meet === '수락' ? el('span', { class: 'ly-tag on' }, '☕ 커피 약속 성사')
