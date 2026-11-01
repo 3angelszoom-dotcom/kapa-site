@@ -942,7 +942,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-48</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-49</small></span></div>
 </footer>
 
 <script>
@@ -1430,7 +1430,7 @@
       p.comments.map(c => el('div', { class: 'comment' },
         el('div', { class: 'meta' }, c.author, vf(c.verified), ` · ${fmt(c.createdAt)}`, c.mine ? ' · 내 댓글' : ''),
         el('div', { class: 'body' }, c.body),
-        c.id === 'tmp' ? null : deleteControl('삭제', 'deleteComment', c.id, () => showPost(p.id), c.mine))));
+        c.id === 'tmp' || !c.mine ? null : deleteControl('삭제', 'deleteComment', c.id, () => showPost(p.id), c.mine))));
   }
   function replaceComments(p) {
     const old = document.getElementById('c-list');
@@ -1476,9 +1476,10 @@
         el('div', { class: 'meta' }, p.author, vf(p.verified), ` · ${fmt(p.createdAt)}`, p.editedAt ? ' · 수정됨' : '', p.mine ? ' · 내 글' : ''),
         el('div', { class: 'body' }, p.body),
         renderAttachments(p),
-        el('div', { class: 'post-acts' },
+        // 수정·삭제는 내가 쓴 글에만 보임 (다른 글은 관리자 화면에서 관리)
+        p.mine ? el('div', { class: 'post-acts' },
           el('button', { class: 'ghost edit-btn', type: 'button', onclick: () => showEdit(p) }, '✏️ 글 수정'),
-          deleteControl('글 삭제', 'deletePost', p.id, showList, p.mine)),
+          deleteControl('글 삭제', 'deletePost', p.id, showList, p.mine)) : null,
         el('div', { class: 'comments' },
           commentList(p),
           !m.canWrite ? needCode('댓글 달기')
