@@ -980,7 +980,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-59</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-60</small></span></div>
 </footer>
 
 <script>
@@ -2959,6 +2959,17 @@
   }
   setInterval(() => ping(false), 90000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) ping(false); });
+  // 알림을 누르거나 앱으로 다시 돌아오면 체크인 화면을 새 현황으로 다시 불러옴 (예전 화면이 그대로 남지 않게)
+  let lyBack = 0;
+  const lyRefreshIfShown = () => {
+    const v = document.getElementById('view-layover');
+    if (document.hidden || !v || v.hidden || !memberKey || Date.now() - lyBack < 3000) return;
+    lyBack = Date.now(); loadLayover();
+  };
+  document.addEventListener('visibilitychange', lyRefreshIfShown);
+  window.addEventListener('focus', lyRefreshIfShown);
+  window.addEventListener('pageshow', e => { if (e.persisted) lyRefreshIfShown(); });
+  if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', lyRefreshIfShown);
   let adminMounted = false;
 
   // ===== 페이지 이동: #home, #hiring, #interview, #free, #longsit, #anon, #guide, #admin =====
