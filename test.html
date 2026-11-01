@@ -488,6 +488,8 @@
   .w-keep { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
   .w-keep-f { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px; border-radius: 999px; background: #F1F3F6; font-size: 13px; font-weight: 500; }
   .w-keep-f button { border: 0; background: #fff; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-size: 12px; line-height: 1; padding: 0; }
+  .me-card .ly-push { margin: 4px 0 0; }
+  .me-card .ly-push .ly-card { padding: 14px; border: 1px solid #EEF0F3; border-radius: 16px; }
   /* ---- admin page ---- */
   .a-wrap { display: flex; flex-direction: column; gap: 16px; }
   .a-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
@@ -884,7 +886,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-43</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-44</small></span></div>
 </footer>
 
 <script>
@@ -1054,6 +1056,7 @@
       el('div', { class: 'me-row' }, av, el('div', {},
         el('b', {}, personal ? m.name + '님' : m.type === 'admin' ? '관리자' : '회원'),
         el('p', {}, personal ? '✓ 개인 입장 코드로 입장 중 (실명)' : m.type === 'admin' ? '관리자 비밀번호로 입장 중' : '회원 비밀번호로 입장 중 · 글쓰기·체크인은 개인 입장 코드가 필요해요'))),
+      personal ? pushCard(true) : null,
       !personal ? el('button', { class: 'primary', type: 'button', onclick: () => { close(); setMemberKey(''); after(); openMe(); } }, '개인 입장 코드로 입장') : null,
       el('button', { class: 'me-out', type: 'button', onclick: () => { close(); setMemberKey(''); after(); } }, '이 기기에서 로그아웃')));
   }
@@ -2336,8 +2339,10 @@
     return box;
   }
   let pushOpen = false;   // 폰 알림 칸 펼침 여부
-  function pushCard() {
+  // inSheet: 프로필 창 안에서 쓸 때 (처음부터 펼쳐서 보여줌, 체크인 화면의 펼침 상태와는 따로)
+  function pushCard(inSheet) {
     if (!PUSH || GAS) return null;
+    let open = inSheet ? true : pushOpen;
     const box = el('section', { class: 'ly-sec ly-push' });
     const msg = el('p', { class: 'msg' });
     const draw = () => {
@@ -2360,11 +2365,11 @@
         const off = el('button', { class: 'ly-pill', type: 'button' }, '🔕 알림 끄기');
         off.addEventListener('click', async () => { off.disabled = true; await disablePush(); draw(); });
         // 켜진 뒤에는 한 줄로 접어 두고, 누르면 받을 알림 고르기·시험 알림을 펼침
-        const tog = el('button', { class: 'ly-push-tog', type: 'button', 'aria-expanded': String(pushOpen) }, pushOpen ? '접기 ▲' : '설정 ▼');
-        tog.addEventListener('click', () => { pushOpen = !pushOpen; draw(); });
+        const tog = el('button', { class: 'ly-push-tog', type: 'button', 'aria-expanded': String(open) }, open ? '접기 ▲' : '설정 ▼');
+        tog.addEventListener('click', () => { open = !open; if (!inSheet) pushOpen = open; draw(); });
         head.append(el('span', { class: 'ly-push-on' }, '켜짐 ✓'), tog);
         head.classList.add('tap'); head.addEventListener('click', e => { if (e.target !== tog) tog.click(); });
-        body = pushOpen ? [el('p', { class: 'ly-push-note' }, '커피 한잔 알림은 항상 와요. 아래에서 다른 알림을 고를 수 있어요.'), prefsBox(), el('div', { class: 'ly-push-btns' }, test, off)] : [];
+        body = open ? [el('p', { class: 'ly-push-note' }, '커피 한잔 알림은 항상 와요. 아래에서 다른 알림을 고를 수 있어요.'), prefsBox(), el('div', { class: 'ly-push-btns' }, test, off)] : [];
       } else {
         const on = el('button', { class: 'primary small' }, '폰 알림 켜기');
         on.addEventListener('click', async () => { on.disabled = true; on.textContent = '켜는 중…'; msg.textContent = '';
