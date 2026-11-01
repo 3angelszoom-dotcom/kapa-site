@@ -831,7 +831,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-26</small></span></div>
+  <div class="container"><b>KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-27</small></span></div>
 </footer>
 
 <script>
@@ -2377,8 +2377,11 @@
     }
 
     // 3) 내 체크인
-    const mineSec = mine.length ? el('section', { class: 'ly-sec' }, el('h2', {}, '🧳 내 체크인'),
-      mine.map(c => {
+    // 커피 약속이 성사된 체크인은 받은·보낸 요청 칸에 "성사"로 보이니까 내 체크인에서는 뺌
+    const matched = c => r.meets.some(m => m.status === '수락' && m.place === c.place && m.myStart === c.start && m.myEnd === c.end);
+    const mineOpen = mine.filter(c => !matched(c));
+    const mineSec = mineOpen.length ? el('section', { class: 'ly-sec' }, el('h2', {}, '🧳 내 체크인'),
+      mineOpen.map(c => {
         const n = r.checkins.filter(o => !o.mine && o.overlapWith.indexOf(c.id) >= 0).length;
         return el('div', { class: 'ly-row' + (n ? ' match' : '') },
           el('div', {}, el('b', {}, c.place), ` · ${kindName(c)}`, el('span', { class: 'ly-tag' + (n ? ' on' : '') }, n ? `같이 있는 회원 ${n}명` : '아직 겹치는 회원 없음')),
