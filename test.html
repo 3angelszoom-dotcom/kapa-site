@@ -303,6 +303,7 @@
   /* 성사·거절된 요청: 연락처와 버튼을 아래 줄에 넓게 */
   #view-layover .ly-row.settled .ly-act { grid-row: auto; grid-column: 1 / -1; justify-content: flex-start; margin-top: 6px; }
   #view-layover .ly-row.settled .ly-act .done-btn { margin-left: auto; }
+  #view-layover .ly-act .join-btn { background: #0F766E; border-color: #0F766E; }
   .ly-row .ly-act { grid-row: 1 / span 2; grid-column: 2; display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
   .ly-tag { display: inline-block; margin-left: 6px; padding: 2px 7px; border: 1px solid var(--line); font-size: 11.5px; color: var(--muted); vertical-align: 1px; }
   .ly-tag.on { border-color: var(--ink); color: var(--text); }
@@ -979,7 +980,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-58</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-59</small></span></div>
 </footer>
 
 <script>
@@ -2625,17 +2626,14 @@
 
     // 1) 만나요
     // 받은 요청 · 보낸 요청을 따로 나눠서 보여줌
-    // Done: 끝난 요청(성사·거절)은 Done을 누르면 내 화면에서 사라짐 (이 기기에 기억)
-    let doneIds = []; try { doneIds = JSON.parse(store.get('pc_ly_done') || '[]'); } catch (_) {}
-    const live = new Set(r.meets.map(m => String(m.id)));
-    doneIds = doneIds.filter(id => live.has(String(id)));   // 이미 없어진 요청은 목록에서 정리
-    const markDone = m => { doneIds.push(String(m.id)); store.set('pc_ly_done', JSON.stringify(doneIds)); drawLayover(r); };
-    const doneBtn = m => el('button', { class: 'ghost done-btn', type: 'button', onclick: () => markDone(m) }, '✓ Done');
+    // Done: 끝난 요청(성사·거절)은 Done을 누르면 내 화면에서 사라짐. 약속한 회원이 모두 누르면 전체 현황에서도 사라짐 (서버에 기록)
+    const doneBtn = m => el('button', { class: 'ghost done-btn', type: 'button', onclick: e => act('doneMeet', [memberKey, m.id], e.currentTarget) }, '✓ Done');
     const meetRow = m => el('div', { class: 'ly-row' + (m.status === '수락' ? ' match' : '') + (m.status === '수락' || m.status === '거절' ? ' settled' : '') },
         el('div', {}, el('b', {}, m.name), ` · ${m.place}`,
           el('span', { class: 'ly-tag' + (m.status === '수락' ? ' on' : '') },
-            m.status === '수락' ? '☕ 커피 약속 성사' : m.status === '거절' ? (m.dir === 'out' ? '어려워요' : '거절함') : m.dir === 'in' ? '새 요청' : '기다리는 중')),
-        el('div', { class: 'ly-sub' }, [m.start ? `상대 ${fmtRange(m.start, m.end)}` : '', m.myStart ? `나 ${fmtRange(m.myStart, m.myEnd)}` : (m.dir === 'out' ? '체크인 없이 보낸 요청' : '')].filter(Boolean).join(' · ')),
+            m.status === '수락' ? (m.join ? '🙋 조인 성사' : '☕ 커피 약속 성사') : m.status === '거절' ? (m.dir === 'out' ? '어려워요' : '거절함')
+              : m.dir === 'in' ? (m.join ? '🙋 조인 요청' : '새 요청') : (m.join ? '조인 기다리는 중' : '기다리는 중'))),
+        el('div', { class: 'ly-sub' }, m.join ? `약속 ${fmtRange(m.start, m.end)}` : [m.start ? `상대 ${fmtRange(m.start, m.end)}` : '', m.myStart ? `나 ${fmtRange(m.myStart, m.myEnd)}` : (m.dir === 'out' ? '체크인 없이 보낸 요청' : '')].filter(Boolean).join(' · ')),
         el('div', { class: 'ly-act' },
           m.status === '수락' ? el('span', {}, '연락처 ', el('span', { class: 'ly-kakao' }, m.contact || '(없음)')) : null,
           m.dir === 'in' && m.status === '요청' ? [
@@ -2643,7 +2641,7 @@
             el('button', { class: 'ghost', onclick: e => act('answerMeet', [memberKey, m.id, false, lyPage()], e.currentTarget) }, '거절')] : null,
           m.dir === 'out' && (m.status === '요청' || m.status === '수락') ? el('button', { class: 'ghost', onclick: e => { if (confirmCancel(e.currentTarget)) act('cancelMeet', [memberKey, m.id], e.currentTarget); } }, '취소') : null,
           m.status === '수락' || m.status === '거절' ? doneBtn(m) : null));
-    const shown = r.meets.filter(m => doneIds.indexOf(String(m.id)) < 0);
+    const shown = r.meets;   // Done 누른 요청은 서버에서 이미 빠져서 옴
     const inMeets = shown.filter(m => m.dir === 'in'), outMeets = shown.filter(m => m.dir !== 'in');
     const newIn = inMeets.filter(m => m.status === '요청').length;
     const inSec = inMeets.length ? el('section', { class: 'ly-sec' },
@@ -2760,12 +2758,17 @@
       others.length ? places.map(pl => {
         const list = others.filter(c => c.place === pl);
         return el('div', { class: 'ly-place' }, el('h3', {}, el('span', {}, '📍 ' + pl, whenTag(Math.min(...list.map(daysOut)))), el('small', {}, `${list.length}명`)),
-          list.map(c => el('div', { class: 'ly-row' + (c.overlapWith.length ? ' match' : '') },
+          list.map(c => el('div', { class: 'ly-row' + (c.overlapWith.length ? ' match' : '') + (c.group ? ' settled' : '') },
             el('div', {}, el('b', {}, c.name), vf(true), ` · ${kindName(c)}`, c.overlapWith.length ? el('span', { class: 'ly-tag on' }, '나와 겹쳐요') : null),
             el('div', { class: 'ly-sub' }, fmtRange(c.start, c.end)),
             c.memo ? el('div', { class: 'ly-memo' }, c.memo) : null,
             el('div', { class: 'ly-act' },
-              c.meet === '수락' ? el('span', { class: 'ly-tag on' }, '☕ 커피 약속 성사')
+              // 이미 커피 약속이 성사된 체크인: 함께하는 회원은 "성사", 다른 회원은 "나도 조인하기" (약속한 회원 중 한 명이라도 수락하면 조인)
+              c.group ? [el('span', { class: 'ly-tag on' }, `☕ 약속 성사 · ${c.group}명`),
+                c.joined ? null
+                : c.joinPending ? el('span', { class: 'ly-tag' }, '🙋 조인 요청 중')
+                : personal ? el('button', { class: 'primary small join-btn', onclick: e => directMeet(c, e.currentTarget, true) }, '🙋 나도 조인하기') : null]
+              : c.meet === '수락' ? el('span', { class: 'ly-tag on' }, '☕ 커피 약속 성사')
               : c.meet === '요청' ? el('span', { class: 'ly-tag' }, '☕ 요청 중')
               : personal && c.overlapWith.length ? el('button', { class: 'primary small', onclick: e => act('requestMeet', [memberKey, c.overlapWith[0], c.id, lyPage()], e.currentTarget) }, '☕ 커피 한잔?')
               : personal ? el('button', { class: 'primary small', onclick: e => directMeet(c, e.currentTarget) }, '☕ 커피 한잔?')
@@ -2808,7 +2811,7 @@
         focus() { (mode === 'phone' ? pIn : kIn).focus(); } };
     }
     // 바로 만나요: 내 체크인이 없거나 시간이 안 겹쳐도 전체 현황에서 바로 보냄. 수락되면 보여줄 연락처와 알림 이메일만 받음
-    function directMeet(c, btn) {
+    function directMeet(c, btn, join) {
       const row = btn.closest('.ly-row');
       if (row.querySelector('.ly-direct')) return;
       const contact = contactPicker();
@@ -2818,9 +2821,10 @@
       const mailBox = el('label', { class: 'ly-field' }, '알림 받을 이메일', mail);
       const sync = () => { mailBox.hidden = !on.checked; }; on.addEventListener('change', sync); sync();
       const msg = el('p', { class: 'msg' });
-      const send = el('button', { class: 'primary small' }, '커피 한잔 보내기');
+      const send = el('button', { class: 'primary small' }, join ? '조인 요청 보내기' : '커피 한잔 보내기');
       const box = el('div', { class: 'ly-direct' },
-        el('p', { class: 'hint' }, c.name + '님에게 커피 한잔 하자고 보내요. 수락하면 서로의 연락처가 보여요.'),
+        el('p', { class: 'hint' }, join ? '이 커피 약속에 함께하고 싶다고 보내요. 약속한 회원 중 한 분이라도 수락하면 조인되고, 서로의 연락처가 보여요.'
+          : c.name + '님에게 커피 한잔 하자고 보내요. 수락하면 서로의 연락처가 보여요.'),
         el('div', { class: 'ly-field' }, '내 연락처 (수락한 회원에게만 보여요)', contact.node),
         el('label', { class: 'ly-check' }, on, '수락되면 이메일로 알림 받기'), mailBox,
         el('div', { class: 'ly-direct-btns' }, send, el('button', { class: 'ghost', onclick: () => { box.remove(); btn.hidden = false; } }, '취소')), msg);
