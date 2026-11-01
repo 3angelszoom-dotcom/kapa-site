@@ -243,7 +243,7 @@
   .ct-seg button { min-height: 40px; padding: 6px 4px; border: 1.5px solid #E2E2DE; border-radius: 12px; background: #FAFAF8; color: var(--text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
   .ct-seg button.on { border-color: #10B981; background: #ECFDF5; color: #065F46; }
   .ct-in { display: flex; align-items: center; gap: 8px; }
-  .ct-in > span { flex: none; width: 44px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .ct-in > span { flex: none; min-width: 4.8em; white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--muted); }
   .ct-in input { flex: 1; min-width: 0; }
   .ct-in[hidden] { display: none; }
   #view-layover .ly-kind label:has(input:checked) .ly-kind-ico { background: #10B981; color: #fff; box-shadow: 0 4px 10px -4px rgba(16, 185, 129, .7); }
@@ -967,7 +967,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-54</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-55</small></span></div>
 </footer>
 
 <script>
@@ -2755,15 +2755,18 @@
       if (!saved) {   // 예전에 한 줄로 적어 둔 연락처가 있으면 나눠서 채움
         const old = store.get('pc_ly_contact') || '';
         const k = (/카톡\s*[:：]?\s*([^·\/,]+)/.exec(old) || [])[1], ph = (/(?:전화|폰|tel)\s*[:：]?\s*([+\d][\d\s().-]{5,})/i.exec(old) || [])[1];
-        saved = { mode: k && ph ? 'both' : ph ? 'phone' : 'kakao', kakao: (k || r.me.kakao || '').trim(), phone: (ph || '').trim() };
+        saved = { mode: k && ph ? 'both' : ph ? 'phone' : 'kakao', kakao: (k || '').trim(), phone: (ph || '').trim() };
       }
+      // 비어 있는 칸은 가입 신청 때 적은 내 정보(카톡 ID·전화번호)로 바로 채움
+      if (!saved.kakao) saved.kakao = r.me.kakao || '';
+      if (!saved.phone) saved.phone = r.me.phone || '';
       let mode = saved.mode || 'kakao';
       const kIn = el('input', { placeholder: '카톡 ID', maxlength: '30', autocapitalize: 'off', autocomplete: 'off', 'aria-label': '카톡 ID' }); kIn.value = saved.kakao || '';
       const pIn = el('input', { type: 'tel', inputmode: 'tel', autocomplete: 'tel', placeholder: '415-000-0000', maxlength: '20', 'aria-label': '전화번호' }); pIn.value = saved.phone || '';
       const kRow = el('div', { class: 'ct-in' }, el('span', {}, '💬 카톡'), kIn);
       const pRow = el('div', { class: 'ct-in' }, el('span', {}, '📞 전화'), pIn);
       const opts = [['kakao', '💬 카톡'], ['phone', '📞 전화'], ['both', '둘 다']];
-      const btns = opts.map(([v, l]) => el('button', { type: 'button', 'aria-pressed': 'false', onclick: () => { mode = v; sync(); (v === 'phone' ? pIn : kIn).focus(); } }, l));
+      const btns = opts.map(([v, l]) => el('button', { type: 'button', 'aria-pressed': 'false', onclick: () => { mode = v; sync(); } }, l));   // 키보드가 뜨지 않게 칸을 자동 선택하지 않음
       const sync = () => {
         btns.forEach((b, i) => { const on = opts[i][0] === mode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
         kRow.hidden = mode === 'phone'; pRow.hidden = mode === 'kakao';
