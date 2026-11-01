@@ -237,6 +237,15 @@
   #view-layover .ly-kind input { position: absolute; opacity: 0; pointer-events: none; }
   #view-layover .ly-kind-ico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #EFEFEC; color: #334155; margin-bottom: 2px; }
   #view-layover .ly-kind-ico svg { width: 26px; height: 26px; }
+  /* 연락처: 카톡 / 전화 / 둘 다 고르기 */
+  .ct-pick { display: grid; gap: 8px; }
+  .ct-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .ct-seg button { min-height: 40px; padding: 6px 4px; border: 1.5px solid #E2E2DE; border-radius: 12px; background: #FAFAF8; color: var(--text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .ct-seg button.on { border-color: #10B981; background: #ECFDF5; color: #065F46; }
+  .ct-in { display: flex; align-items: center; gap: 8px; }
+  .ct-in > span { flex: none; width: 44px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .ct-in input { flex: 1; min-width: 0; }
+  .ct-in[hidden] { display: none; }
   #view-layover .ly-kind label:has(input:checked) .ly-kind-ico { background: #10B981; color: #fff; box-shadow: 0 4px 10px -4px rgba(16, 185, 129, .7); }
   #view-layover #ly-submit { border-radius: 14px; background: linear-gradient(180deg, #2B3648 0%, #0B1220 100%); border: 1px solid rgba(52, 211, 153, .45); }
   #view-layover .ly-kind b { display: block; font-size: 14px; }
@@ -958,7 +967,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-53</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-54</small></span></div>
 </footer>
 
 <script>
@@ -2650,8 +2659,7 @@
       const gate = el('input', { id: 'ly-gate', placeholder: 'B12', maxlength: '12' });
       const gateBox = el('label', {}, '🚪 게이트 (선택)', gate); gateBox.hidden = true;
       const memo = el('input', { id: 'ly-memo', placeholder: '예: 저녁 같이 드실 분 / 공항 라운지에 있어요', maxlength: '100' });
-      const contact = el('input', { id: 'ly-contact', placeholder: '예: 카톡 abc123 / 전화 415-000-0000', maxlength: '60' });
-      contact.value = store.get('pc_ly_contact') || (r.me.kakao ? '카톡 ' + r.me.kakao : '');
+      const contact = contactPicker();
       // 이메일 알림: 만나요가 오거나 내 만나요가 수락되면 메일로 알려 줌 (주소는 본인만 봄)
       const notifyOn = el('input', { type: 'checkbox', id: 'ly-notify-on' });
       const notify = el('input', { id: 'ly-notify', type: 'email', inputmode: 'email', autocomplete: 'email', placeholder: 'you@example.com', maxlength: '120', 'aria-label': '알림 받을 이메일' });
@@ -2668,13 +2676,13 @@
       btn.addEventListener('click', async () => {
         msg.textContent = '';
         if (start.value && end.value && start.value >= end.value) { msg.textContent = '끝 시간이 시작 시간보다 뒤여야 해요.'; return; }
-        if (!contact.value.trim()) { msg.textContent = '커피 한잔이 수락됐을 때 보여줄 연락처를 넣어 주세요.'; contact.focus(); return; }
+        const ctErr = contact.check(); if (ctErr) { msg.textContent = ctErr; return; }
         const mail = notify.value.trim();
         if (notifyOn.checked && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { msg.textContent = '알림 받을 이메일 주소를 넣어 주세요. 알림이 필요 없으면 체크를 빼 주세요.'; notify.focus(); return; }
         btn.disabled = true;
         try {
-          await call('addCheckin', { key: memberKey, kind: kindAir.checked ? 'airport' : 'layover', place: place.value, start: start.value, end: end.value, gate: gate.value, memo: memo.value, contact: contact.value, notify: notifyOn.checked ? mail : '' });
-          store.set('pc_ly_contact', contact.value.trim());
+          await call('addCheckin', { key: memberKey, kind: kindAir.checked ? 'airport' : 'layover', place: place.value, start: start.value, end: end.value, gate: gate.value, memo: memo.value, contact: contact.value(), notify: notifyOn.checked ? mail : '' });
+          contact.save();
           store.set('pc_ly_notify', notifyOn.checked ? '1' : '0');
           if (mail) store.set('pc_ly_email', mail);
           lyOpen = false;
@@ -2688,7 +2696,7 @@
             el('label', {}, el('span', { class: 'ly-geo-row' }, '✈️ 공항 코드', geoBtn), place, geoNote), gateBox,
             el('label', {}, '🕐 시작 (현지 시간)', start), el('label', {}, '🕓 끝 (현지 시간)', end)),
           el('label', { class: 'ly-field' }, '💬 한 줄 메모 (선택)', memo),
-          el('label', { class: 'ly-field' }, '📱 연락처 (커피 한잔을 수락한 회원에게만 보여요)', contact),
+          el('div', { class: 'ly-field' }, '📱 연락처 (커피 한잔을 수락한 회원에게만 보여요)', contact.node),
           el('label', { class: 'ly-check' }, notifyOn, '이메일로 알림 받기 (커피 한잔 요청이 오거나, 내 요청이 수락됐을 때)'),
           notifyBox,
           el('p', { class: 'hint' }, '🔒 편명·호텔 이름은 적지 마세요. 시간이 지나면 자동으로 사라져요.'),
@@ -2741,12 +2749,43 @@
               : null))));
       }) : el('p', { class: 'muted' }, '아직 체크인한 회원이 없어요. 첫 체크인을 남겨 보세요!'));
 
+    // 연락처 고르기: 카톡 / 전화 / 둘 다 → "카톡 abc123 · 전화 415-000-0000" 한 줄로 서버에 저장
+    function contactPicker() {
+      let saved = null; try { saved = JSON.parse(store.get('pc_ly_ct') || 'null'); } catch (_) {}
+      if (!saved) {   // 예전에 한 줄로 적어 둔 연락처가 있으면 나눠서 채움
+        const old = store.get('pc_ly_contact') || '';
+        const k = (/카톡\s*[:：]?\s*([^·\/,]+)/.exec(old) || [])[1], ph = (/(?:전화|폰|tel)\s*[:：]?\s*([+\d][\d\s().-]{5,})/i.exec(old) || [])[1];
+        saved = { mode: k && ph ? 'both' : ph ? 'phone' : 'kakao', kakao: (k || r.me.kakao || '').trim(), phone: (ph || '').trim() };
+      }
+      let mode = saved.mode || 'kakao';
+      const kIn = el('input', { placeholder: '카톡 ID', maxlength: '30', autocapitalize: 'off', autocomplete: 'off', 'aria-label': '카톡 ID' }); kIn.value = saved.kakao || '';
+      const pIn = el('input', { type: 'tel', inputmode: 'tel', autocomplete: 'tel', placeholder: '415-000-0000', maxlength: '20', 'aria-label': '전화번호' }); pIn.value = saved.phone || '';
+      const kRow = el('div', { class: 'ct-in' }, el('span', {}, '💬 카톡'), kIn);
+      const pRow = el('div', { class: 'ct-in' }, el('span', {}, '📞 전화'), pIn);
+      const opts = [['kakao', '💬 카톡'], ['phone', '📞 전화'], ['both', '둘 다']];
+      const btns = opts.map(([v, l]) => el('button', { type: 'button', 'aria-pressed': 'false', onclick: () => { mode = v; sync(); (v === 'phone' ? pIn : kIn).focus(); } }, l));
+      const sync = () => {
+        btns.forEach((b, i) => { const on = opts[i][0] === mode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+        kRow.hidden = mode === 'phone'; pRow.hidden = mode === 'kakao';
+      };
+      sync();
+      const useK = () => mode !== 'phone', useP = () => mode !== 'kakao';
+      return {
+        node: el('div', { class: 'ct-pick' }, el('div', { class: 'ct-seg', role: 'group', 'aria-label': '연락 방법' }, btns), kRow, pRow),
+        value: () => [useK() && kIn.value.trim() ? '카톡 ' + kIn.value.trim() : '', useP() && pIn.value.trim() ? '전화 ' + pIn.value.trim() : ''].filter(Boolean).join(' · '),
+        check() {
+          if (useK() && !kIn.value.trim()) { kIn.focus(); return '커피 한잔이 수락됐을 때 보여줄 카톡 ID를 넣어 주세요.'; }
+          if (useP() && !/\d{3}/.test(pIn.value)) { pIn.focus(); return '커피 한잔이 수락됐을 때 보여줄 전화번호를 넣어 주세요.'; }
+          return '';
+        },
+        save() { const v = { mode, kakao: kIn.value.trim(), phone: pIn.value.trim() }; store.set('pc_ly_ct', JSON.stringify(v)); store.set('pc_ly_contact', this.value()); },
+        focus() { (mode === 'phone' ? pIn : kIn).focus(); } };
+    }
     // 바로 만나요: 내 체크인이 없거나 시간이 안 겹쳐도 전체 현황에서 바로 보냄. 수락되면 보여줄 연락처와 알림 이메일만 받음
     function directMeet(c, btn) {
       const row = btn.closest('.ly-row');
       if (row.querySelector('.ly-direct')) return;
-      const contact = el('input', { placeholder: '예: 카톡 abc123 / 전화 415-000-0000', maxlength: '60', 'aria-label': '내 연락처' });
-      contact.value = store.get('pc_ly_contact') || (r.me.kakao ? '카톡 ' + r.me.kakao : '');
+      const contact = contactPicker();
       const on = el('input', { type: 'checkbox' }); on.checked = store.get('pc_ly_notify') !== '0';
       const mail = el('input', { type: 'email', inputmode: 'email', autocomplete: 'email', placeholder: 'you@example.com', maxlength: '120', 'aria-label': '알림 받을 이메일' });
       mail.value = store.get('pc_ly_email') || r.me.email || '';
@@ -2756,18 +2795,18 @@
       const send = el('button', { class: 'primary small' }, '커피 한잔 보내기');
       const box = el('div', { class: 'ly-direct' },
         el('p', { class: 'hint' }, c.name + '님에게 커피 한잔 하자고 보내요. 수락하면 서로의 연락처가 보여요.'),
-        el('label', { class: 'ly-field' }, '내 연락처 (수락한 회원에게만 보여요)', contact),
+        el('div', { class: 'ly-field' }, '내 연락처 (수락한 회원에게만 보여요)', contact.node),
         el('label', { class: 'ly-check' }, on, '수락되면 이메일로 알림 받기'), mailBox,
         el('div', { class: 'ly-direct-btns' }, send, el('button', { class: 'ghost', onclick: () => { box.remove(); btn.hidden = false; } }, '취소')), msg);
       send.addEventListener('click', async () => {
         msg.textContent = '';
-        const ct = contact.value.trim(), em = mail.value.trim();
-        if (!ct) { msg.textContent = '상대가 수락하면 보여줄 연락처를 넣어 주세요.'; contact.focus(); return; }
+        const ct = contact.value(), em = mail.value.trim();
+        const ctErr = contact.check(); if (ctErr) { msg.textContent = ctErr; return; }
         if (on.checked && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { msg.textContent = '알림 받을 이메일 주소를 넣어 주세요. 필요 없으면 체크를 빼 주세요.'; mail.focus(); return; }
         send.disabled = true;
         try {
           await call('requestMeet', memberKey, '', c.id, lyPage(), { contact: ct, notify: on.checked ? em : '' });
-          store.set('pc_ly_contact', ct); store.set('pc_ly_notify', on.checked ? '1' : '0'); if (em) store.set('pc_ly_email', em);
+          contact.save(); store.set('pc_ly_notify', on.checked ? '1' : '0'); if (em) store.set('pc_ly_email', em);
           reload();
         } catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; send.disabled = false; } }
       });
