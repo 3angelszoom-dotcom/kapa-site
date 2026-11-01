@@ -497,6 +497,8 @@
   .fit1 { white-space: nowrap; overflow: hidden; max-width: 100%; }
   .fit1.wrap { white-space: normal; overflow: visible; }
   .site-foot b.fit1 { flex: 1 1 auto; min-width: 0; }
+  /* 맨 아래 글씨(관리자 등)가 왼쪽 ↑·오른쪽 ↻ 둥근 버튼에 가리지 않게 아래 여백 */
+  .site-foot .container { padding-bottom: calc(32px + 64px + env(safe-area-inset-bottom)); }
   #band-title.fit1, #band-desc.fit1 { width: 100%; }
   /* ---- 머리글 오른쪽 위: 입장 상태 (이름 첫 글자 동그라미 + 초록 점) ---- */
   .me-av { position: relative; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 700 13px/1 var(--body); }
@@ -978,7 +980,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-61</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-62</small></span></div>
 </footer>
 
 <script>
