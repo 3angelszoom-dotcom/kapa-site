@@ -202,7 +202,10 @@
   .ly-push .ly-card p { margin: 0; }
   .ly-push-head { display: flex; align-items: center; gap: 8px; font-size: 15px; }
   .ly-push-ico { font-size: 18px; }
-  .ly-push-steps { margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); }
+  .ly-push-steps { margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); display: grid; gap: 4px; }
+  /* 아이폰 안내용 아이콘 (Safari 메뉴에 보이는 모양 그대로) */
+  .ios-ico { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: 600; color: var(--text); }
+  .ios-ico svg { width: 1.2em; height: 1.2em; flex: none; }
   .ly-push-btns { display: flex; gap: 8px; flex-wrap: wrap; }
   .ly-push-head.tap { cursor: pointer; }
   .ly-push-on { font-size: 13px; font-weight: 600; color: #059669; background: #ECFDF5; padding: 3px 9px; border-radius: 999px; }
@@ -950,7 +953,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-50</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-51</small></span></div>
 </footer>
 
 <script>
@@ -1052,6 +1055,16 @@
     setTimeout(updateMe, 0);
   }
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  // 아이폰 "홈 화면에 추가" 안내: Safari 메뉴의 아이콘 모양을 그대로 보여 줌
+  const IOS_SVG = {
+    more: '<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
+    share: '<path d="M8.5 9.5H6.5a1.5 1.5 0 0 0-1.5 1.5v8.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V11a1.5 1.5 0 0 0-1.5-1.5h-2"/><path d="M12 14.5V3"/><path d="M8.5 6.5 12 3l3.5 3.5"/>',
+    add: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/>' };
+  const iosIco = (k, label) => el('span', { class: 'ios-ico', html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IOS_SVG[k] + '</svg>' }, label);
+  const iosSteps = cls => el('ol', { class: cls },
+    el('li', {}, 'Safari 아래 ', iosIco('more'), ' 버튼을 누르고 ', iosIco('share', '공유'), ' (Share)를 눌러요.'),
+    el('li', {}, iosIco('add', '홈 화면에 추가'), ' (Add to Home Screen)를 눌러요. 안 보이면 아래로 내려요.'),
+    el('li', {}, '오른쪽 위 "추가 (Add)"를 누르면 끝!'));
   // ===== 화면 아래 구석 "앱으로 설치" 버튼 =====
   // 안드로이드·크롬: 누르면 바로 설치 창 / 아이폰: 애플이 바로 설치를 막아 둬서 "공유 → 홈 화면에 추가" 안내를 띄움
   (function installButton() {
@@ -1062,8 +1075,7 @@
     const wrap = el('div', { class: 'a2hs', hidden: true });
     const sheet = el('div', { class: 'a2hs-sheet', hidden: true, role: 'dialog', 'aria-label': '홈 화면에 추가하는 방법' },
       el('b', {}, '홈 화면에 KAPA 앱 추가'),
-      el('ol', {}, el('li', {}, '화면 아래쪽 ', el('span', { class: 'a2hs-share', 'aria-label': '공유' }, '□↑'), ' 공유 버튼을 눌러요.'),
-        el('li', {}, '아래로 내려서 "홈 화면에 추가"를 눌러요.'), el('li', {}, '오른쪽 위 "추가"를 누르면 끝!')),
+      iosSteps(''),
       el('p', {}, '홈 화면의 KAPA 아이콘으로 열면 앱처럼 쓰고, 실시간 알림을 받을 수 있어요.'),
       el('div', { class: 'a2hs-row' },
         el('button', { class: 'ghost small', onclick: () => { store.set('pc_a2hs_hide', '1'); wrap.remove(); } }, '다시 보지 않기'),
@@ -1330,7 +1342,7 @@
     // 아이폰: 사이트 안쪽 저장소가 자주 지워져서, 홈 화면에 추가(주소에 입장 열쇠 포함)하도록 한 번 안내
     const tip = GAS && isIOS && keepMe && isToken(memberKey) && store.get('pc_ios_tip') !== 'done'
       ? el('div', { class: 'ios-tip' },
-          el('span', {}, el('b', {}, '아이폰 자동 입장 팁 · '), 'Safari 아래 ', el('b', {}, '공유 버튼(□↑) → 홈 화면에 추가'),
+          el('span', {}, el('b', {}, '아이폰 자동 입장 팁 · '), 'Safari ', iosIco('more'), ' → ', iosIco('share', '공유'), ' → ', iosIco('add', '홈 화면에 추가'),
             '를 누르면 다음부터 그 아이콘으로 코드 없이 바로 들어와요. 즐겨찾기에 추가해도 돼요.'),
           el('button', { class: 'ghost small', onclick: e => { store.set('pc_ios_tip', 'done'); e.target.closest('.ios-tip').remove(); } }, '닫기'))
       : null;
@@ -2459,8 +2471,8 @@
       let body;
       if (isIOS && !isStandalone()) {
         body = [el('p', {}, '아이폰은 KAPA를 홈 화면에 추가해야 알림을 받을 수 있어요. 커피 한잔 요청이 오면 앱처럼 바로 알려 드려요.'),
-          el('ol', { class: 'ly-push-steps' }, el('li', {}, 'Safari 아래쪽 공유 버튼(□↑)을 눌러요.'), el('li', {}, '"홈 화면에 추가"를 눌러요.'),
-            el('li', {}, '홈 화면의 KAPA 아이콘으로 열고, 개인 코드로 입장한 뒤 여기서 "폰 알림 켜기"를 눌러요.'))];
+          iosSteps('ly-push-steps'),
+          el('p', { class: 'ly-push-note' }, '그다음 홈 화면의 KAPA 아이콘으로 열고, 개인 코드로 입장한 뒤 여기서 "폰 알림 켜기"를 눌러요.')];
       } else if (!pushSupported()) {
         body = [el('p', {}, '이 브라우저는 폰 알림을 지원하지 않아요. 체크인할 때 이메일 알림을 켜 두세요.')];
       } else if (Notification.permission === 'denied') {
