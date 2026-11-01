@@ -980,7 +980,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-60</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-61</small></span></div>
 </footer>
 
 <script>
@@ -2627,7 +2627,13 @@
     // 1) 만나요
     // 받은 요청 · 보낸 요청을 따로 나눠서 보여줌
     // Done: 끝난 요청(성사·거절)은 Done을 누르면 내 화면에서 사라짐. 약속한 회원이 모두 누르면 전체 현황에서도 사라짐 (서버에 기록)
-    const doneBtn = m => el('button', { class: 'ghost done-btn', type: 'button', onclick: e => act('doneMeet', [memberKey, m.id], e.currentTarget) }, '✓ Done');
+    // 누르는 즉시 화면에서 지우고(서버 답을 기다리지 않음), 서버 기록은 뒤에서. 실패하면 다시 불러옴
+    const doneBtn = m => el('button', { class: 'ghost done-btn', type: 'button', onclick: () => {
+      r.meets = r.meets.filter(x => x.id !== m.id);
+      try { store.set('pc_ly', JSON.stringify({ k: memberKey, r: r })); } catch (_) {}
+      drawLayover(r);
+      call('doneMeet', memberKey, m.id).catch(e => { if (e.message !== '__auth') reload(); });
+    } }, '✓ Done');
     const meetRow = m => el('div', { class: 'ly-row' + (m.status === '수락' ? ' match' : '') + (m.status === '수락' || m.status === '거절' ? ' settled' : '') },
         el('div', {}, el('b', {}, m.name), ` · ${m.place}`,
           el('span', { class: 'ly-tag' + (m.status === '수락' ? ' on' : '') },
