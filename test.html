@@ -490,6 +490,11 @@
   .w-keep-f button { border: 0; background: #fff; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-size: 12px; line-height: 1; padding: 0; }
   .me-card .ly-push { margin: 4px 0 0; }
   .me-card .ly-push .ly-card { padding: 14px; border: 1px solid #EEF0F3; border-radius: 16px; }
+  /* ---- 익명 상담소 담당 회원 (관리자) ---- */
+  .a-anonv { display: grid; gap: 8px; }
+  .a-anonv input[type=text], .a-anonv > input { padding: 10px 12px; border: 1px solid var(--line); font: inherit; }
+  .a-anonv-list { display: grid; gap: 2px; max-height: 320px; overflow-y: auto; border: 1px solid var(--line); padding: 6px 10px; }
+  .a-anonv-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 14px; cursor: pointer; }
   /* ---- admin page ---- */
   .a-wrap { display: flex; flex-direction: column; gap: 16px; }
   .a-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
@@ -881,7 +886,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-45</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-46</small></span></div>
 </footer>
 
 <script>
@@ -1221,7 +1226,7 @@
     if (state.q) {
       loading();
       try {
-        const posts = await call('listPosts', board, state.q, memberKey);
+        const posts = await call('listPosts', board, state.q, memberKey, dev());
         if (my === viewId) drawList(posts);
       } catch (e) { if (my === viewId) showError(e); }
       return;
@@ -1258,7 +1263,9 @@
     put(
       tip,
       notice ? el('div', { class: 'w-notice' + (/\n/.test(notice) ? '' : ' fit1'), 'data-min': '10' }, el('b', {}, '📢 공지'), notice) : null,
-      state.board === ANON ? el('div', { class: 'w-notice' }, el('b', {}, '익명'), '이 게시판의 글과 댓글은 모두 익명이에요. 누가 썼는지 아무도 볼 수 없어요. 웹사이트 관리자도 볼 수 없어요.') : null,
+      state.board === ANON ? el('div', { class: 'w-notice' }, el('b', {}, '익명'), me().anonViewer
+        ? '🔐 상담 담당으로 지정돼 있어서 모든 상담 글을 볼 수 있어요. 누가 썼는지는 아무도 볼 수 없어요. 웹사이트 관리자도 볼 수 없어요.'
+        : '여기 쓴 글은 상담 담당 회원과 나만 볼 수 있어요. 다른 회원의 상담 글은 보이지 않아요. 누가 썼는지는 아무도 볼 수 없어요.') : null,
       whoBar,
       el('div', { class: 'w-toolbar' },
         el('div', { class: 'search-row' }, search,
@@ -2149,7 +2156,36 @@
       view.append(
         kakaoCard('big', '카톡방 링크: 카파 큰방', '승인할 때 "큰방"을 고른 사람이 초대 코드를 넣으면 열리는 오픈채팅 링크예요. 사이트에는 공개되지 않아요.', s.kakaoUrl),
         kakaoCard('small', '카톡방 링크: 영주권 작은방', '승인할 때 "영주권 작은방"을 고른 사람에게 열리는 링크예요.', s.kakaoUrlSmall),
-        siteCard(s.siteUrl || ''), pushAdminCard(s.push || {}));
+        siteCard(s.siteUrl || ''), anonViewersCard(), pushAdminCard(s.push || {}));
+    }
+    // 익명 상담소를 볼 수 있는 상담 담당 회원 고르기
+    function anonViewersCard() {
+      const box = el('div', { class: 'a-anonv' }, el('p', { class: 'a-muted' }, '불러오는 중…'));
+      const msg = el('p', { class: 'a-ok' });
+      let picked = [];
+      const draw = r => {
+        picked = r.viewers.slice();
+        const q = el('input', { placeholder: '이름으로 찾기', 'aria-label': '이름으로 찾기' });
+        const list = el('div', { class: 'a-anonv-list' });
+        const drawList = () => list.replaceChildren(...r.members.filter(m => !q.value.trim() || m.name.indexOf(q.value.trim()) >= 0 || m.kid.indexOf(q.value.trim()) >= 0).map(m => {
+          const cb = el('input', { type: 'checkbox' }); cb.checked = picked.indexOf(m.id) >= 0;
+          cb.addEventListener('change', () => { picked = cb.checked ? picked.concat(m.id) : picked.filter(x => x !== m.id); cnt.textContent = '지정된 회원 ' + picked.length + '명'; });
+          return el('label', { class: 'a-anonv-row' }, cb, el('span', {}, m.kid || m.name));
+        }));
+        const cnt = el('b', {}, '지정된 회원 ' + picked.length + '명');
+        q.addEventListener('input', drawList);
+        drawList();
+        box.replaceChildren(cnt, q, list,
+          el('div', { class: 'a-actions' }, el('button', { class: 'a-btn', onclick: async () => {
+            msg.className = 'a-ok'; msg.textContent = '저장 중…';
+            try { const r2 = await api('adminSetAnonViewers', picked); msg.textContent = '저장했어요. ' + r2.viewers.length + '명이 모든 상담 글을 볼 수 있어요.'; }
+            catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } } } }, '저장')), msg);
+      };
+      api('adminGetAnonViewers').then(draw, e => { if (e.message !== '__auth') box.replaceChildren(el('p', { class: 'a-err' }, e.message)); });
+      return el('section', { class: 'a-card' },
+        el('h3', {}, '익명 상담소 담당 회원'),
+        el('p', { class: 'a-muted' }, '체크한 회원이 개인 입장 코드로 들어오면 익명 상담소의 모든 글을 볼 수 있어요. 다른 회원은 자기가 쓴 글과 그 답변만 보여요. 관리자 비밀번호로 들어오면 항상 볼 수 있어요. 글쓴이 이름은 담당 회원에게도 보이지 않아요.'),
+        box);
     }
     // 폰 앱 알림 (Firebase) 설정
     function pushAdminCard(st) {
