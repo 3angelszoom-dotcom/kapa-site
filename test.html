@@ -483,6 +483,11 @@
   /* ---- KAPA 로고 누를 때만: 주변이 살짝 어두워짐 (테두리·움직임 없음) ---- */
   .site-head .logo { display: inline-block; border-radius: 12px; -webkit-tap-highlight-color: transparent; }
   .site-head .logo:active { background-color: rgba(15, 23, 42, .10); box-shadow: 0 0 0 5px rgba(15, 23, 42, .10); }
+  /* ---- 글 수정 ---- */
+  .post-acts { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+  .w-keep { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .w-keep-f { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px; border-radius: 999px; background: #F1F3F6; font-size: 13px; font-weight: 500; }
+  .w-keep-f button { border: 0; background: #fff; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-size: 12px; line-height: 1; padding: 0; }
   /* ---- admin page ---- */
   .a-wrap { display: flex; flex-direction: column; gap: 16px; }
   .a-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
@@ -879,7 +884,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-41</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-43</small></span></div>
 </footer>
 
 <script>
@@ -1407,10 +1412,12 @@
       el('article', { class: 'post' },
         el('span', { class: 'badge' }, (boardOf(p.board) || {}).name || ''),
         el('h2', {}, p.title),
-        el('div', { class: 'meta' }, p.author, vf(p.verified), ` · ${fmt(p.createdAt)}`, p.mine ? ' · 내 글' : ''),
+        el('div', { class: 'meta' }, p.author, vf(p.verified), ` · ${fmt(p.createdAt)}`, p.editedAt ? ' · 수정됨' : '', p.mine ? ' · 내 글' : ''),
         el('div', { class: 'body' }, p.body),
         renderAttachments(p),
-        deleteControl('글 삭제', 'deletePost', p.id, showList, p.mine),
+        el('div', { class: 'post-acts' },
+          el('button', { class: 'ghost edit-btn', type: 'button', onclick: () => showEdit(p) }, '✏️ 글 수정'),
+          deleteControl('글 삭제', 'deletePost', p.id, showList, p.mine)),
         el('div', { class: 'comments' },
           commentList(p),
           !m.canWrite ? needCode('댓글 달기')
@@ -1458,7 +1465,8 @@
         writeForm(state.board, id => { markStale(); showPost(id); })));
   }
   // 글쓰기 양식 (게시판 화면 · 첫 화면 글쓰기 창에서 같이 씀). done(새 글 id)
-  function writeForm(board, done) {
+  // edit: 고칠 글 (있으면 수정 양식 — 제목·내용·첨부·링크를 미리 채우고 "수정 완료"로 저장)
+  function writeForm(board, done, edit) {
     const m = me(), anon = board === ANON, fixedName = anon || m.type === 'personal';
     const title = el('input', { id: 'w-title', placeholder: '제목', maxlength: '100', 'aria-label': '제목' });
     const name = el('input', { id: 'w-name', placeholder: '이름', maxlength: '30', 'aria-label': '이름' }); name.value = store.get('pc_name');
@@ -1469,19 +1477,31 @@
     const links = el('textarea', { id: 'w-links', placeholder: 'https://drive.google.com/...  (한 줄에 하나, 최대 3개)' }); links.style.minHeight = '72px';
     const status = el('p', { class: 'hint' });
     const msg = el('p', { class: 'msg' });
-    const btn = el('button', { class: 'primary' }, '게시하기');
+    const btn = el('button', { class: 'primary' }, edit ? '수정 완료' : '게시하기');
+    // 수정: 기존 내용 채우기 + 기존 첨부 파일은 ✕로 뺄 수 있게
+    let keep = [];
+    const keepBox = el('div', { class: 'w-keep' });
+    if (edit) {
+      title.value = edit.title; body.value = edit.body; links.value = (edit.links || []).join('\n');
+      keep = (edit.files || []).map(f => f.id).filter(Boolean);
+      const drawKeep = () => keepBox.replaceChildren(...(edit.files || []).filter(f => keep.indexOf(f.id) >= 0).map(f =>
+        el('span', { class: 'w-keep-f' }, (f.isImage ? '🖼️ ' : '📄 ') + f.name,
+          el('button', { type: 'button', 'aria-label': f.name + ' 빼기', onclick: () => { keep = keep.filter(x => x !== f.id); drawKeep(); } }, '✕'))));
+      drawKeep();
+    }
     fileInput.addEventListener('change', () => {
       picked.textContent = Array.from(fileInput.files).map(f => `${f.name} (${(f.size / 1048576).toFixed(1)}MB)`).join(', ');
     });
     btn.addEventListener('click', async () => {
       msg.textContent = '';
       const fs = Array.from(fileInput.files);
-      if (fs.length > MAX_FILES) { msg.textContent = `파일은 ${MAX_FILES}개까지 첨부할 수 있어요.`; return; }
+      if (fs.length + keep.length > MAX_FILES) { msg.textContent = `파일은 ${MAX_FILES}개까지 첨부할 수 있어요.` + (keep.length ? ' 기존 파일을 ✕로 빼 주세요.' : ''); return; }
       const big = fs.find(f => f.size > MAX_MB * 1048576);
       if (big) { msg.textContent = `${big.name}: ${MAX_MB}MB를 넘어요. Google Drive에 올리고 링크 칸에 붙여넣어 주세요.`; return; }
       const linkList = links.value.split('\n').map(s => s.trim()).filter(Boolean);
       if (linkList.length > 3) { msg.textContent = '링크는 3개까지 넣을 수 있어요.'; return; }
-      if (!title.value.trim() || (!fixedName && !name.value.trim()) || !body.value.trim()) { msg.textContent = fixedName ? '제목과 내용을 모두 입력해 주세요.' : '제목, 이름, 내용을 모두 입력해 주세요.'; return; }
+      if (edit && !edit.mine && !pw.value) { msg.textContent = '글을 쓸 때 넣은 비밀번호를 입력해 주세요.'; pw.focus(); return; }
+      if (!title.value.trim() || (!edit && !fixedName && !name.value.trim()) || !body.value.trim()) { msg.textContent = fixedName ? '제목과 내용을 모두 입력해 주세요.' : '제목, 이름, 내용을 모두 입력해 주세요.'; return; }
       btn.disabled = true;
       try {
         if (!fixedName) store.set('pc_name', name.value.trim());
@@ -1491,12 +1511,31 @@
             status.textContent = `파일 올리는 중 ${i + 1}/${fs.length} · ${Math.round(r * 100)}% (창을 닫지 마세요)`;
           }));
         }
+        if (edit) {
+          status.textContent = '수정 저장 중…';
+          await call('updatePost', { id: edit.id, title: title.value, body: body.value, links: linkList, files: ids, keepFiles: keep,
+            password: pw.value, key: memberKey, device: dev() });
+          return done(edit.id);
+        }
         status.textContent = '글 등록 중…';
         const id = await call('createPost', { board, title: title.value, author: fixedName ? '' : name.value, body: body.value,
           password: pw.value, files: ids, links: linkList, key: memberKey, device: dev() });
         done(id);
       } catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; status.textContent = ''; btn.disabled = false; } }
     });
+    if (edit) {
+      pw.placeholder = '글 쓸 때 넣은 비밀번호';
+      return el('div', { class: 'form' },
+        title,
+        edit.mine ? null : el('div', { class: 'row' }, pw),
+        edit.mine ? null : el('p', { class: 'hint' }, '내가 쓴 글이 아니라고 나오면, 글 쓸 때 넣은 비밀번호로 고칠 수 있어요.'),
+        body,
+        (edit.files || []).length ? el('div', { class: 'field' }, '📎 지금 첨부된 파일 (✕를 누르면 빠져요)', keepBox) : null,
+        el('label', { class: 'field' }, `📎 파일 더 올리기 (이미지·PDF, 파일당 ${MAX_MB}MB, 모두 합쳐 최대 ${MAX_FILES}개)`, fileInput),
+        picked,
+        el('label', { class: 'field' }, '🔗 다른 곳에 있는 파일 링크 (선택, Google Drive·Dropbox 등)', links),
+        btn, status, msg);
+    }
     return el('div', { class: 'form' },
       asWho(board, '글이'),
       title,
@@ -1508,6 +1547,20 @@
       picked,
       el('label', { class: 'field' }, '🔗 다른 곳에 있는 파일 링크 (선택, Google Drive·Dropbox 등)', links),
       btn, status, msg);
+  }
+
+  // 글 수정 화면
+  function showEdit(p) {
+    newView();
+    toTop();
+    put(
+      el('button', { class: 'ghost', onclick: () => showPost(p.id) }, '← 취소'),
+      el('div', { class: 'post' },
+        el('span', { class: 'badge' }, ((boardOf(p.board) || {}).name || '') + ' · 글 수정'),
+        writeForm(p.board, id => {
+          if (feed) { if (feed.full) delete feed.full[id]; }   // 예전 내용이 먼저 보이지 않게
+          markStale(); showPost(id);
+        }, p)));
   }
 
   // ===== 첫 화면 "+ 글쓰기" → 글쓰기 창 (게시판 고르기 → 제목·내용·첨부 → 게시) =====
@@ -2446,6 +2499,11 @@
       geoBtn.addEventListener('click', () => fillNearest(false));
       const start = el('input', { id: 'ly-start', type: 'datetime-local' }); start.value = localInput(now);
       const end = el('input', { id: 'ly-end', type: 'datetime-local' }); end.value = localInput(new Date(now.getTime() + 12 * 3600e3));
+      // 시작 시간을 바꾸면 끝 시간을 자동으로 2시간 뒤로 (끝은 따로 다시 바꿀 수 있음)
+      start.addEventListener('change', () => {
+        const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(start.value); if (!m) return;
+        end.value = localInput(new Date(+m[1], m[2] - 1, +m[3], +m[4] + 2, +m[5]));
+      });
       const gate = el('input', { id: 'ly-gate', placeholder: 'B12', maxlength: '12' });
       const gateBox = el('label', {}, '🚪 게이트 (선택)', gate); gateBox.hidden = true;
       const memo = el('input', { id: 'ly-memo', placeholder: '예: 저녁 같이 드실 분 / 공항 라운지에 있어요', maxlength: '100' });
