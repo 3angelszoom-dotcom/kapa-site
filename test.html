@@ -183,6 +183,8 @@
   /* 레이오버 체크인 */
   .ly-wrap { padding-block: 48px 80px; max-width: 860px; }
   .ly-sec { margin: 0 0 40px; }
+  .ly-cols { display: grid; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 860px) { .ly-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 32px; align-items: start; } }
   .ly-sec > h2 { margin: 0 0 14px; font: 700 13px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; }
   .ly-card { border: 1px solid var(--line); background: var(--card); padding: 18px 20px; }
   .ly-open { width: 100%; margin-bottom: 14px; }
@@ -345,7 +347,9 @@
   .login form { display: flex; flex-direction: column; gap: 14px; }
   .login .keep { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--muted); cursor: pointer; }
   .login .keep input { width: 18px; height: 18px; accent-color: var(--ink); margin: 0; }
-  .sr-user { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+  .sr-user { position: absolute !important; left: 0; width: 1px !important; height: 1px !important; min-height: 0 !important; padding: 0 !important; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+  /* 화면 밖으로 삐져나온 요소 때문에 폰에서 페이지가 옆으로 넓어지지 않게 */
+  html, body { overflow-x: clip; }
   .ios-tip { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--ink); font-size: 13.5px; line-height: 1.6; }
   .ios-tip b { color: var(--text); }
   .ios-tip button { flex-shrink: 0; white-space: nowrap; }
@@ -489,6 +493,31 @@
   .hd-act .nav-dot { position: absolute; top: -6px; right: -8px; margin: 0; box-shadow: 0 0 0 2px #fff; }
   @media (min-width: 641px) { .site-head .container { padding-right: 150px; } .head-acts { position: absolute; top: 28px; right: 24px; } }
   @media (max-width: 640px) { .head-acts { order: 2; margin-left: auto; } }
+  /* 체크인 화면: 오른쪽 위 메뉴 밑에 P M C E 시간 */
+  .tz-strip { position: absolute; top: 100%; right: 0; margin-top: 6px; display: grid; grid-template-columns: repeat(2, auto); gap: 3px 6px; z-index: 2; }
+  .tz-strip[hidden] { display: none; }
+  .tz-strip span { display: inline-flex; align-items: center; gap: 3px; font: 600 10px/1 var(--body); color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tz-strip span svg { width: 14px; height: 14px; flex: none; display: block; }
+  .tz-strip span.tz-ico { display: block; width: 14px; height: 14px; }
+  .tz-tag { display: inline-block; margin-right: 5px; vertical-align: -2px; line-height: 0; }
+  /* 내 폰 시간대: 시각을 굵게 */
+  .tz-strip span.me { font-weight: 800; }
+  /* 페이지 머리 띠: 아이콘을 제목 왼쪽에 붙이고, 제목 글씨는 작게, "HIR · Boarding" 같은 작은 문구는 숨김 */
+  .page-band .container { flex-direction: row !important; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 12px !important; }
+  .page-band .eyebrow { display: none !important; }
+  .page-band p { flex-basis: 100%; }
+  .page-band h1 { font-size: clamp(22px, 3.4vw, 32px) !important; }
+  #band-title.fit1 { width: auto !important; flex: 0 1 auto; min-width: 0; }
+  .band-ico { font-size: 28px; }
+  .ly-band-ico { width: 46px !important; height: 46px !important; border-radius: 14px !important; }
+  .ly-band-ico svg { width: 27px !important; height: 27px !important; }
+  .ly-band h1 { font-size: 24px !important; margin-top: 0 !important; }
+  /* 체크인 화면: 사진 배경이 있는 위 화면(메뉴·시계·제목)은 스크롤해도 항상 위에 고정, 아래 내용만 그 밑으로 올라감 */
+  body.is-lay .site-head { position: fixed; top: 0; left: 0; right: 0; z-index: 30; }
+  body.is-lay #view-layover .ly-band { position: sticky; top: 0; z-index: 20; }
+  body.is-lay.scrolled #view-layover .ly-band { box-shadow: 0 8px 20px rgba(0, 0, 0, .22); }
+  /* 폰: 시계가 메뉴와 겹치지 않게 메뉴와 띠를 조금 내림 */
+  @media (max-width: 640px) { .head-acts { position: relative; } body.is-lay .site-head .nav { margin-top: 30px; } body.is-lay .ly-band { padding-top: 182px !important; } }
   .hero .container { padding-block: 150px 22px !important; }
   @media (max-width: 640px) { .hero .container { padding-block: 132px 18px !important; } }
   /* 머리 배경: 모든 페이지를 게시판 페이지와 같은 색(연한 회색)으로 + 비행기 ("이용 안내" 살짝 위, 머리글에 있어서 어느 페이지에서나 보임) */
@@ -772,6 +801,8 @@
         <span class="me-av" id="me-av"></span>
         <span class="me-name" id="me-name">입장</span>
       </button>
+      <!-- 체크인 화면에서만: 글쓰기 밑에 미국 4개 시간대 지금 시각 2x2 (내 폰 시간대는 초록) -->
+      <div class="tz-strip" id="tz-strip" aria-label="미국 시간대별 지금 시각" hidden></div>
     </div>
     <!-- 레이오버 화면 아이콘이 쓰는 색 (유리 핀) -->
     <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
@@ -992,7 +1023,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-66</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-69</small></span></div>
 </footer>
 
 <script>
@@ -1219,6 +1250,40 @@
     window.addEventListener('resize', later);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
     later(); }
+  // ===== 체크인 화면: 미국 4개 시간대(P·M·C·E) 지금 시각. 내 폰과 같은 시간대는 초록으로 =====
+  const TZS = [['P', 'America/Los_Angeles', '태평양'], ['M', 'America/Denver', '산악'], ['C', 'America/Chicago', '중부'], ['E', 'America/New_York', '동부']];
+  const TZ_COLOR = { P: '#3B82F6', M: '#F59E0B', C: '#8B5CF6', E: '#EF4444', A: '#14B8A6', H: '#EC4899' };
+  // 미국 공항 → 시간대 (P 태평양 · M 산악 · C 중부 · E 동부 · A 알래스카 · H 하와이). 출처: mwgg/Airports 공개 데이터
+  const TZ_AP = {P: 'BLD ACV ALW BFI BFL BIH BLI BUR CCR CEC CLD EAT EKO EUG FAT FRD GEG HHR IPL LAS LAX LGB LWS MCE MFR MMH MRY OAK OLM ONT ESD OTH PAE PDT PDX PSC PSP PUW RDD RDM RNO SAN SBA SBD SBP SCK SEA SFO SJC SLE SMF SMX SNA SQL STS TIW TKF YKM', E: 'ABE ABY ACK ACY AGS ALB AOO APN ART ATL AUG AVL AVP AZO BDL BED BFD BGM BGR BHB BKW BOS BQK BTV BUF BWI CAE CAK CHA CHO CHS CIU CKB CLE CLT CMH CMX CRW CSG CVG DAB DAY DCA DOV DTW DUJ ELM ERI ESC EWB EWN EWR EYW FAY FLL FLO FNT FWA GNV GRR GSO GSP HGR HPN HTS HVN HHH HYA IAD IAG ILG ILM IND IPT ISP ITH JAX JFK USA JST LAF LAL LAN LBE LCK LEB LEX LGA LNS LUK LWB LYH MBS MCN MCO MDT MGW MHT MIA MKG MLB MSS MYR OAJ OGS OPF ORF ORH OCE PBG DJT PDK PGD PGV PHF PHL PIE PIT PKB PLN PQI PSM PVD PWM RDU RIC RKD ROA ROC RSW RUT SAV MQT SBN SBY SDF SFB UST SHD SLK SRQ SWF SYR TEB TLH TOL TPA TRI TTN TVC TYS SCE NPT VLD VRB WST', C: 'ABI ABR ACT AEX ALO AMA ATW ATY AUS BKG BHM BIS BLV BMI BNA BPT BRD BRL BRO BTR CGI CID CLL CMI COU CRP CWA DAL DBQ DDC DEC DFW DHN DLH DSM DSI DVL EAR EAU ECP ELD EVV FAR FOD FSD FSM FTW GCK GFK GGG GLH GPT GRB GRI GRK GTR GYY HIB HOT HOU HRL HRO HSV HYS IAH ICT IMT INL IRK JAN JBR JLN JMS LAW LBB LBF LBL LCH LFT LIT LNK LRD LSE MAF MCI MCK MCW MDW MEI MEM MFE MGC MGM MHK MKE MKL MLI MLU MOB MOT MSL MSN MSP MSY MWA MWL OKC OMA ORD OWB PAH PIA PIB PIR PNS RFD RHI RST SAT SGF SHV SJT SLN SPI SPS STC STL SUX SWO TBN TUL TUP TVF TXK TYR UIN VCT VPS XNA XWA', M: 'ABQ AIA ALS ASE BFF BIL BJC BOI BTM BZN CDC CDR CEZ CNM CNY COD COS CPR CVN CYS DEN DIK DRO EGE ELP FLG GCC GCN GDV GGW GJT FCA GTF GUC GUP HDN HII HLN HOB HVR IDA AZA JAC LAR LRU MSO MTJ MYL YUM OGD OLF PGA PHX PIH PRC PUB PVU RAP RIW RKS ROW SAF SDY SGU SHR TSM SLC SMN SOW SUN SVC TEX TUS TWF VEL WYS', A: 'BTI BET BRW CDB CDV DRG DLG ADQ DUT EMK ENA FAI ABL GAL GKN GAM GST HCR HSL HNS HOM EGX IAN ILI UTO JNU AKN AKP KTN KLW LUR MCG MRI MYU ANC ANI ANV OME ORT OTZ STG PSG PTH PTU NUI ARC RBY SVA SCC SDP SIT SNP ATK UNK VDZ WRG AIN YAK FYU PIZ', H: 'ADK HNM JHM KOA LIH MKK MUE HNL LNY OGG ITO'};
+  const TZ_OF = {};
+  Object.keys(TZ_AP).forEach(k => TZ_AP[k].split(' ').forEach(c => (TZ_OF[c] = k)));
+  const tzSvg = (k, size) => '<svg viewBox="0 0 14 14" width="' + size + '" height="' + size + '" aria-hidden="true"><rect width="14" height="14" rx="4" fill="' + TZ_COLOR[k] + '"/><text x="7" y="7.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="9" font-weight="800" font-family="-apple-system,system-ui,sans-serif">' + k + '</text></svg>';
+  const TZ_NAME = { P: '태평양', M: '산악', C: '중부', E: '동부', A: '알래스카', H: '하와이' };
+  // 체크인 시간 옆: 그 공항의 시간대 아이콘 (시간은 공항 현지 시간 그대로)
+  const tzIco = place => { const k = TZ_OF[String(place || '').toUpperCase()]; return k ? el('span', { class: 'tz-tag', title: TZ_NAME[k] + ' 시간 (공항 현지)', html: tzSvg(k, 13) }) : null; };
+  let tzTimer = null;
+  function tzDraw() {
+    const box = document.getElementById('tz-strip'); if (!box) return;
+    const now = new Date();
+    const hm = tz => { try { return now.toLocaleTimeString('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }); } catch (_) { return ''; } };
+    const mine = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+    let found = false;
+    box.replaceChildren(...TZS.map(([k, tz, name]) => {
+      const t = hm(tz), me = !found && t === mine;
+      if (me) found = true;
+      // 글자를 상자 정가운데에 두려고 작은 SVG로 그림
+      const ico = el('span', { class: 'tz-ico', html: tzSvg(k, 14) });
+      return el('span', { class: 'tz-' + k + (me ? ' me' : ''), title: name + ' 시간' + (me ? ' (내 폰 시간대)' : '') }, ico, t);
+    }));
+  }
+  function tzShow(on) {
+    const box = document.getElementById('tz-strip'); if (!box) return;
+    box.hidden = !on;
+    clearInterval(tzTimer); tzTimer = null;
+    if (on) { tzDraw(); tzTimer = setInterval(tzDraw, 20000); }
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && tzTimer) tzDraw(); });   // 앱으로 돌아오면 바로 맞춤
+  { const sc = () => document.body.classList.toggle('scrolled', window.scrollY > 8); window.addEventListener('scroll', sc, { passive: true }); sc(); }
   // ===== 홈 화면 앱으로 연 사람만: 오른쪽 아래 새로고침 버튼 (앱에는 브라우저 새로고침이 없어서) =====
   (function refreshButton() {
     if (GAS) return;
@@ -2513,6 +2578,8 @@
     return `${m}/${dd}(${WD[new Date(Date.UTC(y, m - 1, dd)).getUTCDay()]}) ${hm}`;
   }
   const fmtRange = (a, b) => a.slice(0, 10) === b.slice(0, 10) ? `${fmtLocal(a)} – ${b.slice(11)}` : `${fmtLocal(a)} – ${fmtLocal(b)}`;
+  // 날짜 뒤, 시간 바로 앞에 그 공항의 시간대 아이콘: '11/3(화) [C] 16:00 – 19:00'
+  const fmtRangeTz = (a, b, place) => { const s = fmtRange(a, b), i = s.indexOf(') ') + 2; return i > 1 ? [s.slice(0, i), tzIco(place), s.slice(i)] : [tzIco(place), s]; };
   const kindName = c => c.kind === 'airport' ? '공항 대기' + (c.gate ? ' · ' + c.gate : '') : '레이오버';
   function localInput(d) { const z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; }
 
@@ -2725,7 +2792,12 @@
           el('span', { class: 'ly-tag' + (m.status === '수락' ? ' on' : '') },
             m.status === '수락' ? (m.join ? '🙋 조인 성사' : '☕ 커피 약속 성사') : m.status === '거절' ? (m.dir === 'out' ? '어려워요' : '거절함')
               : m.dir === 'in' ? (m.join ? '🙋 조인 요청' : '새 요청') : (m.join ? '조인 기다리는 중' : '기다리는 중'))),
-        el('div', { class: 'ly-sub' }, m.join ? `약속 ${fmtRange(m.start, m.end)}` : [m.start ? `상대 ${fmtRange(m.start, m.end)}` : '', m.myStart ? `나 ${fmtRange(m.myStart, m.myEnd)}` : (m.dir === 'out' ? '체크인 없이 보낸 요청' : '')].filter(Boolean).join(' · ')),
+        // 시간대 아이콘은 첫 번째 시간 바로 앞에 ("상대 11/3(화) [C] 16:00 …")
+        el('div', { class: 'ly-sub' }, m.join ? ['약속 ', ...fmtRangeTz(m.start, m.end, m.place)] : (() => {
+          const first = m.start ? ['상대 ', ...fmtRangeTz(m.start, m.end, m.place)] : m.myStart ? ['나 ', ...fmtRangeTz(m.myStart, m.myEnd, m.place)] : '';
+          const rest = m.start ? (m.myStart ? `나 ${fmtRange(m.myStart, m.myEnd)}` : (m.dir === 'out' ? '체크인 없이 보낸 요청' : '')) : (!m.myStart && m.dir === 'out' ? '체크인 없이 보낸 요청' : '');
+          return [...(first || []), first && rest ? ' · ' : null, rest];
+        })()),
         el('div', { class: 'ly-act' },
           m.status === '수락' ? el('span', {}, '연락처 ', el('span', { class: 'ly-kakao' }, m.contact || '(없음)')) : null,
           m.dir === 'in' && m.status === '요청' ? [
@@ -2833,7 +2905,7 @@
         const n = r.checkins.filter(o => !o.mine && o.overlapWith.indexOf(c.id) >= 0).length;
         return el('div', { class: 'ly-row' + (n ? ' match' : '') },
           el('div', {}, el('b', {}, c.place), ` · ${kindName(c)}`, el('span', { class: 'ly-tag' + (n ? ' on' : '') }, n ? `같이 있는 회원 ${n}명` : '아직 겹치는 회원 없음')),
-          el('div', { class: 'ly-sub' }, fmtRange(c.start, c.end)),
+          el('div', { class: 'ly-sub' }, fmtRangeTz(c.start, c.end, c.place)),
           c.memo ? el('div', { class: 'ly-memo' }, c.memo) : null,
           el('div', { class: 'ly-act' }, el('button', { class: 'ghost', onclick: e => act('cancelCheckin', [memberKey, c.id], e.currentTarget, null, () => { r.checkins = r.checkins.filter(x => x.id !== c.id); }) }, '취소')));
       })) : null;
@@ -2851,7 +2923,7 @@
         return el('div', { class: 'ly-place' }, el('h3', {}, el('span', {}, '📍 ' + pl, whenTag(Math.min(...list.map(daysOut)))), el('small', {}, `${list.length}명`)),
           list.map(c => el('div', { class: 'ly-row' + (c.overlapWith.length ? ' match' : '') + (c.group ? ' settled' : '') },
             el('div', {}, el('b', {}, c.name), vf(true), ` · ${kindName(c)}`, c.overlapWith.length ? el('span', { class: 'ly-tag on' }, '나와 겹쳐요') : null),
-            el('div', { class: 'ly-sub' }, fmtRange(c.start, c.end)),
+            el('div', { class: 'ly-sub' }, fmtRangeTz(c.start, c.end, c.place)),
             c.memo ? el('div', { class: 'ly-memo' }, c.memo) : null,
             el('div', { class: 'ly-act' },
               // 이미 커피 약속이 성사된 체크인: 함께하는 회원은 "성사", 다른 회원은 "나도 조인하기" (약속한 회원 중 한 명이라도 수락하면 조인)
@@ -2934,7 +3006,8 @@
       row.append(box);   // 키보드가 저절로 뜨지 않게 칸을 자동 선택하지 않음
     }
 
-    fill(formSec, pushSec, inSec, outSec, mineSec, allSec);   // 체크인하기를 맨 위에
+    // 넓은 화면: 왼쪽에 내 체크인(항상 맨 위)·알림·요청, 오른쪽에 전체 현황 / 폰: 위에서 아래로
+    fill(formSec, el('div', { class: 'ly-cols' }, el('div', { class: 'ly-col' }, mineSec, pushSec, inSec, outSec), el('div', { class: 'ly-col' }, allSec)));   // 체크인하기를 맨 위에
   }
 
   // 최신글을 누르면 그 게시판으로 이동해서 바로 글을 열기
@@ -3076,6 +3149,8 @@
     const isLay = route === 'layover';
     document.getElementById('view-home').hidden = !!b || isAdmin || isAbout || isLay;
     document.body.classList.toggle('is-home', !b && !isAdmin && !isAbout && !isLay);
+    document.body.classList.toggle('is-lay', !!isLay);
+    tzShow(isLay);
     document.getElementById('view-layover').hidden = !isLay;
     document.getElementById('view-about').hidden = !isAbout;
     document.getElementById('view-board').hidden = !b;
