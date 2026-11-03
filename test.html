@@ -992,7 +992,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-65</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-66</small></span></div>
 </footer>
 
 <script>
@@ -1193,6 +1193,7 @@
         el('p', {}, personal ? '✓ 개인 입장 코드로 입장 중 (실명)' : m.type === 'admin' ? '관리자 비밀번호로 입장 중' : '회원 비밀번호로 입장 중 · 글쓰기·체크인은 개인 입장 코드가 필요해요'))),
       personal && m.kakaoRoom && m.kakaoRoom.url ? el('a', { class: 'me-kakao', href: m.kakaoRoom.url, target: '_blank', rel: 'noopener' },
         '💬 카톡방 참여하기', el('small', {}, m.kakaoRoom.room === 'small' ? '카파 GC 작은방' : '카파 큰방')) : null,
+      personal && m.isAdmin ? el('button', { class: 'ghost', type: 'button', onclick: () => { close(); location.hash = 'admin'; } }, '🛠 관리자 페이지') : null,
       personal ? pushCard(true) : null,
       !personal ? el('button', { class: 'primary', type: 'button', onclick: () => { close(); setMemberKey(''); after(); openMe(); } }, '개인 입장 코드로 입장') : null,
       el('button', { class: 'me-out', type: 'button', onclick: () => { close(); setMemberKey(''); after(); } }, '이 기기에서 로그아웃')));
@@ -1759,7 +1760,7 @@
 
   // ===== 관리자 화면 =====
   // call(fn, ...args): 서버 함수 호출 (Promise). 관리자 기능은 첫 인자로 관리자 비밀번호를 받음
-  function mountAdmin(root, call, BOARDS) {
+  function mountAdmin(root, call, BOARDS, memberKeyOf) {
     let key = '';
     try { key = sessionStorage.getItem('pc_admin') || ''; } catch (_) {}
     const setKey = k => { key = k; try { k ? sessionStorage.setItem('pc_admin', k) : sessionStorage.removeItem('pc_admin'); } catch (_) {} };
@@ -2318,9 +2319,38 @@
       view.append(
         kakaoCard('big', '카톡방 링크: 카파 큰방', '승인할 때 "큰방"을 고른 회원이 개인 입장 코드로 입장하면 보이는 오픈채팅 링크예요. 다른 사람에게는 공개되지 않아요.', s.kakaoUrl),
         kakaoCard('small', '카톡방 링크: 영주권 작은방', '승인할 때 "영주권 작은방"을 고른 사람에게 열리는 링크예요.', s.kakaoUrlSmall),
-        siteCard(s.siteUrl || ''), anonViewersCard(), pushAdminCard(s.push || {}));
+        siteCard(s.siteUrl || ''), anonViewersCard(), adminMembersCard(), pushAdminCard(s.push || {}));
     }
     // 익명 상담소를 볼 수 있는 상담 담당 회원 고르기
+    // 관리자 지정 회원: 체크한 회원은 개인 입장 코드로 입장해 있으면 비밀번호 없이 관리자 페이지에 들어옴
+    function adminMembersCard() {
+      const box = el('div', { class: 'a-anonv' }, el('p', { class: 'a-muted' }, '불러오는 중…'));
+      const msg = el('p', { class: 'a-ok' });
+      const draw = r => {
+        let picked = r.admins.slice();
+        const q = el('input', { placeholder: '이름으로 찾기', 'aria-label': '이름으로 찾기' });
+        const list = el('div', { class: 'a-anonv-list' });
+        const cnt = el('b', {}, '지정된 회원 ' + picked.length + '명');
+        const drawList = () => list.replaceChildren(...r.members.filter(m => !q.value.trim() || m.name.indexOf(q.value.trim()) >= 0 || m.kid.indexOf(q.value.trim()) >= 0).map(m => {
+          const cb = el('input', { type: 'checkbox' }); cb.checked = picked.indexOf(m.id) >= 0; cb.disabled = !r.canEdit;
+          cb.addEventListener('change', () => { picked = cb.checked ? picked.concat(m.id) : picked.filter(x => x !== m.id); cnt.textContent = '지정된 회원 ' + picked.length + '명'; });
+          return el('label', { class: 'a-anonv-row' }, cb, el('span', {}, m.kid || m.name));
+        }));
+        q.addEventListener('input', drawList);
+        drawList();
+        box.replaceChildren(cnt, q, list,
+          r.canEdit ? el('div', { class: 'a-actions' }, el('button', { class: 'a-btn', onclick: async () => {
+            msg.className = 'a-ok'; msg.textContent = '저장 중…';
+            try { const r2 = await api('adminSetAdminMembers', picked); msg.textContent = '저장했어요. ' + r2.admins.length + '명이 비밀번호 없이 관리자 페이지에 들어올 수 있어요.'; }
+            catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } } } }, '저장'))
+          : el('p', { class: 'a-muted' }, '관리자 지정은 관리자 비밀번호로 들어온 경우에만 바꿀 수 있어요.'), msg);
+      };
+      api('adminGetAdminMembers').then(draw, e => { if (e.message !== '__auth') box.replaceChildren(el('p', { class: 'a-err' }, e.message)); });
+      return el('section', { class: 'a-card' },
+        el('h3', {}, '관리자 지정 회원'),
+        el('p', { class: 'a-muted' }, '체크한 회원은 개인 입장 코드로 입장해 있으면 관리자 비밀번호 없이 관리자 페이지에 들어와요. (관리자 지정과 관리자 비밀번호 바꾸기는 비밀번호로 들어온 경우에만 할 수 있어요.)'),
+        box);
+    }
     function anonViewersCard() {
       const box = el('div', { class: 'a-anonv' }, el('p', { class: 'a-muted' }, '불러오는 중…'));
       const msg = el('p', { class: 'a-ok' });
@@ -2395,7 +2425,13 @@
         sMsg);
     }
 
-    key ? shell() : login();
+    // 관리자 지정 회원: 개인 입장 코드로 입장해 있으면 비밀번호 없이 바로 들어감
+    const mk = memberKeyOf ? memberKeyOf() : '';
+    if (key) shell();
+    else if (mk && /^p[A-Za-z0-9]+\./.test(mk)) {
+      root.replaceChildren(el('p', { class: 'a-muted' }, '확인 중…'));
+      call('adminLogin', mk).then(ok => { if (ok) { setKey(mk); tab = 'dash'; shell(); } else login(); }, () => login());
+    } else login();
   }
 
   // ===== 새로 올라온 글 (메인 페이지) =====
@@ -3063,7 +3099,7 @@
       if (memberKey && !(feed && feed.me) && !lastMe) fetchFeed().catch(() => {});   // 승인 회원이면 카톡방 버튼을 바로 보여주려고
       syncInvite();
     } else if (isAdmin) {
-      if (!adminMounted) { mountAdmin(document.getElementById('admin-root'), rawCall, SERVER_BOARDS); adminMounted = true; }
+      if (!adminMounted) { mountAdmin(document.getElementById('admin-root'), rawCall, SERVER_BOARDS, () => memberKey); adminMounted = true; }
       window.scrollTo(0, 0);
     } else if (route === 'guide') {
       loadRecent();
