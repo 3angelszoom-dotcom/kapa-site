@@ -505,19 +505,19 @@
   /* 페이지 머리 띠: 아이콘을 제목 왼쪽에 붙이고, 제목 글씨는 작게, "HIR · Boarding" 같은 작은 문구는 숨김 */
   .page-band .container { flex-direction: row !important; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 12px !important; }
   .page-band .eyebrow { display: none !important; }
-  .page-band p { flex-basis: 100%; }
+  .page-band p { flex-basis: 100%; max-width: none !important; }   /* 설명 글은 항상 제목 아랫줄로 */
   .page-band h1 { font-size: clamp(22px, 3.4vw, 32px) !important; }
   #band-title.fit1 { width: auto !important; flex: 0 1 auto; min-width: 0; }
   .band-ico { font-size: 28px; }
   .ly-band-ico { width: 46px !important; height: 46px !important; border-radius: 14px !important; }
   .ly-band-ico svg { width: 27px !important; height: 27px !important; }
   .ly-band h1 { font-size: 24px !important; margin-top: 0 !important; }
-  /* 체크인 화면: 사진 배경이 있는 위 화면(메뉴·시계·제목)은 스크롤해도 항상 위에 고정, 아래 내용만 그 밑으로 올라감 */
-  body.is-lay .site-head { position: fixed; top: 0; left: 0; right: 0; z-index: 30; }
-  body.is-lay #view-layover .ly-band { position: sticky; top: 0; z-index: 20; }
-  body.is-lay.scrolled #view-layover .ly-band { box-shadow: 0 8px 20px rgba(0, 0, 0, .22); }
+  /* 모든 페이지: 사진 배경이 있는 위 화면(메뉴·시계·제목)은 스크롤해도 항상 위에 고정, 아래 내용만 그 밑으로 올라감 */
+  body .site-head { position: fixed; top: 0; left: 0; right: 0; z-index: 30; }
+  body .hero, body .page-band, body .ly-band { position: sticky; top: 0; z-index: 20; }
+  body.scrolled .hero, body.scrolled .page-band, body.scrolled .ly-band { box-shadow: 0 8px 20px rgba(0, 0, 0, .22); }
   /* 폰: 시계가 메뉴와 겹치지 않게 메뉴와 띠를 조금 내림 */
-  @media (max-width: 640px) { .head-acts { position: relative; } body.is-lay .site-head .nav { margin-top: 30px; } body.is-lay .ly-band { padding-top: 182px !important; } }
+  @media (max-width: 640px) { .head-acts { position: relative; } .site-head .nav { margin-top: 30px; } .ly-band { padding-top: 182px !important; } .page-band { padding-top: 186px !important; } }
   .hero .container { padding-block: 150px 22px !important; }
   @media (max-width: 640px) { .hero .container { padding-block: 132px 18px !important; } }
   /* 머리 배경: 모든 페이지를 게시판 페이지와 같은 색(연한 회색)으로 + 비행기 ("이용 안내" 살짝 위, 머리글에 있어서 어느 페이지에서나 보임) */
@@ -1023,7 +1023,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-69</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-71</small></span></div>
 </footer>
 
 <script>
@@ -3150,7 +3150,7 @@
     document.getElementById('view-home').hidden = !!b || isAdmin || isAbout || isLay;
     document.body.classList.toggle('is-home', !b && !isAdmin && !isAbout && !isLay);
     document.body.classList.toggle('is-lay', !!isLay);
-    tzShow(isLay);
+    tzShow(true);   // P·M·C·E 시계는 모든 페이지에
     document.getElementById('view-layover').hidden = !isLay;
     document.getElementById('view-about').hidden = !isAbout;
     document.getElementById('view-board').hidden = !b;
