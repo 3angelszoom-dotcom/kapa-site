@@ -1023,7 +1023,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-71</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-72</small></span></div>
 </footer>
 
 <script>
@@ -2413,7 +2413,7 @@
       api('adminGetAdminMembers').then(draw, e => { if (e.message !== '__auth') box.replaceChildren(el('p', { class: 'a-err' }, e.message)); });
       return el('section', { class: 'a-card' },
         el('h3', {}, '관리자 지정 회원'),
-        el('p', { class: 'a-muted' }, '체크한 회원은 개인 입장 코드로 입장해 있으면 관리자 비밀번호 없이 관리자 페이지에 들어와요. (관리자 지정과 관리자 비밀번호 바꾸기는 비밀번호로 들어온 경우에만 할 수 있어요.)'),
+        el('p', { class: 'a-muted' }, '체크한 회원은 개인 입장 코드로 입장해 있으면 관리자 비밀번호 없이 관리자 페이지에 들어와요. 지정된 회원도 이 목록을 바꿀 수 있어요. (관리자 비밀번호 바꾸기는 비밀번호로 들어온 경우에만 할 수 있어요.)'),
         box);
     }
     function anonViewersCard() {
