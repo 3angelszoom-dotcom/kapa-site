@@ -213,6 +213,12 @@
   .ly-push-on { font-size: 13px; font-weight: 600; color: #059669; background: #ECFDF5; padding: 3px 9px; border-radius: 999px; }
   .ly-push-tog { margin-left: auto; border: 0; background: #F1F3F6; color: #334155; border-radius: 999px; padding: 7px 13px; font: 600 13px/1 var(--body); cursor: pointer; }
   .ly-push-note { font-size: 14px; color: var(--muted); }
+  .ly-top { display: flex; align-items: stretch; justify-content: flex-end; gap: 8px; margin: 0 0 12px; }
+  .ly-bell { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); background: #F1F3F6; color: #475569; border-radius: 14px; padding: 9px 12px 9px 10px; font: 600 13px/1 var(--body); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .ly-bell.on { background: #ECFDF5; color: #059669; border-color: #A7F3D0; }
+  .ly-bell-ico { font-size: 15px; line-height: 1; }
+  .ly-bell-chev { font-size: 9px; opacity: .7; margin-left: 1px; }
+  .ly-pushbar .ly-push { margin: 0 0 20px; }
   .ly-pill { border: 1px solid #E2E5EA; background: #fff; color: #1F2937; border-radius: 999px; padding: 9px 15px; font: 600 14px/1 var(--body); cursor: pointer; }
   .ly-pill:disabled { opacity: .5; }
   .ly-push .msg.ok { color: #059669; }
@@ -523,23 +529,30 @@
     background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .03)); border: 1px solid rgba(255, 255, 255, .22);
     -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   .tz-strip.in-tile { grid-template-columns: 1fr; gap: 3px; min-height: 70px; padding: 6px 4px; border-radius: 13px; justify-items: center; }
-  /* 폰 게시판 등: 위 메뉴도 홈 화면과 같은 아이콘 칸 (조금 작게), 마지막 칸에 시계 */
+  /* 폰 게시판 등: 위 메뉴도 홈 화면과 똑같은 아이콘 칸, 마지막 칸에 시계 */
   .site-head .nav-tiles { display: none; }
   @media (max-width: 640px) {
     body:not(.is-home) .site-head .nav { display: none; }
     body:not(.is-home) .site-head .nav-tiles { display: grid; order: 3; width: 100%; margin-top: 10px; gap: 6px; }
-    .site-head .nav-tiles .hm-tile { min-height: 54px; gap: 4px; padding: 6px 2px; border-radius: 11px; font-size: 10.5px; }
-    .site-head .nav-tiles .hm-tile svg { width: 19px; height: 19px; }
     .site-head .nav-tiles .hm-tile[aria-current="page"] { border-color: #fff; background: linear-gradient(180deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, .10)); }
-    .site-head .nav-tiles .tz-strip.in-tile { min-height: 54px; padding: 3px 2px; gap: 1px; border-radius: 11px; }
-    .site-head .nav-tiles .tz-strip span { font-size: 9.5px; }
-    .site-head .nav-tiles .tz-strip span svg, .site-head .nav-tiles .tz-strip span.tz-ico { width: 11px; height: 11px; }
   }
   /* 폰: 큰 제목(과 아이콘)은 위 메뉴 칸에 이미 있으니 빼고 작은 설명 글만 (관리자 페이지는 메뉴에 없어서 제목 그대로) */
   @media (max-width: 640px) {
     #view-board .page-band h1, #view-board .band-ico, #view-about .page-band h1, #view-layover .ly-band h1, #view-layover .ly-band-ico { display: none !important; }
-    #view-board .page-band, #view-about .page-band, #view-layover .ly-band { padding-bottom: 18px !important; }
+    /* 위 화면을 홈과 똑같이: 로고·아이콘 → Together, Higher → 아이콘 칸(시계). 밑의 사진 화면 글은 모두 뺌 */
+    #view-board .page-band .container, #view-about .page-band .container, #view-layover .ly-band .container { display: none !important; }
+    #view-board .page-band, #view-about .page-band, #view-layover .ly-band { padding-bottom: 0 !important; }
+    #view-board .page-band, #view-about .page-band, #view-layover .ly-band { padding-top: var(--hh, 150px) !important; }   /* 사진 화면 = 위 메뉴 높이만큼 */
+    #view-layover .ly-wrap { padding-top: 12px; }
+    body:not(.is-home) .site-head .head-tag { display: block; order: 3; width: 100%; margin-top: 36px; }
+    body:not(.is-home) .site-head .nav-tiles { order: 4; margin-top: 46px; }
+    .head-tag .hm-tag { margin: 0; font: 400 26px/1.1 var(--display); letter-spacing: -.01em; color: #fff; text-shadow: 0 4px 18px rgba(0, 0, 0, .55); }
+    .head-tag .hm-tag em { font-style: normal; font-weight: 700; color: #8EC5FF; }
+    .head-tag .hm-sub { margin: 6px 0 0; letter-spacing: .1em; font-size: 9.5px; }
   }
+  .site-head .head-tag { display: none; }   /* 폰 게시판 등에서만 */
+  .ly-lead { display: none; }
+  @media (max-width: 640px) { .ly-lead { display: flex; align-items: center; justify-content: center; flex: 1; min-width: 0; margin: 0; padding: 9px 8px; border: 1px solid var(--line); border-radius: 14px; background: #F7F8FA; text-align: center; font-size: clamp(10px, 3.2vw, 13.5px); line-height: 1.35; white-space: nowrap; letter-spacing: -.02em; color: #475569; } }
   .hero .container { padding-block: 150px 22px !important; }
   @media (max-width: 640px) { .hero .container { padding-block: 132px 18px !important; } }
   /* 머리 배경: 모든 페이지를 게시판 페이지와 같은 색(연한 회색)으로 + 비행기 ("이용 안내" 살짝 위, 머리글에 있어서 어느 페이지에서나 보임) */
@@ -1045,7 +1058,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-73</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-74</small></span></div>
 </footer>
 
 <script>
@@ -1312,7 +1325,10 @@
     let nt = document.querySelector('.nav-tiles');
     if (!nt) {   // 홈 아이콘 칸을 복사해서 위 메뉴(폰 게시판 등)로 씀
       const src = document.querySelector('.hm-tiles'), nav = document.getElementById('nav');
-      if (src && nav) { nt = src.cloneNode(true); nt.querySelectorAll('.tz-strip').forEach(x => x.remove()); nt.classList.add('nav-tiles'); nt.setAttribute('aria-label', '메뉴'); nav.after(nt); }
+      if (src && nav) {   // 폰 게시판 등: 홈과 똑같이 Together, Higher를 아이콘 칸 위에
+        nav.after(el('div', { class: 'head-tag', 'aria-hidden': 'true' }, el('div', { class: 'hm-tag', html: 'Together, <em>Higher</em>' }), el('div', { class: 'hm-sub' }, 'Korean American Pilots Association')));
+      }
+      if (src && nav) { nt = src.cloneNode(true); nt.querySelectorAll('.tz-strip').forEach(x => x.remove()); nt.classList.add('nav-tiles'); nt.setAttribute('aria-label', '메뉴'); document.querySelector('.site-head .head-tag').after(nt); }
     }
     const tile = tzMq.matches;
     const to = !tile ? document.querySelector('.head-acts') : home ? document.querySelector('.hm-tiles:not(.nav-tiles)') : nt;
@@ -2681,7 +2697,7 @@
   }
   let pushOpen = false;   // 폰 알림 칸 펼침 여부
   // inSheet: 프로필 창 안에서 쓸 때 (처음부터 펼쳐서 보여줌, 체크인 화면의 펼침 상태와는 따로)
-  function pushCard(inSheet) {
+  function pushCard(inSheet, onChange) {
     if (!PUSH || GAS) return null;
     let open = inSheet ? true : pushOpen;
     const box = el('section', { class: 'ly-sec ly-push' });
@@ -2718,9 +2734,23 @@
         body = [el('p', {}, '커피 한잔 요청이 오거나 내 요청이 수락되면 이 기기로 바로 알림이 와요.'), on];
       }
       box.replaceChildren(el('div', { class: 'ly-card' }, head, body, msg));
+      if (onChange) onChange();
     };
     draw();
     return box;
+  }
+  // 체크인 화면 위 안내 상자 오른쪽: 알림 종 + 켜짐/꺼짐만, 누르면 설정 칸이 그 밑에 펼쳐짐
+  function pushBar() {
+    if (!PUSH || GAS) return null;
+    const isOn = () => { try { return pushSupported() && Notification.permission === 'granted' && !!store.get('pc_push_tok'); } catch (_) { return false; } };
+    const txt = el('span', {}), chev = el('span', { class: 'ly-bell-chev', 'aria-hidden': 'true' });
+    const btn = el('button', { class: 'ly-bell', type: 'button', 'aria-label': '폰 알림 설정' }, el('span', { class: 'ly-bell-ico', 'aria-hidden': 'true' }, '🔔'), txt, chev);
+    const slot = el('div', {});
+    const refresh = () => { const on = isOn(); btn.classList.toggle('on', on); txt.textContent = on ? '켜짐' : '꺼짐'; chev.textContent = pushOpen ? '▲' : '▼'; btn.setAttribute('aria-expanded', String(pushOpen)); };
+    const show = () => { slot.replaceChildren(pushOpen ? pushCard(true, refresh) : ''); refresh(); };
+    btn.addEventListener('click', () => { pushOpen = !pushOpen; show(); });
+    show();
+    return { btn, slot: el('div', { class: 'ly-pushbar' }, slot) };
   }
   // 취소 버튼: 한 번 누르면 "정말 취소?"로 바뀌고, 한 번 더 누르면 취소 (실수 방지, 알림창 없이)
   function confirmCancel(btn) {
@@ -2818,7 +2848,9 @@
 
     // 0) 폰 앱 알림
     await siteCfgP;
-    const pushSec = personal ? pushCard() : null;
+    const pb = personal ? pushBar() : null;   // 안내 상자 오른쪽 종 버튼
+    // 맨 위 한 줄: 안내 상자(폰에서만, 넓은 화면은 위 사진 화면에 있음) + 그 오른쪽 알림 켜짐/꺼짐
+    const pushSec = personal ? [el('div', { class: 'ly-top' }, el('p', { class: 'ly-lead' }, '같은 공항, 같은 시간에 있는 회원과 ☕ 🍽️'), pb && pb.btn), pb && pb.slot] : null;
 
     // 1) 만나요
     // 받은 요청 · 보낸 요청을 따로 나눠서 보여줌
@@ -3050,7 +3082,7 @@
     }
 
     // 넓은 화면: 왼쪽에 내 체크인(항상 맨 위)·알림·요청, 오른쪽에 전체 현황 / 폰: 위에서 아래로
-    fill(formSec, el('div', { class: 'ly-cols' }, el('div', { class: 'ly-col' }, mineSec, pushSec, inSec, outSec), el('div', { class: 'ly-col' }, allSec)));   // 체크인하기를 맨 위에
+    fill(pushSec, formSec, el('div', { class: 'ly-cols' }, el('div', { class: 'ly-col' }, mineSec, inSec, outSec), el('div', { class: 'ly-col' }, allSec)));   // 체크인하기를 맨 위에
   }
 
   // 최신글을 누르면 그 게시판으로 이동해서 바로 글을 열기
