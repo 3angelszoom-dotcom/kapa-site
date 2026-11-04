@@ -517,7 +517,29 @@
   body .hero, body .page-band, body .ly-band { position: sticky; top: 0; z-index: 20; }
   body.scrolled .hero, body.scrolled .page-band, body.scrolled .ly-band { box-shadow: 0 8px 20px rgba(0, 0, 0, .22); }
   /* 폰: 시계가 메뉴와 겹치지 않게 메뉴와 띠를 조금 내림 */
-  @media (max-width: 640px) { .head-acts { position: relative; } .site-head .nav { margin-top: 30px; } .ly-band { padding-top: 182px !important; } .page-band { padding-top: 186px !important; } }
+  @media (max-width: 640px) { .head-acts { position: relative; } .ly-band { padding-top: calc(var(--hh, 150px) + 14px) !important; } .page-band { padding-top: calc(var(--hh, 150px) + 18px) !important; } }   /* --hh: 위 메뉴 높이 (JS가 잼) */
+  /* 폰: 시계를 메뉴 마지막 칸에 박스로 (홈은 아이콘 칸 끝, 게시판 등은 메뉴 줄 끝) */
+  .tz-strip.in-tile { position: static; margin: 0; align-content: center; justify-content: center;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .03)); border: 1px solid rgba(255, 255, 255, .22);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .tz-strip.in-tile { grid-template-columns: 1fr; gap: 3px; min-height: 70px; padding: 6px 4px; border-radius: 13px; justify-items: center; }
+  /* 폰 게시판 등: 위 메뉴도 홈 화면과 같은 아이콘 칸 (조금 작게), 마지막 칸에 시계 */
+  .site-head .nav-tiles { display: none; }
+  @media (max-width: 640px) {
+    body:not(.is-home) .site-head .nav { display: none; }
+    body:not(.is-home) .site-head .nav-tiles { display: grid; order: 3; width: 100%; margin-top: 10px; gap: 6px; }
+    .site-head .nav-tiles .hm-tile { min-height: 54px; gap: 4px; padding: 6px 2px; border-radius: 11px; font-size: 10.5px; }
+    .site-head .nav-tiles .hm-tile svg { width: 19px; height: 19px; }
+    .site-head .nav-tiles .hm-tile[aria-current="page"] { border-color: #fff; background: linear-gradient(180deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, .10)); }
+    .site-head .nav-tiles .tz-strip.in-tile { min-height: 54px; padding: 3px 2px; gap: 1px; border-radius: 11px; }
+    .site-head .nav-tiles .tz-strip span { font-size: 9.5px; }
+    .site-head .nav-tiles .tz-strip span svg, .site-head .nav-tiles .tz-strip span.tz-ico { width: 11px; height: 11px; }
+  }
+  /* 폰: 큰 제목(과 아이콘)은 위 메뉴 칸에 이미 있으니 빼고 작은 설명 글만 (관리자 페이지는 메뉴에 없어서 제목 그대로) */
+  @media (max-width: 640px) {
+    #view-board .page-band h1, #view-board .band-ico, #view-about .page-band h1, #view-layover .ly-band h1, #view-layover .ly-band-ico { display: none !important; }
+    #view-board .page-band, #view-about .page-band, #view-layover .ly-band { padding-bottom: 18px !important; }
+  }
   .hero .container { padding-block: 150px 22px !important; }
   @media (max-width: 640px) { .hero .container { padding-block: 132px 18px !important; } }
   /* 머리 배경: 모든 페이지를 게시판 페이지와 같은 색(연한 회색)으로 + 비행기 ("이용 안내" 살짝 위, 머리글에 있어서 어느 페이지에서나 보임) */
@@ -1023,7 +1045,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-72</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-73</small></span></div>
 </footer>
 
 <script>
@@ -1282,6 +1304,27 @@
     clearInterval(tzTimer); tzTimer = null;
     if (on) { tzDraw(); tzTimer = setInterval(tzDraw, 20000); }
   }
+  // 폰에서는 시계를 아이콘 메뉴 마지막 칸으로 옮김 (홈: 홈 아이콘 칸, 게시판 등: 위 메뉴 아이콘 칸), 넓은 화면은 오른쪽 위(글쓰기 밑) 그대로
+  const tzMq = window.matchMedia('(max-width: 640px)');
+  function tzPlace() {
+    const box = document.getElementById('tz-strip'); if (!box) return;
+    const home = document.body.classList.contains('is-home');
+    let nt = document.querySelector('.nav-tiles');
+    if (!nt) {   // 홈 아이콘 칸을 복사해서 위 메뉴(폰 게시판 등)로 씀
+      const src = document.querySelector('.hm-tiles'), nav = document.getElementById('nav');
+      if (src && nav) { nt = src.cloneNode(true); nt.querySelectorAll('.tz-strip').forEach(x => x.remove()); nt.classList.add('nav-tiles'); nt.setAttribute('aria-label', '메뉴'); nav.after(nt); }
+    }
+    const tile = tzMq.matches;
+    const to = !tile ? document.querySelector('.head-acts') : home ? document.querySelector('.hm-tiles:not(.nav-tiles)') : nt;
+    if (!to) return;
+    if (box.parentNode !== to) to.appendChild(box);
+    box.classList.toggle('in-tile', tile);
+    tzHead();
+  }
+  // 위 메뉴(고정) 높이를 재서 사진 화면 제목이 메뉴 밑에서 시작하게
+  function tzHead() { const h = document.querySelector('.site-head'); if (h) document.documentElement.style.setProperty('--hh', Math.round(h.getBoundingClientRect().height) + 'px'); }
+  try { new ResizeObserver(tzHead).observe(document.querySelector('.site-head')); } catch (_) { window.addEventListener('resize', tzHead); }
+  try { tzMq.addEventListener('change', tzPlace); } catch (_) { tzMq.addListener(tzPlace); }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && tzTimer) tzDraw(); });   // 앱으로 돌아오면 바로 맞춤
   { const sc = () => document.body.classList.toggle('scrolled', window.scrollY > 8); window.addEventListener('scroll', sc, { passive: true }); sc(); }
   // ===== 홈 화면 앱으로 연 사람만: 오른쪽 아래 새로고침 버튼 (앱에는 브라우저 새로고침이 없어서) =====
@@ -3151,11 +3194,12 @@
     document.body.classList.toggle('is-home', !b && !isAdmin && !isAbout && !isLay);
     document.body.classList.toggle('is-lay', !!isLay);
     tzShow(true);   // P·M·C·E 시계는 모든 페이지에
+    tzPlace();
     document.getElementById('view-layover').hidden = !isLay;
     document.getElementById('view-about').hidden = !isAbout;
     document.getElementById('view-board').hidden = !b;
     document.getElementById('view-admin').hidden = !isAdmin;
-    document.querySelectorAll('#nav a').forEach(a => {
+    document.querySelectorAll('#nav a, .nav-tiles a').forEach(a => {
       if (a.dataset.route === route) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
     if (b) {
