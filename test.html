@@ -523,36 +523,31 @@
   body .hero, body .page-band, body .ly-band { position: sticky; top: 0; z-index: 20; }
   body.scrolled .hero, body.scrolled .page-band, body.scrolled .ly-band { box-shadow: 0 8px 20px rgba(0, 0, 0, .22); }
   /* 폰: 시계가 메뉴와 겹치지 않게 메뉴와 띠를 조금 내림 */
-  @media (max-width: 640px) { .head-acts { position: relative; } .ly-band { padding-top: calc(var(--hh, 150px) + 14px) !important; } .page-band { padding-top: calc(var(--hh, 150px) + 18px) !important; } }   /* --hh: 위 메뉴 높이 (JS가 잼) */
-  /* 폰: 시계를 메뉴 마지막 칸에 박스로 (홈은 아이콘 칸 끝, 게시판 등은 메뉴 줄 끝) */
+  .ly-band { padding-top: calc(var(--hh, 150px) + 14px) !important; } .page-band { padding-top: calc(var(--hh, 150px) + 18px) !important; }   /* --hh: 위 메뉴 높이 (JS가 잼) */
+  /* 모든 화면(폰·컴퓨터): 시계를 아이콘 메뉴 마지막 칸에 박스로 */
   .tz-strip.in-tile { position: static; margin: 0; align-content: center; justify-content: center;
     background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .03)); border: 1px solid rgba(255, 255, 255, .22);
     -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   .tz-strip.in-tile { grid-template-columns: 1fr; gap: 3px; min-height: 70px; padding: 6px 4px; border-radius: 13px; justify-items: center; }
-  /* 폰 게시판 등: 위 메뉴도 홈 화면과 똑같은 아이콘 칸, 마지막 칸에 시계 */
-  .site-head .nav-tiles { display: none; }
-  @media (max-width: 640px) {
-    body:not(.is-home) .site-head .nav { display: none; }
-    body:not(.is-home) .site-head .nav-tiles { display: grid; order: 3; width: 100%; margin-top: 10px; gap: 6px; }
-    .site-head .nav-tiles .hm-tile[aria-current="page"] { border-color: #fff; background: linear-gradient(180deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, .10)); }
-  }
-  /* 폰: 큰 제목(과 아이콘)은 위 메뉴 칸에 이미 있으니 빼고 작은 설명 글만 (관리자 페이지는 메뉴에 없어서 제목 그대로) */
-  @media (max-width: 640px) {
-    #view-board .page-band h1, #view-board .band-ico, #view-about .page-band h1, #view-layover .ly-band h1, #view-layover .ly-band-ico { display: none !important; }
-    /* 위 화면을 홈과 똑같이: 로고·아이콘 → Together, Higher → 아이콘 칸(시계). 밑의 사진 화면 글은 모두 뺌 */
-    #view-board .page-band .container, #view-about .page-band .container, #view-layover .ly-band .container { display: none !important; }
-    #view-board .page-band, #view-about .page-band, #view-layover .ly-band { padding-bottom: 14px !important; }   /* 메뉴 밑 여백 = 홈과 같게 (22px) */
-    #view-board .page-band, #view-about .page-band, #view-layover .ly-band { padding-top: var(--hh, 150px) !important; }   /* 사진 화면 = 위 메뉴 높이만큼 */
-    #view-layover .ly-wrap { padding-top: 12px; }
-    body:not(.is-home) .site-head .head-tag { display: block; order: 3; width: 100%; margin-top: 36px; }
-    body:not(.is-home) .site-head .nav-tiles { order: 4; margin-top: 46px; }
-    .head-tag .hm-tag { margin: 0; font: 400 26px/1.1 var(--display); letter-spacing: -.01em; color: #fff; text-shadow: 0 4px 18px rgba(0, 0, 0, .55); }
-    .head-tag .hm-tag em { font-style: normal; font-weight: 700; color: #8EC5FF; }
-    .head-tag .hm-sub { margin: 6px 0 0; letter-spacing: .1em; font-size: 9.5px; }
-  }
-  .site-head .head-tag { display: none; }   /* 폰 게시판 등에서만 */
-  .ly-lead { display: none; }
-  @media (max-width: 640px) { .ly-lead { display: flex; align-items: center; justify-content: center; flex: 1; min-width: 0; margin: 0; padding: 9px 8px; border: 1px solid var(--line); border-radius: 14px; background: #F7F8FA; text-align: center; font-size: clamp(10px, 3.2vw, 13.5px); line-height: 1.35; white-space: nowrap; letter-spacing: -.02em; color: #475569; } }
+  @media (min-width: 641px) { .tz-strip.in-tile { gap: 5px; border-radius: 16px; } .tz-strip.in-tile span { font-size: 13px; gap: 5px; } .tz-strip.in-tile span svg, .tz-strip.in-tile span.tz-ico { width: 17px; height: 17px; } }
+  /* 모든 화면: 위 화면을 홈과 똑같이 (로고·아이콘 → Together, Higher → 아이콘 칸 + 시계), 글자 메뉴는 안 씀 */
+  .site-head .nav { display: none !important; }
+  .site-head .container { padding-right: 24px !important; }
+  .head-acts { position: relative !important; top: auto !important; right: auto !important; order: 2; margin-left: auto; }
+  .site-head .nav-tiles, .site-head .head-tag { display: none; }
+  body:not(.is-home) .site-head .head-tag { display: block; order: 3; width: 100%; margin-top: 36px; text-align: left; }
+  body:not(.is-home) .site-head .nav-tiles { display: grid; order: 4; width: 100%; margin-top: 46px; }
+  .site-head .nav-tiles .hm-tile[aria-current="page"] { border-color: #fff; background: linear-gradient(180deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, .10)); }
+  .head-tag .hm-tag { margin: 0; font: 400 clamp(32px, 4.4vw, 56px)/1.1 var(--display); letter-spacing: -.01em; color: #fff; text-shadow: 0 4px 18px rgba(0, 0, 0, .55); }
+  .head-tag .hm-tag em { font-style: normal; font-weight: 700; color: #8EC5FF; }
+  .head-tag .hm-sub { margin: 12px 0 0; }
+  @media (max-width: 640px) { .head-tag .hm-tag { font-size: 26px; } .head-tag .hm-sub { margin-top: 6px; letter-spacing: .1em; font-size: 9.5px; } }
+  /* 게시판·체크인·About Us: 큰 제목·설명은 위 메뉴 칸에 있으니 사진 화면 글은 모두 빼고, 사진 화면 = 위 메뉴 높이 + 홈과 같은 여백 (관리자 페이지는 그대로) */
+  #view-board .page-band .container, #view-about .page-band .container, #view-layover .ly-band .container { display: none !important; }
+  #view-board .page-band, #view-about .page-band, #view-layover .ly-band { padding-top: var(--hh, 150px) !important; padding-bottom: 14px !important; }   /* --hh: 위 메뉴 높이 (JS가 잼) */
+  #view-layover .ly-wrap { padding-top: 12px; }
+  @media (min-width: 641px) { #view-board .page-band, #view-about .page-band, #view-layover .ly-band { padding-bottom: 36px !important; } #view-layover .ly-wrap { padding-top: 24px; } }   /* 컴퓨터: 홈 메뉴 밑 여백과 같게 */
+  .ly-lead { display: flex; align-items: center; justify-content: center; flex: 1; min-width: 0; margin: 0; padding: 9px 8px; border: 1px solid var(--line); border-radius: 14px; background: #F7F8FA; text-align: center; font-size: clamp(10px, 3.2vw, 14px); line-height: 1.35; white-space: nowrap; letter-spacing: -.02em; color: #475569; }
   .hero .container { padding-block: 150px 22px !important; }
   @media (max-width: 640px) { .hero .container { padding-block: 132px 18px !important; } }
   /* 머리 배경: 모든 페이지를 게시판 페이지와 같은 색(연한 회색)으로 + 비행기 ("이용 안내" 살짝 위, 머리글에 있어서 어느 페이지에서나 보임) */
@@ -624,7 +619,7 @@
   .hero .hm-tag { margin: 0; font: 400 clamp(32px, 4.4vw, 56px)/1.1 var(--display) !important; letter-spacing: -.01em !important; color: #fff !important; text-transform: none !important; text-shadow: 0 4px 18px rgba(0, 0, 0, .55); }
   .hero .hm-tag em { font-style: normal; font-weight: 700; color: #8EC5FF; }
   .hm-sub { margin: 12px 0 0; font: 500 clamp(11px, 1.5vw, 17px)/1.3 var(--display); letter-spacing: .28em; color: rgba(226, 232, 240, .9); }
-  .hm-tiles { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; margin-top: 48px; }
+  .hm-tiles { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px; margin-top: 48px; }   /* 7칸 + 시계 */
   .hm-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; min-height: 104px; padding: 12px 6px; border-radius: 16px;
     color: #fff; text-decoration: none; text-align: center; font: 600 14px/1.2 var(--body);
     background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .03)); border: 1px solid rgba(255, 255, 255, .22);
@@ -1058,7 +1053,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-75</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-76</small></span></div>
 </footer>
 
 <script>
@@ -1330,7 +1325,7 @@
       }
       if (src && nav) { nt = src.cloneNode(true); nt.querySelectorAll('.tz-strip').forEach(x => x.remove()); nt.classList.add('nav-tiles'); nt.setAttribute('aria-label', '메뉴'); document.querySelector('.site-head .head-tag').after(nt); }
     }
-    const tile = tzMq.matches;
+    const tile = true;   // 폰·컴퓨터 모두 아이콘 칸 마지막에
     const to = !tile ? document.querySelector('.head-acts') : home ? document.querySelector('.hm-tiles:not(.nav-tiles)') : nt;
     if (!to) return;
     if (box.parentNode !== to) to.appendChild(box);
