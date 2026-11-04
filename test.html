@@ -519,9 +519,13 @@
   .ly-band-ico svg { width: 27px !important; height: 27px !important; }
   .ly-band h1 { font-size: 24px !important; margin-top: 0 !important; }
   /* 모든 페이지: 사진 배경이 있는 위 화면(메뉴·시계·제목)은 스크롤해도 항상 위에 고정, 아래 내용만 그 밑으로 올라감 */
-  body .site-head { position: fixed; top: 0; left: 0; right: 0; z-index: 30; }
-  body .hero, body .page-band, body .ly-band { position: sticky; top: 0; z-index: 20; }
-  body.scrolled .hero, body.scrolled .page-band, body.scrolled .ly-band { box-shadow: 0 8px 20px rgba(0, 0, 0, .22); }
+  /* 스크롤하면: 맨 위에 로고·아이콘 줄, 그 밑에 아이콘 메뉴 칸만 떠서 고정 (Together, Higher와 사진은 올라감). JS가 head-mini / tiles-fixed를 붙임 */
+  body .site-head { position: absolute; top: 0; left: 0; right: 0; z-index: 30; }
+  body.head-mini .site-head { position: fixed; z-index: 41; background: rgba(10, 22, 48, .96); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  body.head-mini .site-head .head-tag, body.head-mini .site-head .tiles-spacer, body.head-mini .site-head .nav-tiles:not(.tiles-fixed) { display: none !important; }
+  .tiles-fixed { position: fixed !important; top: 0; left: 0; right: 0; z-index: 40; margin: 0 !important;
+    padding: 8px max(18px, calc((100vw - 1112px) / 2)) !important; background: rgba(10, 22, 48, .94);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 8px 20px rgba(0, 0, 0, .25); }
   /* 폰: 시계가 메뉴와 겹치지 않게 메뉴와 띠를 조금 내림 */
   .ly-band { padding-top: calc(var(--hh, 150px) + 14px) !important; } .page-band { padding-top: calc(var(--hh, 150px) + 18px) !important; }   /* --hh: 위 메뉴 높이 (JS가 잼) */
   /* 모든 화면(폰·컴퓨터): 시계를 아이콘 메뉴 마지막 칸에 박스로 */
@@ -537,7 +541,7 @@
   .site-head .nav-tiles, .site-head .head-tag { display: none; }
   body:not(.is-home) .site-head .head-tag { display: block; order: 3; width: 100%; margin-top: 36px; text-align: left; }
   body:not(.is-home) .site-head .nav-tiles { display: grid; order: 4; width: 100%; margin-top: 46px; }
-  .site-head .nav-tiles .hm-tile[aria-current="page"] { border-color: #fff; background: linear-gradient(180deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, .10)); }
+  .nav-tiles .hm-tile[aria-current="page"] { border-color: #fff; background: linear-gradient(180deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, .10)); }
   .head-tag .hm-tag { margin: 0; font: 400 clamp(32px, 4.4vw, 56px)/1.1 var(--display); letter-spacing: -.01em; color: #fff; text-shadow: 0 4px 18px rgba(0, 0, 0, .55); }
   .head-tag .hm-tag em { font-style: normal; font-weight: 700; color: #8EC5FF; }
   .head-tag .hm-sub { margin: 12px 0 0; }
@@ -1053,7 +1057,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-76</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-77</small></span></div>
 </footer>
 
 <script>
@@ -1315,6 +1319,7 @@
   // 폰에서는 시계를 아이콘 메뉴 마지막 칸으로 옮김 (홈: 홈 아이콘 칸, 게시판 등: 위 메뉴 아이콘 칸), 넓은 화면은 오른쪽 위(글쓰기 밑) 그대로
   const tzMq = window.matchMedia('(max-width: 640px)');
   function tzPlace() {
+    tilesUnfix();   // 고정된 메뉴 칸은 제자리로 돌려놓고 다시 계산
     const box = document.getElementById('tz-strip'); if (!box) return;
     const home = document.body.classList.contains('is-home');
     let nt = document.querySelector('.nav-tiles');
@@ -1331,11 +1336,37 @@
     if (box.parentNode !== to) to.appendChild(box);
     box.classList.toggle('in-tile', tile);
     tzHead();
+    setTimeout(tilesCheck, 0);
   }
   // 위 메뉴(고정) 높이를 재서 사진 화면 제목이 메뉴 밑에서 시작하게
-  function tzHead() { const h = document.querySelector('.site-head'); if (h) document.documentElement.style.setProperty('--hh', Math.round(h.getBoundingClientRect().height) + 'px'); }
+  function tzHead() { if (document.body.classList.contains('head-mini')) return; const h = document.querySelector('.site-head'); if (h) document.documentElement.style.setProperty('--hh', Math.round(h.getBoundingClientRect().height) + 'px'); }
   try { new ResizeObserver(tzHead).observe(document.querySelector('.site-head')); } catch (_) { window.addEventListener('resize', tzHead); }
   try { tzMq.addEventListener('change', tzPlace); } catch (_) { tzMq.addListener(tzPlace); }
+  // 스크롤해서 아이콘 메뉴 칸이 화면 맨 위에 닿으면 그 칸만 맨 위에 고정 (자리는 빈 칸으로 남겨서 화면이 튀지 않게)
+  const tileFix = { el: null, spacer: el('div', { class: 'tiles-spacer', 'aria-hidden': 'true' }), at: 0 };
+  function tilesNow() { return document.body.classList.contains('is-home') ? document.querySelector('.hm-tiles:not(.nav-tiles)') : document.querySelector('.nav-tiles'); }
+  function tilesUnfix() {
+    const f = tileFix;
+    if (f.el) { f.el.classList.remove('tiles-fixed'); f.el.style.top = ''; if (f.spacer.parentNode) f.spacer.replaceWith(f.el); f.el = null; }
+    document.body.classList.remove('head-mini');
+  }
+  function tilesCheck() {
+    const f = tileFix;
+    if (f.el) { if (window.scrollY < f.at) tilesUnfix(); return; }
+    const t = tilesNow(); if (!t || !t.offsetParent) return;
+    const r = t.getBoundingClientRect();
+    const c = document.querySelector('.site-head .container');
+    const barH = Math.round(parseFloat(c && getComputedStyle(c).minHeight) || 70);   // 로고·아이콘 줄 높이
+    if (r.top <= barH && window.scrollY > 0) {
+      const cs = getComputedStyle(t);
+      f.at = window.scrollY + r.top - barH;
+      Object.assign(f.spacer.style, { height: r.height + 'px', marginTop: cs.marginTop, order: cs.order, width: '100%', flex: 'none' });
+      t.replaceWith(f.spacer); document.body.appendChild(t); t.classList.add('tiles-fixed'); t.style.top = barH + 'px'; f.el = t;
+      document.body.classList.add('head-mini');
+    }
+  }
+  window.addEventListener('scroll', tilesCheck, { passive: true });
+  window.addEventListener('resize', () => { tilesUnfix(); tilesCheck(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && tzTimer) tzDraw(); });   // 앱으로 돌아오면 바로 맞춤
   { const sc = () => document.body.classList.toggle('scrolled', window.scrollY > 8); window.addEventListener('scroll', sc, { passive: true }); sc(); }
   // ===== 홈 화면 앱으로 연 사람만: 오른쪽 아래 새로고침 버튼 (앱에는 브라우저 새로고침이 없어서) =====
