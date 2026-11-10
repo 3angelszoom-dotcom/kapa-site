@@ -1057,7 +1057,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-79</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-80</small></span></div>
 </footer>
 
 <script>
@@ -1065,7 +1065,7 @@
   // 이 화면이 어디서 열렸나: Apps Script(…/exec) 안이면 google.script로, 내 도메인(index.html)이면 API_URL로 서버와 대화
   const GAS = typeof google !== 'undefined' && !!(google.script && google.script.run);
   const API_URL = "https://script.google.com/macros/s/AKfycbxM8aE3mSczAAv6SxyngKNPxyeY7q0Mw4QF1-F-GGvnxpNXEpURJsOaolXf7S1DHuU/exec";
-  const SERVER_BOARDS = [{"id": "hiring", "name": "Airlines Hiring News"}, {"id": "interview", "name": "My Interview Tips"}, {"id": "free", "name": "자유게시판"}, {"id": "longsit", "name": "Airport Info"}, {"id": "anon", "name": "익명 상담소"}];
+  const SERVER_BOARDS = [{"id": "hiring", "name": "Airlines Hiring News"}, {"id": "interview", "name": "My Interview Tips"}, {"id": "free", "name": "자유게시판"}, {"id": "longsit", "name": "Airport Info"}, {"id": "anon", "name": "1:1 상담"}];
   const KAKAO_URL = '';
   let CONTACT = '';
   let HERO_IMAGE = '';
@@ -2702,21 +2702,22 @@
     if (tok) { try { await call('removePushToken', memberKey, tok); } catch (e) {} }
     store.set('pc_push_tok', '');
   }
-  // 알림 종류 고르기 (공지 / 내 글에 댓글 / 새 글 받을 게시판). 바꾸면 바로 저장
+  // 알림 종류 고르기 (공지 / 내 글에 댓글 / 새 체크인 / 새 글 받을 게시판). 바꾸면 바로 저장
   function prefsBox() {
     const box = el('div', { class: 'ly-prefs' }, el('p', { class: 'muted' }, '알림 설정 불러오는 중…'));
     call('getPushPrefs', memberKey).then(p => {
       const ck = (on, label) => { const i = el('input', { type: 'checkbox' }); i.checked = !!on; return [i, el('label', { class: 'ly-check' }, i, label)]; };
       const [nI, nL] = ck(p.notice, '공지사항');
       const [cI, cL] = ck(p.comments, '내 글에 댓글');
+      const [kI, kL] = ck(p.checkins !== false, '새 체크인 (누가 체크인하면)');
       const bs = p.allBoards.map(b => ({ id: b.id, c: ck(p.boards.indexOf(b.id) >= 0, b.name) }));
       const note = el('span', { class: 'ly-prefs-note' });
       let t = null;
       const save = () => { clearTimeout(t); note.textContent = '저장 중…'; t = setTimeout(async () => {
-        try { await call('setPushPrefs', memberKey, { notice: nI.checked, comments: cI.checked, boards: bs.filter(b => b.c[0].checked).map(b => b.id) }); note.textContent = '저장됨 ✓'; }
+        try { await call('setPushPrefs', memberKey, { notice: nI.checked, comments: cI.checked, checkins: kI.checked, boards: bs.filter(b => b.c[0].checked).map(b => b.id) }); note.textContent = '저장됨 ✓'; }
         catch (e) { if (e.message !== '__auth') note.textContent = e.message; } }, 500); };
-      [nI, cI, ...bs.map(b => b.c[0])].forEach(i => i.addEventListener('change', save));
-      box.replaceChildren(el('b', { class: 'ly-prefs-h' }, '받을 알림', note), nL, cL,
+      [nI, cI, kI, ...bs.map(b => b.c[0])].forEach(i => i.addEventListener('change', save));
+      box.replaceChildren(el('b', { class: 'ly-prefs-h' }, '받을 알림', note), nL, cL, kL,
         el('b', { class: 'ly-prefs-h' }, '새 글 알림 받을 게시판'), el('div', { class: 'ly-prefs-boards' }, bs.map(b => b.c[1])));
     }, e => { box.replaceChildren(el('p', { class: 'msg' }, e.message === '__auth' ? '' : '알림 설정을 불러오지 못했어요.')); });
     return box;
