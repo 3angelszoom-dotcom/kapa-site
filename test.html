@@ -307,10 +307,13 @@
   .ly-row b { font-weight: 600; }
   .ly-row .ly-sub { grid-column: 1; color: var(--muted); font-size: 13px; }
   .ly-row .ly-memo { grid-column: 1 / -1; font-size: 14px; }
-  #view-layover .ly-act .done-btn { color: #065F46; border-color: #A7F3D0; background: #ECFDF5; font: 700 13px/1 var(--body); letter-spacing: 0; text-transform: none; }
+  #view-layover .ly-act .del-wrap { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  #view-layover .ly-act .del-btn, #view-layover .ly-act .del-no { color: #475569; border-color: var(--line); background: #F8FAFC; font: 700 13px/1 var(--body); letter-spacing: 0; text-transform: none; }
+  #view-layover .ly-act .del-yes { color: #fff; border: 1px solid #DC2626; background: #DC2626; border-radius: 10px; padding: 8px 14px; font: 700 13px/1 var(--body); cursor: pointer; }
+  #view-layover .ly-act .del-q { font-size: 13px; font-weight: 700; color: #B91C1C; }
   /* 성사·거절된 요청: 연락처와 버튼을 아래 줄에 넓게 */
   #view-layover .ly-row.settled .ly-act { grid-row: auto; grid-column: 1 / -1; justify-content: flex-start; margin-top: 6px; }
-  #view-layover .ly-row.settled .ly-act .done-btn { margin-left: auto; }
+  #view-layover .ly-row.settled .ly-act .del-wrap { margin-left: auto; }
   #view-layover button { touch-action: manipulation; }
   #view-layover button.busy { opacity: .55; }
   #view-layover .ly-act .join-btn { background: #0F766E; border-color: #0F766E; }
@@ -1057,7 +1060,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-80</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-81</small></span></div>
 </footer>
 
 <script>
@@ -2881,14 +2884,23 @@
 
     // 1) 만나요
     // 받은 요청 · 보낸 요청을 따로 나눠서 보여줌
-    // Done: 끝난 요청(성사·거절)은 Done을 누르면 내 화면에서 사라짐. 약속한 회원이 모두 누르면 전체 현황에서도 사라짐 (서버에 기록)
+    // 삭제(예전 Done): 끝난 요청(성사·거절)은 삭제를 누르면 내 화면에서 사라짐. 약속한 회원이 모두 누르면 전체 현황에서도 사라짐 (서버에 기록)
     // 누르는 즉시 화면에서 지우고(서버 답을 기다리지 않음), 서버 기록은 뒤에서. 실패하면 다시 불러옴
-    const doneBtn = m => el('button', { class: 'ghost done-btn', type: 'button', onclick: () => {
-      r.meets = r.meets.filter(x => x.id !== m.id);
-      try { store.set('pc_ly', JSON.stringify({ k: memberKey, r: r })); } catch (_) {}
-      drawLayover(r);
-      call('doneMeet', memberKey, m.id).catch(e => { if (e.message !== '__auth') reload(); });
-    } }, '✓ Done');
+    // 삭제: 한 번 누르면 "정말 삭제할까요? [삭제] [아니요]"로 바뀌고, [삭제]를 한 번 더 눌러야 지워짐
+    const doneBtn = m => {
+      const wrap = el('span', { class: 'del-wrap' });
+      const ask = () => wrap.replaceChildren(el('button', { class: 'ghost del-btn', type: 'button', onclick: confirm }, '🗑 삭제'));
+      const confirm = () => wrap.replaceChildren(el('span', { class: 'del-q' }, '정말 삭제할까요?'),
+        el('button', { class: 'del-yes', type: 'button', onclick: () => {
+          r.meets = r.meets.filter(x => x.id !== m.id);
+          try { store.set('pc_ly', JSON.stringify({ k: memberKey, r: r })); } catch (_) {}
+          drawLayover(r);
+          call('doneMeet', memberKey, m.id).catch(e => { if (e.message !== '__auth') reload(); });
+        } }, '삭제'),
+        el('button', { class: 'ghost del-no', type: 'button', onclick: ask }, '아니요'));
+      ask();
+      return wrap;
+    };
     const meetRow = m => el('div', { class: 'ly-row' + (m.status === '수락' ? ' match' : '') + (m.status === '수락' || m.status === '거절' ? ' settled' : '') },
         el('div', {}, el('b', {}, m.name), ` · ${m.place}`,
           el('span', { class: 'ly-tag' + (m.status === '수락' ? ' on' : '') },
