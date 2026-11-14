@@ -476,6 +476,8 @@
     background: rgba(255, 255, 255, .55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
   @media (max-width: 640px) { .ly-band { padding-block: 150px 28px !important; } }
   /* ---- 홈 화면 앱: 오른쪽 아래 투명 새로고침 버튼 ---- */
+  .upd-bar { position: fixed; left: 50%; transform: translateX(-50%); top: calc(10px + env(safe-area-inset-top)); z-index: 90; border: 0; border-radius: 999px;
+    padding: 11px 18px; background: #0A84FF; color: #fff; font: 700 14px/1.2 var(--body); box-shadow: 0 8px 24px rgba(0, 0, 0, .3); cursor: pointer; white-space: nowrap; }
   .rf-btn { position: fixed; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 60; width: 44px; height: 44px; border-radius: 50%;
     display: grid; place-items: center; padding: 0; cursor: pointer; color: #0B1220;
     background: rgba(255, 255, 255, .38); border: 1px solid rgba(255, 255, 255, .6); box-shadow: 0 4px 14px rgba(15, 23, 42, .14);
@@ -1060,7 +1062,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-83</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-84</small></span></div>
 </footer>
 
 <script>
@@ -1384,6 +1386,33 @@
     // 저장된 예전 화면이 아니라 항상 새 화면을 받도록 주소 끝에 시간을 붙여서 다시 열기
     b.addEventListener('click', () => { b.classList.add('spin'); location.replace(location.pathname + '?r=' + Date.now() + location.hash); });
     document.body.append(b);
+  })();
+  // ===== 새 버전 알림: 앱을 열거나 다시 화면에 띄울 때 사이트에 새 버전이 올라와 있으면 맨 위에 "업데이트" 띠 =====
+  // (폰·홈 화면 앱이 예전에 받아 둔 화면을 계속 보여 주는 일을 막음. 누르면 새 화면을 받아서 다시 열림)
+  (function updateCheck() {
+    if (GAS) return;
+    const vOf = t => (/>(v\d{4}-\d+)</.exec(t) || [])[1] || '';
+    const mine = vOf(document.documentElement.innerHTML);
+    if (!mine) return;
+    let last = 0, bar = null;
+    const show = () => {
+      if (bar) return;
+      bar = el('button', { class: 'upd-bar', type: 'button' }, '🔄 새 버전이 있어요 · 눌러서 업데이트');
+      bar.addEventListener('click', () => { bar.textContent = '업데이트 중…'; location.replace(location.pathname + '?r=' + Date.now() + location.hash); });
+      document.body.append(bar);
+    };
+    const check = async () => {
+      if (bar || document.hidden || Date.now() - last < 60e3) return;
+      last = Date.now();
+      try {
+        const t = await fetch(location.pathname + '?v=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '');
+        const now = vOf(t);
+        if (now && now !== mine) show();
+      } catch (_) {}
+    };
+    setTimeout(check, 4000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+    window.addEventListener('focus', check);
   })();
   // ===== 왼쪽 아래: 페이지 맨 위로 (모든 화면, 아래로 조금 내리면 나타남) =====
   (function topButton() {
