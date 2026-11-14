@@ -1060,13 +1060,15 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-82</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-83</small></span></div>
 </footer>
 
 <script>
   // ===== 서버에서 받은 설정 =====
   // 이 화면이 어디서 열렸나: Apps Script(…/exec) 안이면 google.script로, 내 도메인(index.html)이면 API_URL로 서버와 대화
   const GAS = typeof google !== 'undefined' && !!(google.script && google.script.run);
+  // 테스트 페이지인지: kapausa.org/test.html 과 kapausa.org/test 둘 다 (알림을 눌렀을 때 테스트 페이지로 열리게)
+  const IS_TEST = /\/test(\.html)?$/.test(location.pathname);
   const API_URL = "https://script.google.com/macros/s/AKfycbxM8aE3mSczAAv6SxyngKNPxyeY7q0Mw4QF1-F-GGvnxpNXEpURJsOaolXf7S1DHuU/exec";
   const SERVER_BOARDS = [{"id": "hiring", "name": "Airlines Hiring News"}, {"id": "interview", "name": "My Interview Tips"}, {"id": "free", "name": "자유게시판"}, {"id": "longsit", "name": "Airport Info"}, {"id": "anon", "name": "1:1 상담"}];
   const KAKAO_URL = '';
@@ -1115,7 +1117,7 @@
     if (GAS) return new Promise((resolve, reject) =>
       google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn](...args));
     // 내 도메인: Apps Script 데이터 창구로 POST (text/plain이라 추가 확인 요청 없이 바로 감, 구글 로그인과 무관)
-    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, page: /test\.html$/.test(location.pathname) ? 'test' : '' }), redirect: 'follow' })
+    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, page: IS_TEST ? 'test' : '' }), redirect: 'follow' })
       .then(r => { if (!r.ok) throw new Error('서버에 연결하지 못했어요 (' + r.status + '). 잠시 후 다시 시도해 주세요.'); return r.json(); },
             () => { throw new Error('인터넷 연결을 확인해 주세요.'); })
       .then(j => { if (!j || !j.ok) throw new Error((j && j.error) || '서버 오류'); return j.data; });
@@ -2819,7 +2821,7 @@
     if (!best) throw new Error('가까운 공항을 찾지 못했어요.');
     return best;
   }
-  const lyPage = () => /test\.html$/.test(location.pathname) ? 'test' : '';   // 알림 메일 링크를 테스트 페이지로 보낼지
+  const lyPage = () => IS_TEST ? 'test' : '';   // 알림 메일 링크를 테스트 페이지로 보낼지
   async function loadLayover(fresh) {   // fresh: 버튼을 누른 뒤 다시 불러올 때 (예전 현황을 먼저 보여주지 않음)
     const box = document.getElementById('layover-app');
     const fill = (...k) => box.replaceChildren(...k.flat(Infinity).filter(x => x != null && x !== false));
