@@ -759,6 +759,13 @@
   .ab-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 64px; align-items: start; padding-block: 64px 0; }
   @media (max-width: 900px) { .ab-layout { grid-template-columns: minmax(0, 1fr); gap: 40px; padding-block: 40px 0; } }
   .ab-main { max-width: 680px; min-width: 0; }
+  /* 인사말 오른쪽 Join 버튼: 누르면 인적사항 양식으로 (가입한 회원이 입장해 있으면 숨김) */
+  .ab-lead-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 0 0 40px; }
+  .ab-lead-row .ab-lead { margin: 0; }
+  .ab-join-go { flex: none; display: inline-flex; flex-direction: column; align-items: center; gap: 3px; padding: 14px 20px; border: 0; border-radius: 16px;
+    background: #0B1B3A; color: #fff; font: 700 20px/1 var(--display); letter-spacing: .04em; cursor: pointer; box-shadow: 0 8px 20px rgba(11, 27, 58, .25); }
+  .ab-join-go small { font: 600 11.5px/1 var(--body); letter-spacing: 0; opacity: .8; }
+  .ab-join-go[hidden] { display: none; }
   .ab-lead { margin: 0 0 40px; font-size: clamp(19px, 2.4vw, 23px); line-height: 1.7; font-weight: 500; }
   .ab-timeline { list-style: none; margin: 0 0 48px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--ink); }
   .ab-timeline li { padding: 16px 14px 0 0; display: flex; flex-direction: column; gap: 6px; position: relative; }
@@ -950,7 +957,10 @@
     </section>
     <div class="container ab-layout">
       <article class="ab-main">
-        <p class="ab-lead">안녕하세요!<br>카파 (Korean American Pilots Associations) 입니다.<br>안내글 끝까지 읽어봐 주시기 바랍니다.</p>
+        <div class="ab-lead-row">
+          <p class="ab-lead">안녕하세요!<br>카파 (Korean American Pilots Associations) 입니다.<br>안내글 끝까지 읽어봐 주시기 바랍니다.</p>
+          <button type="button" class="ab-join-go" id="ab-join-go">Join<small>가입 신청</small></button>
+        </div>
 
         <ol class="ab-timeline" aria-label="카파의 역사">
           <li><b>2000년대 중반</b><span>한인 조종사들의 작은 친목 모임으로 시작</span></li>
@@ -1086,7 +1096,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-86</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-87</small></span></div>
 </footer>
 
 <script>
@@ -1238,6 +1248,7 @@
   function syncInvite() {
     const card = document.getElementById('invite'); if (!card) return;
     const m = memberKey && ((feed && feed.me) || lastMe);
+    { const jb = document.getElementById('ab-join-go'); if (jb) jb.hidden = !!(m && m.type === 'personal'); }   // 이미 회원이면 Join 버튼 숨김
     const k = m && m.type === 'personal' && m.kakaoRoom && m.kakaoRoom.url ? m.kakaoRoom : null;
     const h = card.querySelector('h2'), hint = card.querySelector('.ab-hint'), row = card.querySelector('.ab-code-row');
     const login = document.getElementById('ab-login'), old = card.querySelector('.ab-old');
@@ -1253,6 +1264,16 @@
     }
   }
   { const b = document.getElementById('ab-login'); if (b) b.addEventListener('click', () => openMe()); }
+  // Join: 인적사항 양식으로 바로 내려감 (위에 고정되는 메뉴 높이만큼 띄워서)
+  { const b = document.getElementById('ab-join-go'); if (b) b.addEventListener('click', () => {
+    const t = document.getElementById('ab-form'); if (!t) return;
+    const card = t.closest('.ab-card') || t;
+    const c = document.querySelector('.site-head .container');
+    const barH = Math.round(parseFloat(c && getComputedStyle(c).minHeight) || 70);
+    const tiles = document.querySelector('.tiles-fixed') || document.querySelector('.nav-tiles');
+    const off = barH + (tiles ? tiles.getBoundingClientRect().height + 16 : 0) + 12;
+    window.scrollTo({ top: card.getBoundingClientRect().top + window.scrollY - off, behavior: 'smooth' });
+  }); }
   function updateMe() {
     try { syncInvite(); } catch (_) {}
     const av = document.getElementById('me-av'), nm = document.getElementById('me-name'), btn = document.getElementById('hd-me');
