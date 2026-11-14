@@ -9,7 +9,7 @@ self.addEventListener('push', e => {
   const link = d.link || '/';
   e.waitUntil(self.registration.showNotification(title, {
     body: d.body || n.body || '', icon: 'icon-192.png', badge: 'icon-192.png',
-    tag: 'kapa-meet', renotify: true, data: { link: link }
+    tag: d.tag || 'kapa-meet', renotify: true, data: { link: link }   // 서버가 알림마다 다른 tag를 보내면 알림이 쌓임 (안 보내면 예전처럼 마지막 것만)
   }));
 });
 self.addEventListener('notificationclick', e => {
