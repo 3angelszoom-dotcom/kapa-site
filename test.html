@@ -476,6 +476,31 @@
     background: rgba(255, 255, 255, .55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
   @media (max-width: 640px) { .ly-band { padding-block: 150px 28px !important; } }
   /* ---- 홈 화면 앱: 오른쪽 아래 투명 새로고침 버튼 ---- */
+  /* 커피 한잔 카드 */
+  #view-layover .ly-row.mr { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+  .mr-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .mr-top .ly-tag { margin-left: 0; }
+  .mr-place { font: 700 14px/1.2 var(--body); color: var(--text); }
+  .mr-when { font-size: 13px; }
+  .mr-ppl { display: grid; gap: 8px; }
+  .mr-p { display: flex; align-items: center; justify-content: space-between; gap: 6px 10px; flex-wrap: wrap; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .7); border: 1px solid #E7EEE9; }
+  .mr-who { display: flex; flex-direction: column; min-width: 0; }
+  .mr-who b { font-size: 15px; }
+  .mr-who small { color: var(--muted); font-size: 12px; }
+  .mr-cts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mr-ct { display: inline-flex; align-items: center; gap: 4px; padding: 7px 11px; border-radius: 999px; font: 700 13px/1 var(--body); text-decoration: none; border: 1px solid transparent; cursor: pointer; }
+  .mr-ct.k { background: #FEE500; color: #191919; }
+  .mr-ct.p { background: #E8F1FF; color: #0A5BD3 !important; border-color: #C9DCFB; }
+  .mr-ct.o { background: #F3F3F1; color: var(--text); cursor: default; }
+  .mr-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .mr-acts .del-wrap { margin-left: auto; }
+  #view-layover .ly-act .del-wrap, .mr-acts .del-wrap { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .mr-acts .del-btn, .mr-acts .del-no, .mr-acts .mr-cancel { color: #475569; border: 1px solid var(--line); background: #F8FAFC; border-radius: 10px; padding: 8px 12px; font: 700 13px/1 var(--body); letter-spacing: 0; text-transform: none; }
+  .mr-acts .del-yes { color: #fff; border: 1px solid #DC2626; background: #DC2626; border-radius: 10px; padding: 8px 14px; font: 700 13px/1 var(--body); cursor: pointer; }
+  .mr-acts .del-q { font-size: 13px; font-weight: 700; color: #B91C1C; }
+  .ly-toast { position: fixed; left: 50%; bottom: calc(70px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 95; width: min(360px, calc(100vw - 32px));
+    padding: 12px 16px; border-radius: 14px; background: #1F2937; color: #fff; font-size: 14px; line-height: 1.45; box-shadow: 0 10px 30px rgba(0, 0, 0, .3); transition: opacity .4s; }
+  .ly-toast.out { opacity: 0; }
   .upd-bar { position: fixed; left: 50%; transform: translateX(-50%); top: calc(10px + env(safe-area-inset-top)); z-index: 90; border: 0; border-radius: 999px;
     padding: 11px 18px; background: #0A84FF; color: #fff; font: 700 14px/1.2 var(--body); box-shadow: 0 8px 24px rgba(0, 0, 0, .3); cursor: pointer; white-space: nowrap; }
   .rf-btn { position: fixed; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 60; width: 44px; height: 44px; border-radius: 50%;
@@ -1062,7 +1087,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-84</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-85</small></span></div>
 </footer>
 
 <script>
@@ -2933,24 +2958,51 @@
       ask();
       return wrap;
     };
-    const meetRow = m => el('div', { class: 'ly-row' + (m.status === '수락' ? ' match' : '') + (m.status === '수락' || m.status === '거절' ? ' settled' : '') },
-        el('div', {}, el('b', {}, m.name), ` · ${m.place}`,
-          el('span', { class: 'ly-tag' + (m.status === '수락' ? ' on' : '') },
-            m.status === '수락' ? (m.join ? '🙋 조인 성사' : '☕ 커피 약속 성사') : m.status === '거절' ? (m.dir === 'out' ? '어려워요' : '거절함')
-              : m.dir === 'in' ? (m.join ? '🙋 조인 요청' : '새 요청') : (m.join ? '조인 기다리는 중' : '기다리는 중'))),
-        // 시간대 아이콘은 첫 번째 시간 바로 앞에 ("상대 11/3(화) [C] 16:00 …")
-        el('div', { class: 'ly-sub' }, m.join ? ['약속 ', ...fmtRangeTz(m.start, m.end, m.place)] : (() => {
-          const first = m.start ? ['상대 ', ...fmtRangeTz(m.start, m.end, m.place)] : m.myStart ? ['나 ', ...fmtRangeTz(m.myStart, m.myEnd, m.place)] : '';
-          const rest = m.start ? (m.myStart ? `나 ${fmtRange(m.myStart, m.myEnd)}` : (m.dir === 'out' ? '체크인 없이 보낸 요청' : '')) : (!m.myStart && m.dir === 'out' ? '체크인 없이 보낸 요청' : '');
-          return [...(first || []), first && rest ? ' · ' : null, rest];
-        })()),
-        el('div', { class: 'ly-act' },
-          m.status === '수락' ? el('span', {}, '연락처 ', el('span', { class: 'ly-kakao' }, m.contact || '(없음)')) : null,
-          m.dir === 'in' && m.status === '요청' ? [
-            el('button', { class: 'primary small', onclick: e => act('answerMeet', [memberKey, m.id, true, lyPage()], e.currentTarget, null, () => { m.status = '수락'; m.contact = m.contact || '불러오는 중…'; }) }, '수락'),
-            el('button', { class: 'ghost', onclick: e => act('answerMeet', [memberKey, m.id, false, lyPage()], e.currentTarget, null, () => { m.status = '거절'; }) }, '거절')] : null,
-          m.dir === 'out' && (m.status === '요청' || m.status === '수락') ? el('button', { class: 'ghost', onclick: e => { if (confirmCancel(e.currentTarget)) act('cancelMeet', [memberKey, m.id], e.currentTarget, null, () => { r.meets = r.meets.filter(x => x.id !== m.id); }); } }, '취소') : null,
-          m.status === '수락' || m.status === '거절' ? doneBtn(m) : null));
+    // 커피 한잔 카드: [상태 · 공항] / 시간 / 사람마다 이름 + (성사되면) 💬 카톡 · 📞 전화 버튼 / [취소] ... [🗑 삭제]
+    const nameParts = n => { const p = String(n || '').split('/'); return { nm: p[0], sub: [p[1], p[2]].filter(Boolean).join(' · ') }; };
+    const kakaoBtn = id => el('button', { class: 'mr-ct k', type: 'button', onclick: async () => {
+      // 카톡은 아이디로 대화창을 바로 여는 주소가 없어서: 아이디를 복사하고 카톡을 열어 줌 (친구 추가 → ID로 추가에 붙여넣기)
+      try { await navigator.clipboard.writeText(id); } catch (_) {}
+      lyToast('카톡 ID "' + id + '"를 복사했어요. 카톡 → 친구 추가 → ID로 추가에 붙여넣으세요.');
+      setTimeout(() => { location.href = 'kakaotalk://'; }, 600);
+    } }, '💬 ', id);
+    const phoneBtn = ph => el('a', { class: 'mr-ct p', href: 'tel:' + ph.replace(/[^\d+]/g, '') }, '📞 ', ph);
+    const meetRow = m => {
+      const ok = m.status === '수락', done = ok || m.status === '거절';
+      const tag = el('span', { class: 'ly-tag' + (ok ? ' on' : '') },
+        ok ? (m.join ? '🙋 조인 성사' : '☕ 커피 약속 성사') : m.status === '거절' ? (m.dir === 'out' ? '어려워요' : '거절함')
+          : m.dir === 'in' ? (m.join ? '🙋 조인 요청' : '새 요청') : (m.join ? '조인 기다리는 중' : '기다리는 중'));
+      // 시간대 아이콘은 첫 번째 시간 바로 앞에 ("상대 11/3(화) [C] 16:00 …")
+      const when = m.join ? ['약속 ', ...fmtRangeTz(m.start, m.end, m.place)] : (() => {
+        const first = m.start ? ['상대 ', ...fmtRangeTz(m.start, m.end, m.place)] : m.myStart ? ['나 ', ...fmtRangeTz(m.myStart, m.myEnd, m.place)] : '';
+        const rest = m.start ? (m.myStart ? `나 ${fmtRange(m.myStart, m.myEnd)}` : (m.dir === 'out' ? '체크인 없이 보낸 요청' : '')) : (!m.myStart && m.dir === 'out' ? '체크인 없이 보낸 요청' : '');
+        return [...(first || []), first && rest ? ' · ' : null, rest];
+      })();
+      const ppl = ok && m.people && m.people.length ? m.people : String(m.name || '').split(', ').map(n => ({ name: n }));
+      const person = p => { const n = nameParts(p.name);
+        return el('div', { class: 'mr-p' },
+          el('div', { class: 'mr-who' }, el('b', {}, n.nm), n.sub ? el('small', {}, n.sub) : null),
+          ok ? el('div', { class: 'mr-cts' }, p.kakao ? kakaoBtn(p.kakao) : null, p.phone ? phoneBtn(p.phone) : null,
+            p.other ? el('span', { class: 'mr-ct o' }, p.other) : null,
+            !p.kakao && !p.phone && !p.other ? el('span', { class: 'muted' }, m.contact && !m.people ? m.contact : '연락처 없음') : null) : null);
+      };
+      const acts = [
+        m.dir === 'in' && m.status === '요청' ? [
+          el('button', { class: 'primary small', onclick: e => act('answerMeet', [memberKey, m.id, true, lyPage()], e.currentTarget, null, () => { m.status = '수락'; m.contact = m.contact || '불러오는 중…'; }) }, '수락'),
+          el('button', { class: 'ghost', onclick: e => act('answerMeet', [memberKey, m.id, false, lyPage()], e.currentTarget, null, () => { m.status = '거절'; }) }, '거절')] : null,
+        m.dir === 'out' && (m.status === '요청' || m.status === '수락') ? el('button', { class: 'ghost mr-cancel', onclick: e => { if (confirmCancel(e.currentTarget)) act('cancelMeet', [memberKey, m.id], e.currentTarget, null, () => { r.meets = r.meets.filter(x => x.id !== m.id); }); } }, '취소') : null,
+        done ? doneBtn(m) : null].flat().filter(Boolean);
+      return el('div', { class: 'ly-row mr' + (ok ? ' match' : '') + (done ? ' settled' : '') },
+        el('div', { class: 'mr-top' }, tag, el('span', { class: 'mr-place' }, '📍 ' + m.place)),
+        el('div', { class: 'ly-sub mr-when' }, when),
+        el('div', { class: 'mr-ppl' }, ppl.map(person)),
+        acts.length ? el('div', { class: 'mr-acts' }, acts) : null);
+    };
+    // 잠깐 뜨는 안내 (카톡 ID 복사 등)
+    function lyToast(t) {
+      const x = el('div', { class: 'ly-toast', role: 'status' }, t);
+      document.body.append(x); setTimeout(() => x.classList.add('out'), 3200); setTimeout(() => x.remove(), 3700);
+    }
     const shown = r.meets;   // Done 누른 요청은 서버에서 이미 빠져서 옴
     const inMeets = shown.filter(m => m.dir === 'in'), outMeets = shown.filter(m => m.dir !== 'in');
     const newIn = inMeets.filter(m => m.status === '요청').length;
