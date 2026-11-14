@@ -1060,7 +1060,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-81</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-82</small></span></div>
 </footer>
 
 <script>
@@ -2713,14 +2713,15 @@
       const [nI, nL] = ck(p.notice, '공지사항');
       const [cI, cL] = ck(p.comments, '내 글에 댓글');
       const [kI, kL] = ck(p.checkins !== false, '새 체크인 (누가 체크인하면)');
+      const [aI, aL] = ck(p.applicants !== false, '📝 새 가입 신청 (관리자)');   // 관리자 지정 회원에게만 보임
       const bs = p.allBoards.map(b => ({ id: b.id, c: ck(p.boards.indexOf(b.id) >= 0, b.name) }));
       const note = el('span', { class: 'ly-prefs-note' });
       let t = null;
       const save = () => { clearTimeout(t); note.textContent = '저장 중…'; t = setTimeout(async () => {
-        try { await call('setPushPrefs', memberKey, { notice: nI.checked, comments: cI.checked, checkins: kI.checked, boards: bs.filter(b => b.c[0].checked).map(b => b.id) }); note.textContent = '저장됨 ✓'; }
+        try { await call('setPushPrefs', memberKey, { notice: nI.checked, comments: cI.checked, checkins: kI.checked, applicants: aI.checked, boards: bs.filter(b => b.c[0].checked).map(b => b.id) }); note.textContent = '저장됨 ✓'; }
         catch (e) { if (e.message !== '__auth') note.textContent = e.message; } }, 500); };
-      [nI, cI, kI, ...bs.map(b => b.c[0])].forEach(i => i.addEventListener('change', save));
-      box.replaceChildren(el('b', { class: 'ly-prefs-h' }, '받을 알림', note), nL, cL, kL,
+      [nI, cI, kI, aI, ...bs.map(b => b.c[0])].forEach(i => i.addEventListener('change', save));
+      box.replaceChildren(el('b', { class: 'ly-prefs-h' }, '받을 알림', note), nL, cL, kL, p.isAdmin ? aL : null,
         el('b', { class: 'ly-prefs-h' }, '새 글 알림 받을 게시판'), el('div', { class: 'ly-prefs-boards' }, bs.map(b => b.c[1])));
     }, e => { box.replaceChildren(el('p', { class: 'msg' }, e.message === '__auth' ? '' : '알림 설정을 불러오지 못했어요.')); });
     return box;
