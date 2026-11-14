@@ -483,12 +483,14 @@
   .mr-place { font: 700 14px/1.2 var(--body); color: var(--text); }
   .mr-when { font-size: 13px; }
   .mr-ppl { display: grid; gap: 8px; }
-  .mr-p { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .7); border: 1px solid #E7EEE9; }
+  .mr-p { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .7); border: 1px solid #E7EEE9; }
   .mr-who { display: flex; flex-direction: column; min-width: 0; }
   .mr-who b { font-size: 15px; }
   .mr-who small { color: var(--muted); font-size: 12px; }
-  .mr-cts { display: flex; gap: 6px; flex-wrap: wrap; }
-  .mr-ct { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 999px; font: 700 12.5px/1 var(--body); white-space: nowrap; text-decoration: none; border: 1px solid transparent; cursor: pointer; }
+  .mr-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .mr-line b { font-size: 15px; margin-right: 2px; }
+  .mr-sub { color: var(--muted); font-size: 12px; }
+  .mr-ct { display: inline-flex; align-items: center; gap: 3px; padding: 5px 9px; border-radius: 999px; font: 700 12px/1 var(--body); white-space: nowrap; text-decoration: none; border: 1px solid transparent; cursor: pointer; }
   .mr-ct.k { background: #FEE500; color: #191919; }
   .mr-ct.p { background: #E8F1FF; color: #0A5BD3 !important; border-color: #C9DCFB; }
   .mr-ct.o { background: #F3F3F1; color: var(--text); cursor: default; }
@@ -1096,7 +1098,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-88</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-90</small></span></div>
 </footer>
 
 <script>
@@ -3000,11 +3002,13 @@
       })();
       const ppl = ok && m.people && m.people.length ? m.people : String(m.name || '').split(', ').map(n => ({ name: n }));
       const person = p => { const n = nameParts(p.name);
+        // 한 줄: 이름 바로 옆에 💬 카톡 · 📞 전화 / 그 밑 작은 글씨: 항공사 · 베이스
         return el('div', { class: 'mr-p' },
-          el('div', { class: 'mr-who' }, el('b', {}, n.nm), n.sub ? el('small', {}, n.sub) : null),
-          ok ? el('div', { class: 'mr-cts' }, p.kakao ? kakaoBtn(p.kakao) : null, p.phone ? phoneBtn(p.phone) : null,
-            p.other ? el('span', { class: 'mr-ct o' }, p.other) : null,
-            !p.kakao && !p.phone && !p.other ? el('span', { class: 'muted' }, m.contact && !m.people ? m.contact : '연락처 없음') : null) : null);
+          el('div', { class: 'mr-line' }, el('b', {}, n.nm),
+            ok ? [p.kakao ? kakaoBtn(p.kakao) : null, p.phone ? phoneBtn(p.phone) : null,
+              p.other ? el('span', { class: 'mr-ct o' }, p.other) : null,
+              !p.kakao && !p.phone && !p.other ? el('span', { class: 'muted' }, m.contact && !m.people ? m.contact : '연락처 없음') : null] : null),
+          n.sub ? el('small', { class: 'mr-sub' }, n.sub) : null);
       };
       const acts = [
         m.dir === 'in' && m.status === '요청' ? [
