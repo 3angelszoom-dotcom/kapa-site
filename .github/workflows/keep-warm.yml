@@ -1,0 +1,17 @@
+# KAPA 체크인: Apps Script 서버가 잠들지 않게 5분마다 가볍게 한 번 불러 둠 (무료, 공개 저장소)
+name: keep-warm
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: ping TEST server
+        run: |
+          curl -sS -L -o /dev/null -w "%{http_code} %{time_total}s\n" \
+            -H 'Content-Type: text/plain;charset=utf-8' \
+            --data '{"fn":"getSiteConfig","args":[],"page":"test"}' \
+            'https://script.google.com/macros/s/AKfycbxM8aE3mSczAAv6SxyngKNPxyeY7q0Mw4QF1-F-GGvnxpNXEpURJsOaolXf7S1DHuU/exec' || true

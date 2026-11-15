@@ -1099,7 +1099,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-91</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-92</small></span></div>
 </footer>
 
 <script>
@@ -2752,6 +2752,7 @@
 
   let lyOpen = false;   // 체크인 양식 펼침 여부
   let lyEdit = null;    // 고치는 중인 내 체크인 (없으면 새 체크인)
+  let lyDraft = null, lyDraftErr = '';   // 체크인 저장이 서버에서 실패했을 때 양식을 그 값 그대로 다시 열기
   // 레이오버(침대) / 공항 대기(게이트 의자) 선 아이콘
   const LY_ICO = {
     inbox: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10"/><path d="M7.5 9.5 12 14l4.5-4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>',
@@ -3066,22 +3067,24 @@
       const gateBox = el('label', {}, '🚪 게이트 (선택)', gate); gateBox.hidden = true;
       const memo = el('input', { id: 'ly-memo', placeholder: '예: 저녁 같이 드실 분 / 공항 라운지에 있어요', maxlength: '100' });
       const E = lyEdit;   // 수정 중이면 그 체크인 값으로 채움
-      const contact = contactPicker(E ? (E.my && E.my.contact) || '' : null);
+      const P = E || lyDraft; lyDraft = null;   // 채울 값 (수정 중인 체크인, 또는 방금 저장에 실패한 값)
+      const contact = contactPicker(P ? (P.my && P.my.contact) || '' : null);
       // 이메일 알림: 만나요가 오거나 내 만나요가 수락되면 메일로 알려 줌 (주소는 본인만 봄)
       const notifyOn = el('input', { type: 'checkbox', id: 'ly-notify-on' });
       const notify = el('input', { id: 'ly-notify', type: 'email', inputmode: 'email', autocomplete: 'email', placeholder: 'you@example.com', maxlength: '120', 'aria-label': '알림 받을 이메일' });
       notify.value = store.get('pc_ly_email') || r.me.email || '';
       notifyOn.checked = store.get('pc_ly_notify') !== '0';
-      if (E) {
-        (E.kind === 'airport' ? kindAir : kindLay).checked = true;
-        place.value = E.place; start.value = E.start; end.value = E.end; gate.value = E.gate || ''; memo.value = E.memo || '';
-        const nt = (E.my && E.my.notify) || ''; notifyOn.checked = !!nt; if (nt) notify.value = nt;
+      if (P) {
+        (P.kind === 'airport' ? kindAir : kindLay).checked = true;
+        place.value = P.place; start.value = P.start; end.value = P.end; gate.value = P.gate || ''; memo.value = P.memo || '';
+        const nt = (P.my && P.my.notify) || ''; notifyOn.checked = !!nt; if (nt) notify.value = nt;
       }
       const notifyBox = el('label', { class: 'ly-field' }, '✉️ 알림 받을 이메일 (다른 회원에게는 보이지 않아요)', notify);
       const syncNotify = () => { notifyBox.hidden = !notifyOn.checked; };
       notifyOn.addEventListener('change', () => { syncNotify(); if (notifyOn.checked) notify.focus(); });
       syncNotify();
       const msg = el('p', { class: 'msg' });
+      if (lyDraftErr) { msg.textContent = '저장하지 못했어요: ' + lyDraftErr; lyDraftErr = ''; }
       const syncKind = () => { gateBox.hidden = !kindAir.checked; };
       kindAir.addEventListener('change', syncKind); kindLay.addEventListener('change', syncKind);
       syncKind();
@@ -3093,15 +3096,22 @@
         const ctErr = contact.check(); if (ctErr) { msg.textContent = ctErr; return; }
         const mail = notify.value.trim();
         if (notifyOn.checked && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { msg.textContent = '알림 받을 이메일 주소를 넣어 주세요. 알림이 필요 없으면 체크를 빼 주세요.'; notify.focus(); return; }
-        btn.disabled = true; btn.textContent = E ? '저장 중…' : '체크인 중…';
+        // 누르는 즉시 화면에 반영하고(서버 답을 기다리지 않음), 서버 저장은 뒤에서. 실패하면 양식을 그 값 그대로 다시 열고 이유를 보여줌
+        const v = { kind: kindAir.checked ? 'airport' : 'layover', place: place.value.toUpperCase().replace(/[^A-Z]/g, ''), start: start.value, end: end.value,
+          gate: kindAir.checked ? gate.value.toUpperCase() : '', memo: memo.value.trim(), my: { contact: contact.value(), notify: notifyOn.checked ? mail : '' } };
+        contact.save();
+        store.set('pc_ly_notify', notifyOn.checked ? '1' : '0');
+        if (mail) store.set('pc_ly_email', mail);
+        if (E) Object.assign(E, v);
+        else r.checkins.push(Object.assign({ id: 'tmp' + Date.now(), name: r.me.name || '', mine: true, overlapWith: [], meet: '', group: 0 }, v));
+        lyEdit = null; lyOpen = false; lyReq++; drawLayover(r);
         try {
-          lyOpen = false;   // 성공하면 양식을 접은 새 화면이 바로 그려짐
-          if (E) { lyEdit = null; await layCall('editCheckin', { id: E.id, key: memberKey, kind: kindAir.checked ? 'airport' : 'layover', place: place.value, start: start.value, end: end.value, gate: gate.value, memo: memo.value, contact: contact.value(), notify: notifyOn.checked ? mail : '' }); }
-          else await layCall('addCheckin', { key: memberKey, kind: kindAir.checked ? 'airport' : 'layover', place: place.value, start: start.value, end: end.value, gate: gate.value, memo: memo.value, contact: contact.value(), notify: notifyOn.checked ? mail : '' });
-          contact.save();
-          store.set('pc_ly_notify', notifyOn.checked ? '1' : '0');
-          if (mail) store.set('pc_ly_email', mail);
-        } catch (e) { lyOpen = true; if (E) lyEdit = E; if (e.message !== '__auth') { msg.textContent = e.message; btn.disabled = false; btn.textContent = E ? '수정 저장' : '체크인'; } }
+          await layCall(E ? 'editCheckin' : 'addCheckin', Object.assign(E ? { id: E.id } : {}, { key: memberKey, kind: v.kind, place: place.value, start: v.start, end: v.end, gate: gate.value, memo: memo.value, contact: v.my.contact, notify: v.my.notify }));
+        } catch (e) {
+          if (e.message === '__auth') return;
+          lyDraft = v; lyDraftErr = e.message; lyOpen = true; if (E) lyEdit = E;
+          reload();
+        }
       });
       const formCard = el('div', { class: 'ly-card form' },
           el('div', { class: 'ly-kind' }, el('label', {}, kindLay, el('span', { class: 'ly-kind-ico', html: LY_ICO.bed }), el('b', {}, '레이오버')),
@@ -3229,11 +3239,12 @@
         const ct = contact.value(), em = mail.value.trim();
         const ctErr = contact.check(); if (ctErr) { msg.textContent = ctErr; return; }
         if (on.checked && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { msg.textContent = '알림 받을 이메일 주소를 넣어 주세요. 필요 없으면 체크를 빼 주세요.'; mail.focus(); return; }
-        send.disabled = true; send.textContent = '보내는 중…';
-        try {
-          contact.save(); store.set('pc_ly_notify', on.checked ? '1' : '0'); if (em) store.set('pc_ly_email', em);
-          await layCall('requestMeet', memberKey, '', c.id, lyPage(), { contact: ct, notify: on.checked ? em : '' });
-        } catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; send.disabled = false; } }
+        // 누르는 즉시 "기다리는 중"으로 바꾸고 서버 기록은 뒤에서. 실패하면 다시 불러오고 이유를 잠깐 띄움
+        contact.save(); store.set('pc_ly_notify', on.checked ? '1' : '0'); if (em) store.set('pc_ly_email', em);
+        if (join) c.joinPending = true; else c.meet = '요청';
+        lyReq++; drawLayover(r);
+        try { await layCall('requestMeet', memberKey, '', c.id, lyPage(), { contact: ct, notify: on.checked ? em : '' }); }
+        catch (e) { if (e.message !== '__auth') { lyToast(e.message); reload(); } }
       });
       btn.hidden = true;
       row.append(box);   // 키보드가 저절로 뜨지 않게 칸을 자동 선택하지 않음
