@@ -213,6 +213,7 @@
   .ly-push-on { font-size: 13px; font-weight: 600; color: #059669; background: #ECFDF5; padding: 3px 9px; border-radius: 999px; }
   .ly-push-tog { margin-left: auto; border: 0; background: #F1F3F6; color: #334155; border-radius: 999px; padding: 7px 13px; font: 600 13px/1 var(--body); cursor: pointer; }
   .ly-push-note { font-size: 14px; color: var(--muted); }
+  .ly-edit-cancel { margin-top: 8px; width: 100%; }
   .ly-top { display: flex; align-items: stretch; justify-content: flex-end; gap: 8px; margin: 0 0 12px; }
   .ly-bell { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); background: #F1F3F6; color: #475569; border-radius: 14px; padding: 9px 12px 9px 10px; font: 600 13px/1 var(--body); cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .ly-bell.on { background: #ECFDF5; color: #059669; border-color: #A7F3D0; }
@@ -1098,7 +1099,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-90</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-91</small></span></div>
 </footer>
 
 <script>
@@ -2750,6 +2751,7 @@
   function localInput(d) { const z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; }
 
   let lyOpen = false;   // 체크인 양식 펼침 여부
+  let lyEdit = null;    // 고치는 중인 내 체크인 (없으면 새 체크인)
   // 레이오버(침대) / 공항 대기(게이트 의자) 선 아이콘
   const LY_ICO = {
     inbox: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10"/><path d="M7.5 9.5 12 14l4.5-4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>',
@@ -3063,12 +3065,18 @@
       const gate = el('input', { id: 'ly-gate', placeholder: 'B12', maxlength: '12' });
       const gateBox = el('label', {}, '🚪 게이트 (선택)', gate); gateBox.hidden = true;
       const memo = el('input', { id: 'ly-memo', placeholder: '예: 저녁 같이 드실 분 / 공항 라운지에 있어요', maxlength: '100' });
-      const contact = contactPicker();
+      const E = lyEdit;   // 수정 중이면 그 체크인 값으로 채움
+      const contact = contactPicker(E ? (E.my && E.my.contact) || '' : null);
       // 이메일 알림: 만나요가 오거나 내 만나요가 수락되면 메일로 알려 줌 (주소는 본인만 봄)
       const notifyOn = el('input', { type: 'checkbox', id: 'ly-notify-on' });
       const notify = el('input', { id: 'ly-notify', type: 'email', inputmode: 'email', autocomplete: 'email', placeholder: 'you@example.com', maxlength: '120', 'aria-label': '알림 받을 이메일' });
       notify.value = store.get('pc_ly_email') || r.me.email || '';
       notifyOn.checked = store.get('pc_ly_notify') !== '0';
+      if (E) {
+        (E.kind === 'airport' ? kindAir : kindLay).checked = true;
+        place.value = E.place; start.value = E.start; end.value = E.end; gate.value = E.gate || ''; memo.value = E.memo || '';
+        const nt = (E.my && E.my.notify) || ''; notifyOn.checked = !!nt; if (nt) notify.value = nt;
+      }
       const notifyBox = el('label', { class: 'ly-field' }, '✉️ 알림 받을 이메일 (다른 회원에게는 보이지 않아요)', notify);
       const syncNotify = () => { notifyBox.hidden = !notifyOn.checked; };
       notifyOn.addEventListener('change', () => { syncNotify(); if (notifyOn.checked) notify.focus(); });
@@ -3076,21 +3084,24 @@
       const msg = el('p', { class: 'msg' });
       const syncKind = () => { gateBox.hidden = !kindAir.checked; };
       kindAir.addEventListener('change', syncKind); kindLay.addEventListener('change', syncKind);
-      const btn = el('button', { class: 'primary', id: 'ly-submit' }, '체크인');
+      syncKind();
+      const btn = el('button', { class: 'primary', id: 'ly-submit' }, E ? '수정 저장' : '체크인');
+      const editCancel = E ? el('button', { type: 'button', class: 'ghost ly-edit-cancel', onclick: () => { lyEdit = null; lyOpen = false; drawLayover(r); } }, '수정 취소') : null;
       btn.addEventListener('click', async () => {
         msg.textContent = '';
         if (start.value && end.value && start.value >= end.value) { msg.textContent = '끝 시간이 시작 시간보다 뒤여야 해요.'; return; }
         const ctErr = contact.check(); if (ctErr) { msg.textContent = ctErr; return; }
         const mail = notify.value.trim();
         if (notifyOn.checked && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { msg.textContent = '알림 받을 이메일 주소를 넣어 주세요. 알림이 필요 없으면 체크를 빼 주세요.'; notify.focus(); return; }
-        btn.disabled = true; btn.textContent = '체크인 중…';
+        btn.disabled = true; btn.textContent = E ? '저장 중…' : '체크인 중…';
         try {
           lyOpen = false;   // 성공하면 양식을 접은 새 화면이 바로 그려짐
-          await layCall('addCheckin', { key: memberKey, kind: kindAir.checked ? 'airport' : 'layover', place: place.value, start: start.value, end: end.value, gate: gate.value, memo: memo.value, contact: contact.value(), notify: notifyOn.checked ? mail : '' });
+          if (E) { lyEdit = null; await layCall('editCheckin', { id: E.id, key: memberKey, kind: kindAir.checked ? 'airport' : 'layover', place: place.value, start: start.value, end: end.value, gate: gate.value, memo: memo.value, contact: contact.value(), notify: notifyOn.checked ? mail : '' }); }
+          else await layCall('addCheckin', { key: memberKey, kind: kindAir.checked ? 'airport' : 'layover', place: place.value, start: start.value, end: end.value, gate: gate.value, memo: memo.value, contact: contact.value(), notify: notifyOn.checked ? mail : '' });
           contact.save();
           store.set('pc_ly_notify', notifyOn.checked ? '1' : '0');
           if (mail) store.set('pc_ly_email', mail);
-        } catch (e) { lyOpen = true; if (e.message !== '__auth') { msg.textContent = e.message; btn.disabled = false; btn.textContent = '체크인'; } }
+        } catch (e) { lyOpen = true; if (E) lyEdit = E; if (e.message !== '__auth') { msg.textContent = e.message; btn.disabled = false; btn.textContent = E ? '수정 저장' : '체크인'; } }
       });
       const formCard = el('div', { class: 'ly-card form' },
           el('div', { class: 'ly-kind' }, el('label', {}, kindLay, el('span', { class: 'ly-kind-ico', html: LY_ICO.bed }), el('b', {}, '레이오버')),
@@ -3102,11 +3113,11 @@
           el('div', { class: 'ly-field' }, '📱 연락처 (커피 한잔을 수락한 회원에게만 보여요)', contact.node),
           el('label', { class: 'ly-check sm' }, notifyOn, '이메일로 알림 받기 (요청이 오거나 수락 시)'),
           notifyBox,
-          btn, msg);
+          btn, editCancel, msg);
       // 체크인 버튼: 누르면 양식이 펼쳐짐 (첫 화면 "체크인하기"로 오면 펼친 채로)
       formCard.hidden = !lyOpen;
-      const openBtn = el('button', { class: 'primary ly-open', id: 'ly-open' }, lyOpen ? '접기 ▲' : '✈️ 체크인하기');
-      openBtn.addEventListener('click', () => { lyOpen = !lyOpen; formCard.hidden = !lyOpen; openBtn.textContent = lyOpen ? '접기 ▲' : '✈️ 체크인하기'; });   // 키보드가 저절로 뜨지 않게 칸을 자동 선택하지 않음
+      const openBtn = el('button', { class: 'primary ly-open', id: 'ly-open' }, E ? '✏️ ' + E.place + ' 체크인 수정 중 · 닫기 ▲' : lyOpen ? '접기 ▲' : '✈️ 체크인하기');
+      openBtn.addEventListener('click', () => { if (lyEdit) { lyEdit = null; lyOpen = false; drawLayover(r); return; } lyOpen = !lyOpen; formCard.hidden = !lyOpen; openBtn.textContent = lyOpen ? '접기 ▲' : '✈️ 체크인하기'; });   // 키보드가 저절로 뜨지 않게 칸을 자동 선택하지 않음
       formSec = el('section', { class: 'ly-sec' }, openBtn, formCard);
       // 양식을 처음 열 때 한 번: 휴대폰 위치로 가장 가까운 공항을 채움 (위치 허용을 안 하면 그냥 비워 둠)
       const tryGeo = () => { if (!place.value && !geoTried && !GAS) { geoTried = true; fillNearest(true); } };
@@ -3129,7 +3140,7 @@
           el('div', {}, el('b', {}, c.place), ` · ${kindName(c)}`, el('span', { class: 'ly-tag' + (n ? ' on' : '') }, n ? `같이 있는 회원 ${n}명` : '아직 겹치는 회원 없음')),
           el('div', { class: 'ly-sub' }, fmtRangeTz(c.start, c.end, c.place)),
           c.memo ? el('div', { class: 'ly-memo' }, c.memo) : null,
-          el('div', { class: 'ly-act' }, el('button', { class: 'ghost', onclick: e => act('cancelCheckin', [memberKey, c.id], e.currentTarget, null, () => { r.checkins = r.checkins.filter(x => x.id !== c.id); }) }, '취소')));
+          el('div', { class: 'ly-act' }, el('button', { class: 'ghost', onclick: () => { lyEdit = c; lyOpen = true; drawLayover(r); setTimeout(() => { const f = document.getElementById('ly-open'); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50); } }, '✏️ 수정'), el('button', { class: 'ghost', onclick: e => act('cancelCheckin', [memberKey, c.id], e.currentTarget, null, () => { r.checkins = r.checkins.filter(x => x.id !== c.id); }) }, '취소')));
       })) : null;
 
     // 4) 전체 현황 (공항별)
@@ -3161,10 +3172,10 @@
       }) : el('p', { class: 'muted' }, '아직 체크인한 회원이 없어요. 첫 체크인을 남겨 보세요!'));
 
     // 연락처 고르기: 카톡 / 전화 / 둘 다 → "카톡 abc123 · 전화 415-000-0000" 한 줄로 서버에 저장
-    function contactPicker() {
-      let saved = null; try { saved = JSON.parse(store.get('pc_ly_ct') || 'null'); } catch (_) {}
-      if (!saved) {   // 예전에 한 줄로 적어 둔 연락처가 있으면 나눠서 채움
-        const old = store.get('pc_ly_contact') || '';
+    function contactPicker(init) {
+      let saved = null; if (init == null) { try { saved = JSON.parse(store.get('pc_ly_ct') || 'null'); } catch (_) {} }
+      if (!saved) {   // 예전에 한 줄로 적어 둔 연락처가 있으면 나눠서 채움 (체크인 수정이면 그 체크인의 연락처로)
+        const old = init != null ? init : (store.get('pc_ly_contact') || '');
         const k = (/카톡\s*[:：]?\s*([^·\/,]+)/.exec(old) || [])[1], ph = (/(?:전화|폰|tel)\s*[:：]?\s*([+\d][\d\s().-]{5,})/i.exec(old) || [])[1];
         saved = { mode: k && ph ? 'both' : ph ? 'phone' : 'kakao', kakao: (k || '').trim(), phone: (ph || '').trim() };
       }
