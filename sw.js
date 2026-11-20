@@ -24,20 +24,3 @@ self.addEventListener('notificationclick', e => {
     return self.clients.openWindow(link);
   }));
 });
-// 안드로이드 "공유 → KAPA": 공유한 스크린샷을 잠깐 보관해 두고 글쓰기 화면(?shared=1)으로 넘김
-self.addEventListener('fetch', e => {
-  const u = new URL(e.request.url);
-  if (e.request.method !== 'POST' || u.origin !== self.location.origin || u.pathname !== '/share-target') return;
-  e.respondWith((async () => {
-    const page = u.searchParams.get('p') === 'test' ? '/test.html' : '/';
-    try {
-      const fd = await e.request.formData();
-      const files = fd.getAll('images').filter(f => f && typeof f !== 'string' && f.size);
-      const c = await caches.open('kapa-share');
-      for (const k of await c.keys()) await c.delete(k);
-      await Promise.all(files.slice(0, 3).map((f, i) => c.put('/__share/' + i, new Response(f, { headers: {
-        'Content-Type': f.type || 'image/png', 'X-Name': encodeURIComponent(f.name || ('screenshot-' + (i + 1) + '.png')) } }))));
-    } catch (_) {}
-    return Response.redirect(page + '?shared=1', 303);
-  })());
-});
