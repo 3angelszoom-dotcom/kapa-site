@@ -866,8 +866,14 @@
   .ld-num { display: grid; gap: 4px; text-align: center; }
   .ld-num small { font-size: 12px; font-weight: 700; color: #475569; }
   .ld-num input { text-align: center; font: 800 22px/1.2 var(--body); padding: 10px 4px; }
-  .ld-num-send { width: 100%; margin-top: 12px; padding: 14px 16px; border: 0; border-radius: 999px; background: #1F5FD6; color: #fff; font: 800 16px/1.2 var(--body); letter-spacing: .02em; cursor: pointer; box-shadow: 0 4px 12px rgba(31, 95, 214, .25); }
-  .ld-num-send:active { transform: translateY(1px); }
+  .ld-num-send { flex: 1; min-width: 0; padding: 14px 16px; border: 0; border-radius: 999px; background: #1F5FD6; color: #fff; font: 800 16px/1.2 var(--body); letter-spacing: .02em; cursor: pointer; box-shadow: 0 4px 12px rgba(31, 95, 214, .25); }
+  .ld-num-send:active, .ld-att:active { transform: translateY(1px); }
+  .ld-send-row { display: flex; gap: 10px; margin-top: 12px; }
+  .ld-att { position: relative; flex: none; width: 56px; border: 1.5px solid #93C5FD; border-radius: 999px; background: #fff; font-size: 22px; cursor: pointer; }
+  .ld-att[data-n]:not([data-n=''])::after { content: attr(data-n); position: absolute; top: -6px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: #E5484D; color: #fff; font: 700 12px/20px var(--body); }
+  .ld-att:disabled { opacity: .6; }
+  .ld-hint { margin: 8px 0 0; text-align: center; font-size: 13px; }
+  .ld-answer-box .w-share { margin-top: 10px; }
   .ld-num-send:disabled { opacity: .6; }
   .ld-ans { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
   .ld-ans-i { display: grid; justify-items: center; min-width: 76px; padding: 8px 10px; border-radius: 12px; background: #F1F5F9; }
@@ -1172,7 +1178,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-99</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-100</small></span></div>
 </footer>
 
 <script>
@@ -1643,7 +1649,7 @@
     markStale(); loadsBadge();
   }
   // 스크린샷(공유로 들어온 것 또는 고른 파일)을 이 요청의 댓글로 바로 보냄. items: [{file} | {id}]
-  async function sendShots(postId, items, onStatus, note) {
+  async function sendShots(postId, items, onStatus, note, nums) {
     const ids = [];
     const fs = items.filter(x => x.file);
     items.filter(x => x.id).forEach(x => ids.push(x.id));
@@ -1651,7 +1657,7 @@
       ids.push(await uploadToDrive(fs[i].file, r => onStatus(`스크린샷 올리는 중 ${i + 1}/${fs.length} · ${Math.round(r * 100)}%`)));
     onStatus('답변 보내는 중…');
     const m = me();
-    await call('addComment', { postId, author: m.name || '', body: note || '', files: ids, key: memberKey, device: dev() });
+    await call('addComment', { postId, author: m.name || '', body: note || '', files: ids, loads: nums || null, key: memberKey, device: dev() });
     if (feed) { const q = feed.posts.find(x => x.id === postId); if (q) q.comments = (q.comments || 0) + 1; if (feed.full) delete feed.full[postId]; }
     markStale(); loadsBadge();
   }
@@ -1922,26 +1928,32 @@
     const nAvail = numIn('ld-n-avail', 'Available'), nSb = numIn('ld-n-sb', 'Standby'), nJs = numIn('ld-n-js', 'Jumpseat');
     // 요청 종류에 맞는 칸만: Jumpseat → Jumpseat, NonRev → Available·Standby, 둘 다 → 세 칸
     const numBoxes = m => { const k = (m && m.kind) || 'both'; return k === 'js' ? [nJs.box] : k === 'nr' ? [nAvail.box, nSb.box] : [nAvail.box, nSb.box, nJs.box]; };
+    // 답하기 한 버튼: 숫자만, 스크린샷만, 둘 다 가능. 옆의 📎로 스크린샷 첨부
     const numMsg = el('p', { class: 'msg' });
-    const numBtn = el('button', { class: 'ld-num-send', type: 'button' }, '🔢 숫자로 답하기');
+    let shots = [];
+    const shotIn = el('input', { type: 'file', accept: 'image/*', multiple: '', hidden: '' });
+    const thumbs = el('div', { class: 'w-share' });
+    const attBtn = el('button', { class: 'ld-att', type: 'button', 'aria-label': '스크린샷 첨부', onclick: () => shotIn.click() }, '📎');
+    const drawShots = () => {
+      thumbs.replaceChildren(...shots.map(f => el('span', { class: 'w-share-f sm' },
+        el('img', { src: f.url || (f.url = URL.createObjectURL(f)), alt: '' }),
+        el('button', { type: 'button', 'aria-label': '첨부 빼기', onclick: () => { shots = shots.filter(x => x !== f); drawShots(); } }, '✕'))));
+      attBtn.dataset.n = shots.length ? String(shots.length) : '';
+    };
+    shotIn.addEventListener('change', () => { shots = shots.concat(Array.from(shotIn.files)).slice(0, MAX_FILES); shotIn.value = ''; drawShots(); });
+    const numBtn = el('button', { class: 'ld-num-send', type: 'button' }, '답하기');
     numBtn.addEventListener('click', async () => {
       numMsg.textContent = '';
       const v = i => i.value === '' ? undefined : Math.max(0, Math.floor(Number(i.value)));
       const nums = { avail: v(nAvail.i), sb: v(nSb.i), js: v(nJs.i) };
-      if (Object.values(nums).every(x => x === undefined)) { numMsg.textContent = '아는 칸만 하나 이상 넣어 주세요.'; return; }
-      numBtn.disabled = true; numBtn.textContent = '보내는 중…';
-      try { await sendLoadsNums(id, nums, cBody.value); showPost(id); }
-      catch (e) { if (e.message !== '__auth') { numMsg.textContent = e.message; numBtn.disabled = false; numBtn.textContent = '🔢 숫자로 답하기'; } }
-    });
-    const shotIn = el('input', { type: 'file', accept: 'image/*', multiple: '', hidden: '' });
-    const shotMsg = el('p', { class: 'hint' });
-    const shotBtn = el('button', { class: 'primary ld-answer', type: 'button', onclick: () => shotIn.click() }, '📷 스크린샷으로 답하기');
-    shotIn.addEventListener('change', async () => {
-      const fs = Array.from(shotIn.files).slice(0, MAX_FILES); shotIn.value = '';
-      if (!fs.length) return;
-      shotBtn.disabled = true;
-      try { await sendShots(id, fs.map(file => ({ file })), t => { shotMsg.textContent = t; }, cBody.value); showPost(id); }
-      catch (e) { if (e.message !== '__auth') { shotMsg.textContent = e.message; shotBtn.disabled = false; } }
+      const hasNum = Object.values(nums).some(x => x !== undefined);
+      if (!hasNum && !shots.length) { numMsg.textContent = '숫자를 넣거나 📎로 스크린샷을 첨부해 주세요.'; return; }
+      numBtn.disabled = attBtn.disabled = true; numBtn.textContent = '보내는 중…';
+      try {
+        if (shots.length) await sendShots(id, shots.map(file => ({ file })), t => { numBtn.textContent = t; }, cBody.value, hasNum ? nums : null);
+        else await sendLoadsNums(id, nums, cBody.value);
+        showPost(id);
+      } catch (e) { if (e.message !== '__auth') { numMsg.textContent = e.message; numBtn.disabled = attBtn.disabled = false; numBtn.textContent = '답하기'; } }
     });
     cBtn.addEventListener('click', async () => {
       cBtn.disabled = true; cMsg.textContent = '';
@@ -1967,11 +1979,10 @@
         p.body ? el('div', { class: 'body' }, p.body) : null,
         renderAttachments(p),
         p.board === LOADS && m.canWrite ? el('div', { class: 'ld-answer-box' },
-          shotBtn, shotIn, shotMsg,
-          el('p', { class: 'hint' }, '조회 화면을 캡처해서 고르기만 하면 바로 답변으로 올라가요. 승객 이름 같은 개인정보는 가려 주세요.'),
-          el('div', { class: 'ld-or' }, '또는 숫자로'),
           el('div', { class: 'ld-nums n' + numBoxes(p.meta).length }, numBoxes(p.meta)),
-          numBtn, numMsg) : null,
+          thumbs,
+          el('div', { class: 'ld-send-row' }, numBtn, attBtn, shotIn),
+          numMsg) : null,
         // 수정·삭제는 내가 쓴 글에만 보임 (다른 글은 관리자 화면에서 관리)
         p.mine ? el('div', { class: 'post-acts' },
           el('button', { class: 'ghost edit-btn', type: 'button', onclick: () => showEdit(p) }, '✏️ 수정'),
