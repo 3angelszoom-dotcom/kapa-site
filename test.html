@@ -849,6 +849,20 @@
   .ld-or { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; font-size: 13px; color: #64748B; }
   .ld-or::before, .ld-or::after { content: ''; flex: 1; height: 1px; background: #CBD5E1; }
   .ld-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .ld-nums.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ld-nums.n1 { grid-template-columns: minmax(0, 1fr); max-width: 220px; margin: 0 auto; }
+  .ld-legs { display: grid; gap: 10px; }
+  .ld-leg { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: #FAFBFD; }
+  .ld-leg-g { display: grid; grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1.7fr); gap: 8px; align-items: end; }
+  .ld-leg-g label { display: grid; gap: 3px; font-size: 12px; font-weight: 600; color: #64748B; min-width: 0; }
+  .ld-leg-g input { text-transform: uppercase; padding: 10px 8px; min-width: 0; width: 100%; }
+  .ld-leg-g input[type=date] { text-transform: none; font-size: 14px; padding: 10px 6px; }
+  .ld-leg-g .fr { grid-column: 1 / 3; } .ld-leg-g .ar { display: none; } .ld-leg-g .to { grid-column: 3; }
+  .ld-leg-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 14px; color: #1F5FD6; }
+  .ld-leg-del { border: 0; background: #EEF1F6; color: #475569; width: 28px; height: 28px; border-radius: 50%; font-size: 13px; cursor: pointer; }
+  .ld-leg-del[hidden] { display: none; }
+  .ld-add { width: 100%; padding: 12px; border: 1.5px dashed #93C5FD; border-radius: 12px; background: #F5F9FF; color: #1F5FD6; font: 700 15px/1.2 var(--body); cursor: pointer; }
+  .ld-add[hidden] { display: none; }
   .ld-num { display: grid; gap: 4px; text-align: center; }
   .ld-num small { font-size: 12px; font-weight: 700; color: #475569; }
   .ld-num input { text-align: center; font: 800 22px/1.2 var(--body); padding: 10px 4px; }
@@ -1158,7 +1172,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-98</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-99</small></span></div>
 </footer>
 
 <script>
@@ -1770,7 +1784,7 @@
         ? (posts.length ? posts.slice().sort((a, b) => {   // 답을 기다리는 요청(출발 가까운 순) → 나머지(최신 순)
               const ao = !loadDone(a) && !loadPast(a), bo = !loadDone(b) && !loadPast(b);
               if (ao !== bo) return ao ? -1 : 1;
-              if (ao) return a.meta.date === b.meta.date ? 0 : a.meta.date < b.meta.date ? -1 : 1;
+              if (ao) return a.meta.date === b.meta.date ? (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0) : a.meta.date < b.meta.date ? -1 : 1;
               return a.createdAt < b.createdAt ? 1 : -1;
             }).map(p => loadCard(p, () => showPost(p.id))) : el('p', { class: 'muted' }, '아직 조회 요청이 없어요. 위 버튼으로 첫 요청을 올려 보세요!'))
       : posts.length
@@ -1906,6 +1920,8 @@
     // 좌석 조회: 스크린샷만 고르면 바로 답변으로 올라감 (글은 안 써도 됨)
     const numIn = (id, label) => { const i = el('input', { id, type: 'number', inputmode: 'numeric', min: '0', max: '999', placeholder: '-', 'aria-label': label }); return { i, box: el('label', { class: 'ld-num' }, el('small', {}, label), i) }; };
     const nAvail = numIn('ld-n-avail', 'Available'), nSb = numIn('ld-n-sb', 'Standby'), nJs = numIn('ld-n-js', 'Jumpseat');
+    // 요청 종류에 맞는 칸만: Jumpseat → Jumpseat, NonRev → Available·Standby, 둘 다 → 세 칸
+    const numBoxes = m => { const k = (m && m.kind) || 'both'; return k === 'js' ? [nJs.box] : k === 'nr' ? [nAvail.box, nSb.box] : [nAvail.box, nSb.box, nJs.box]; };
     const numMsg = el('p', { class: 'msg' });
     const numBtn = el('button', { class: 'ld-num-send', type: 'button' }, '🔢 숫자로 답하기');
     numBtn.addEventListener('click', async () => {
@@ -1954,7 +1970,7 @@
           shotBtn, shotIn, shotMsg,
           el('p', { class: 'hint' }, '조회 화면을 캡처해서 고르기만 하면 바로 답변으로 올라가요. 승객 이름 같은 개인정보는 가려 주세요.'),
           el('div', { class: 'ld-or' }, '또는 숫자로'),
-          el('div', { class: 'ld-nums' }, nAvail.box, nSb.box, nJs.box),
+          el('div', { class: 'ld-nums n' + numBoxes(p.meta).length }, numBoxes(p.meta)),
           numBtn, numMsg) : null,
         // 수정·삭제는 내가 쓴 글에만 보임 (다른 글은 관리자 화면에서 관리)
         p.mine ? el('div', { class: 'post-acts' },
@@ -2006,7 +2022,7 @@
       el('button', { class: 'ghost', onclick: showList }, '← 취소'),
       el('div', { class: 'post' },
         el('span', { class: 'badge' }, boardOf(state.board).name),
-        writeForm(state.board, id => { markStale(); showPost(id); })));
+        writeForm(state.board, id => { markStale(); if (id) showPost(id); else showList(); })));
   }
   // 글쓰기 양식 (게시판 화면 · 첫 화면 글쓰기 창에서 같이 씀). done(새 글 id)
   // edit: 고칠 글 (있으면 수정 양식 — 제목·내용·첨부·링크를 미리 채우고 "수정 완료"로 저장)
@@ -2107,16 +2123,41 @@
 
   // 좌석 조회 요청 양식: 항공사·편명·날짜·출발·도착 (+ 메모). 지난번에 쓴 항공사·출발 공항은 기억해 둠
   function loadsForm(done) {
-    const inp = (id, ph, attrs) => el('input', Object.assign({ id, placeholder: ph, autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false' }, attrs || {}));
-    const air = inp('ld-air', 'UA', { maxlength: '3', 'aria-label': '항공사 코드' });
-    const flt = inp('ld-flt', '123', { maxlength: '5', inputmode: 'numeric', 'aria-label': '편명 숫자' });
-    const date = el('input', { id: 'ld-date', type: 'date', 'aria-label': '날짜' });
-    const from = inp('ld-from', 'SFO', { maxlength: '3', 'aria-label': '출발 공항' });
-    const to = inp('ld-to', 'EWR', { maxlength: '3', 'aria-label': '도착 공항' });
+    const inp = (ph, attrs) => el('input', Object.assign({ placeholder: ph, autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false' }, attrs || {}));
+    const up = i => i.addEventListener('input', () => { i.value = i.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+    // 편 하나 = 항공사·편명·날짜·출발·도착. "+ 편 추가"는 앞 편의 항공사·날짜를 그대로, 출발은 앞 편 도착으로 채움 (연결편)
+    const rows = [];
+    const listBox = el('div', { class: 'ld-legs' });
+    function addRow(prev) {
+      const r = {
+        air: inp('UA', { maxlength: '3', 'aria-label': '항공사 코드' }),
+        flt: inp('123', { maxlength: '5', inputmode: 'numeric', 'aria-label': '편명 숫자' }),
+        date: el('input', { type: 'date', 'aria-label': '날짜' }),
+        from: inp('SFO', { maxlength: '3', 'aria-label': '출발 공항' }),
+        to: inp('EWR', { maxlength: '3', 'aria-label': '도착 공항' }),
+      };
+      [r.air, r.from, r.to].forEach(up);
+      r.flt.addEventListener('input', () => { r.flt.value = r.flt.value.replace(/\D/g, ''); });
+      if (prev) { r.air.value = prev.air.value; r.date.value = prev.date.value; r.from.value = prev.to.value; }
+      else { r.air.value = store.get('pc_ld_air') || ''; r.from.value = store.get('pc_ld_from') || ''; r.date.value = ymd(new Date()); }
+      r.num = el('b', { class: 'ld-leg-n' });
+      r.del = el('button', { type: 'button', class: 'ld-leg-del', 'aria-label': '이 편 빼기', onclick: () => { rows.splice(rows.indexOf(r), 1); r.box.remove(); sync(); } }, '✕');
+      r.box = el('div', { class: 'ld-leg' },
+        el('div', { class: 'ld-leg-h' }, r.num, r.del),
+        el('div', { class: 'ld-leg-g' },
+          el('label', {}, '항공사', r.air), el('label', {}, '편명', r.flt), el('label', { class: 'dt' }, '날짜', r.date),
+          el('label', { class: 'fr' }, '출발', r.from), el('span', { class: 'ar', 'aria-hidden': 'true' }, '→'), el('label', { class: 'to' }, '도착', r.to)));
+      rows.push(r); listBox.append(r.box); sync();
+      return r;
+    }
+    const addBtn = el('button', { type: 'button', class: 'ld-add' }, '＋ 편 추가 (Add more)');
+    addBtn.addEventListener('click', () => { const r = addRow(rows[rows.length - 1]); r.flt.focus(); });
+    function sync() {
+      rows.forEach((r, i) => { r.num.textContent = rows.length > 1 ? (i + 1) + '번째 편' : '편 정보'; r.del.hidden = rows.length < 2; });
+      addBtn.hidden = rows.length >= 6;
+      btn.textContent = rows.length > 1 ? '✈️ ' + rows.length + '편 조회 요청 올리기' : '✈️ 조회 요청 올리기';
+    }
     const memo = el('textarea', { id: 'ld-memo', placeholder: '메모 (선택) · 예: 2명, 오후 편도 괜찮아요', maxlength: '500', 'aria-label': '메모' }); memo.style.minHeight = '70px';
-    air.value = store.get('pc_ld_air') || ''; from.value = store.get('pc_ld_from') || ''; date.value = ymd(new Date());
-    [air, from, to].forEach(i => i.addEventListener('input', () => { i.value = i.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }));
-    flt.addEventListener('input', () => { flt.value = flt.value.replace(/\D/g, ''); });
     // 조회 종류: Jumpseat / NonRev, 둘 다 고를 수 있음 (지난번 고른 것을 기억)
     const k0 = store.get('pc_ld_kind') || '';
     const pick = { js: k0 === 'js' || k0 === 'both', nr: k0 === 'nr' || k0 === 'both' };
@@ -2125,29 +2166,34 @@
     const syncKindB = () => kindBtns.forEach(b => { b.classList.toggle('on', pick[b.dataset.k]); b.setAttribute('aria-pressed', String(pick[b.dataset.k])); });
     syncKindB();
     const msg = el('p', { class: 'msg' }), btn = el('button', { class: 'primary' }, '✈️ 조회 요청 올리기');
+    addRow(null);
     btn.addEventListener('click', async () => {
       msg.textContent = '';
       const kind = kindOf();
       if (!kind) { msg.textContent = 'Jumpseat, NonRev 중 하나 이상 골라 주세요. (둘 다 골라도 돼요)'; return; }
-      if (!air.value || !flt.value) { msg.textContent = '항공사와 편명을 넣어 주세요. (예: UA 123)'; return; }
-      if (from.value.length !== 3 || to.value.length !== 3) { msg.textContent = '출발·도착 공항 코드를 3글자로 넣어 주세요.'; return; }
+      const many = rows.length > 1;
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i], n = many ? (i + 1) + '번째 편: ' : '';
+        if (!r.air.value || !r.flt.value) { msg.textContent = n + '항공사와 편명을 넣어 주세요. (예: UA 123)'; r.flt.focus(); return; }
+        if (r.from.value.length !== 3 || r.to.value.length !== 3) { msg.textContent = n + '출발·도착 공항 코드를 3글자로 넣어 주세요.'; return; }
+      }
+      const label = btn.textContent;
       btn.disabled = true; btn.textContent = '올리는 중…';
       try {
-        store.set('pc_ld_air', air.value); store.set('pc_ld_from', from.value); store.set('pc_ld_kind', kind);
-        const id = await call('createPost', { board: LOADS, meta: { kind, air: air.value, flt: flt.value, date: date.value, from: from.value, to: to.value },
+        store.set('pc_ld_air', rows[0].air.value); store.set('pc_ld_from', rows[0].from.value); store.set('pc_ld_kind', kind);
+        const metas = rows.map(r => ({ kind, air: r.air.value, flt: r.flt.value, date: r.date.value, from: r.from.value, to: r.to.value }));
+        const id = await call('createPost', { board: LOADS, meta: metas[0], metas: many ? metas : undefined,
           body: memo.value, files: [], links: [], key: memberKey, device: dev() });
-        done(id);
-      } catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; btn.disabled = false; btn.textContent = '✈️ 조회 요청 올리기'; } }
+        done(many ? null : id);   // 여러 편이면 목록으로
+      } catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; btn.disabled = false; btn.textContent = label; } }
     });
     return el('div', { class: 'form ld-form' },
       asWho(LOADS, '요청이'),
       el('div', { class: 'ld-kind', role: 'group', 'aria-label': '조회 종류 (둘 다 골라도 돼요)' }, kindBtns),
       el('p', { class: 'hint', style: 'margin:-4px 0 0' }, '둘 다 궁금하면 둘 다 눌러 주세요.'),
-      el('div', { class: 'ld-grid' },
-        el('label', {}, '항공사', air), el('label', {}, '편명', flt), el('label', { class: 'wide' }, '날짜', date),
-        el('label', {}, '출발', from), el('label', {}, '도착', to)),
+      listBox, addBtn,
       memo,
-      el('p', { class: 'hint' }, '조회해 줄 수 있는 회원에게 알림이 가고, 답(스크린샷)이 오면 내 폰으로 알려 드려요.'),
+      el('p', { class: 'hint' }, '편마다 요청이 따로 올라가서, 답하는 사람이 편별로 답해 줄 수 있어요. 답이 오면 내 폰으로 알려 드려요.'),
       btn, msg);
   }
 
@@ -2207,7 +2253,7 @@
       show(head('', pickBoard),
         el('div', { class: 'post' },
           el('h2', { style: 'margin:0 0 6px;font-size:19px' }, (b.ico ? b.ico + ' ' : '') + b.name + '에 새 글'),
-          writeForm(board, id => { close(); markStale(); navigate(board + '/p/' + id); })));
+          writeForm(board, id => { close(); markStale(); navigate(id ? board + '/p/' + id : board); })));
       const t = sheet.querySelector('#w-title'); if (t && !isIOS) t.focus();
     }
     async function start() {
