@@ -1158,7 +1158,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-97</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-98</small></span></div>
 </footer>
 
 <script>
@@ -3621,6 +3621,17 @@
   }
   setInterval(() => ping(false), 90000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) ping(false); });
+  // 홈 화면 앱 아이콘 숫자(배지): 앱을 열거나 다시 보면 0으로 지움. 'on' 표시를 남겨야 서비스 워커가 알림 올 때 숫자를 올림
+  async function clearBadge() {
+    try {
+      const c = await caches.open('kapa-badge');
+      await c.put('/__badge/on', new Response('1'));
+      await c.put('/__badge/n', new Response('0'));
+      if (navigator.clearAppBadge) await navigator.clearAppBadge();
+    } catch (e) {}
+  }
+  clearBadge();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) clearBadge(); });
   // 알림을 누르거나 앱으로 다시 돌아오면 체크인 화면을 새 현황으로 다시 불러옴 (예전 화면이 그대로 남지 않게)
   let lyBack = 0;
   const lyRefreshIfShown = () => {
