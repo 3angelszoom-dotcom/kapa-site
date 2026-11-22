@@ -77,7 +77,7 @@
 <div class="panel">
   <h2>Turbulence near route <small id="count"></small></h2>
   <div id="list"><p class="muted">출발·도착 공항을 넣거나 릴리스 루트를 붙여 넣고 Show를 눌러 주세요.</p></div>
-  <p class="note">Solid line: route pasted from the release, drawn with FAA NASR data (U.S. fixes, airways, SIDs/STARs; lat/lon waypoints anywhere). Dashed line: great-circle between airports. Radar: NEXRAD (U.S., IEM) · RainViewer (world). Turbulence: PIREPs (last 3 h), SIGMET/G-AIRMET from aviationweather.gov. For reference only — not for operational use.</p>
+  <p class="note">Solid line: route pasted from the release, drawn with FAA NASR data (U.S. fixes, airways, SIDs/STARs; lat/lon waypoints anywhere). Dashed line: great-circle between airports. Radar: NEXRAD (U.S., IEM, ~1 km) · World: RainViewer (lower resolution, off by default). Turbulence: PIREPs (last 3 h), SIGMET/G-AIRMET from aviationweather.gov. For reference only — not for operational use.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -150,19 +150,21 @@
   const map = L.map('map', { zoomControl: true }).setView([38, -100], 3);
   map.attributionControl.setPrefix(false);   // "Leaflet" 글자는 빼고, 지도·레이더 출처만 작게
   // 바탕 지도: Esri 연회색 (키 없이 사용) → 안 되면 OpenStreetMap으로
-  const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 10, attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }).addTo(map);
+  const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }).addTo(map);
   let baseErr = 0;
-  base.on('tileerror', () => { if (++baseErr === 4) { map.removeLayer(base); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 10, attribution: '&copy; OpenStreetMap contributors' }).addTo(map).bringToBack(); } });
-  const layers = { radar: L.layerGroup(), pirep: L.layerGroup(), area: L.layerGroup(), route: L.layerGroup().addTo(map) };
-  const on = { radar: true, pirep: true, area: true };
-  L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', { opacity: .55, maxZoom: 10, attribution: 'NEXRAD &copy; IEM' }).addTo(layers.radar);
+  base.on('tileerror', () => { if (++baseErr === 4) { map.removeLayer(base); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12, attribution: '&copy; OpenStreetMap contributors' }).addTo(map).bringToBack(); } });
+  const layers = { radar: L.layerGroup(), world: L.layerGroup(), pirep: L.layerGroup(), area: L.layerGroup(), route: L.layerGroup().addTo(map) };
+  const on = { radar: true, world: false, pirep: true, area: true };
+  // 미국 NEXRAD(약 1 km 해상도): 진하게, 레티나 화면에선 한 단계 더 촘촘한 타일로
+  L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?' + Math.floor(Date.now() / 300000), { opacity: .8, maxZoom: 12, maxNativeZoom: 11, detectRetina: true, zIndex: 3, attribution: 'NEXRAD &copy; IEM' }).addTo(layers.radar);
+  // 해외 레이더(RainViewer, 저해상도): 따로 켜는 버튼, NEXRAD 아래에 깔림
   fetch('https://api.rainviewer.com/public/weather-maps.json').then(r => r.json()).then(j => {
     const f = j && j.radar && j.radar.past && j.radar.past[j.radar.past.length - 1];
-    if (f) L.tileLayer(j.host + f.path + '/256/{z}/{x}/{y}/2/1_1.png', { opacity: .5, maxNativeZoom: 7, maxZoom: 10, attribution: 'RainViewer' }).addTo(layers.radar);
+    if (f) L.tileLayer(j.host + f.path + '/256/{z}/{x}/{y}/2/1_1.png', { opacity: .55, maxNativeZoom: 7, maxZoom: 12, zIndex: 2, attribution: 'RainViewer' }).addTo(layers.world);
   }).catch(() => {});
   Object.keys(on).forEach(k => { if (on[k]) layers[k].addTo(map); });
-  $('bar').append(...[['radar', '🌧 Radar'], ['pirep', '⚡ PIREPs'], ['area', '🟧 SIGMET/G-AIRMET']].map(([k, t]) => {
-    const b = el('button', { type: 'button', class: 'tg on', 'aria-pressed': 'true' }, t);
+  $('bar').append(...[['radar', '🌧 Radar U.S.'], ['world', '🌍 World'], ['pirep', '⚡ PIREPs'], ['area', '🟧 SIGMET/G-AIRMET']].map(([k, t]) => {
+    const b = el('button', { type: 'button', class: 'tg' + (on[k] ? ' on' : ''), 'aria-pressed': String(on[k]) }, t);
     b.addEventListener('click', () => { on[k] = !on[k]; b.classList.toggle('on', on[k]); b.setAttribute('aria-pressed', String(on[k])); on[k] ? layers[k].addTo(map) : layers[k].remove(); });
     return b;
   }), el('span', { class: 'legend' }, TURB.slice(1, 4).map((t, i) => el('span', {}, el('i', { style: 'background:' + TCOL[i + 1] }), t))));
