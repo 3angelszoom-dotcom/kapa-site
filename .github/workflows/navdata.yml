@@ -1,0 +1,31 @@
+# FAA NASR 항법 데이터 → navdata/ (route.html의 릴리스 루트 그리기용)
+# 매일 한 번 확인해서 새 28일 주기가 나왔으면 다시 만듦. 수동 실행도 가능.
+name: navdata
+on:
+  schedule:
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+  push:
+    paths: ['tools/build_navdata.py', '.github/workflows/navdata.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build
+        run: python3 tools/build_navdata.py navdata
+        env:
+          FORCE: ${{ github.event_name != 'schedule' && '1' || '0' }}
+      - name: Commit if changed
+        run: |
+          git config user.name "kapa-navdata-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add navdata
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
+          git commit -m "navdata: FAA NASR $(python3 -c 'import json;print(json.load(open("navdata/points.json"))["meta"]["cycle"])')"
+          git push
