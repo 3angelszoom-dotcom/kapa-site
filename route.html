@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B1F45">
+<title>Route Weather · KAPA</title>
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root { --f: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif; --ink: #0B1220; --muted: #64748B; --line: #E2E8F0; --bg: #F4F6FA; --navy: #0B1F45; --blue: #1F5FD6; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 400 15px/1.5 -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif; display: flex; flex-direction: column; }
+  header { background: var(--navy); color: #fff; padding: calc(10px + env(safe-area-inset-top)) 14px 10px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .brand { font: 800 17px/1 var(--f); letter-spacing: .01em; }
+  .brand small { font-weight: 600; color: #8EC5FF; margin-left: 6px; font-size: 12px; }
+  .who { font-size: 12px; color: #B8C4D9; }
+  .who button { background: none; border: 0; color: #8EC5FF; font: inherit; cursor: pointer; padding: 0 0 0 6px; }
+  form { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .8fr) auto minmax(0, .8fr) auto; gap: 6px; align-items: center; margin-top: 10px; }
+  input { width: 100%; min-width: 0; padding: 10px 9px; border-radius: 10px; border: 1px solid #2B3F66; background: #13284F; color: #fff; font: 600 15px/1.2 var(--f); text-transform: uppercase; }
+  input::placeholder { color: #6F82A6; text-transform: none; font-weight: 500; }
+  .arrow { color: #6F82A6; font-size: 13px; }
+  .go { padding: 10px 14px; border: 0; border-radius: 10px; background: #fff; color: var(--navy); font: 800 14px/1 var(--f); cursor: pointer; }
+  .msg { margin: 8px 0 0; font: 600 13px/1.4 var(--f); color: #D6E2F5; min-height: 1.4em; }
+  .msg.err { color: #FCA5A5; }
+  .bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; background: #fff; border-bottom: 1px solid var(--line); }
+  .tg { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 10px; font: 700 12.5px/1 var(--f); color: var(--muted); cursor: pointer; }
+  .tg.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .legend { display: inline-flex; gap: 8px; margin-left: auto; font: 700 11px/1 var(--f); color: var(--muted); }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 3px; vertical-align: -1px; }
+  #map { flex: 1 1 auto; min-height: 52vh; background: #DDE3EA; z-index: 0; }
+  .panel { background: #fff; border-top: 1px solid var(--line); max-height: 34vh; overflow: auto; padding: 10px 12px calc(12px + env(safe-area-inset-bottom)); }
+  .panel h2 { font: 800 15px/1.3 var(--f); margin: 0 0 8px; }
+  .panel h2 small { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .row { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px; align-items: center; width: 100%; padding: 8px 10px; margin-bottom: 6px; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-align: left; font: 500 13px/1.35 var(--f); color: #475569; cursor: pointer; }
+  .row b { color: var(--ink); }
+  .sev { color: #fff; font: 800 10.5px/1 var(--f); letter-spacing: .05em; padding: 4px 7px; border-radius: 999px; }
+  .d { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .note { font-size: 11px; color: #94A3B8; margin: 8px 0 0; line-height: 1.45; }
+  .muted { color: var(--muted); font-size: 13px; margin: 0; }
+  .ap { font: 800 12px/1 var(--f); }
+  .login { padding: 16px; max-width: 420px; margin: 24px auto; background: #fff; border: 1px solid var(--line); border-radius: 16px; }
+  .login h2 { margin: 0 0 6px; font-size: 17px; }
+  .login input { background: #fff; color: var(--ink); border-color: var(--line); margin: 10px 0; text-transform: none; }
+  .login button { width: 100%; padding: 12px; border: 0; border-radius: 10px; background: var(--navy); color: #fff; font: 800 15px/1 var(--f); cursor: pointer; }
+  .login .msg { color: #B91C1C; }
+  @media (max-width: 480px) {
+    form { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+    #flt { grid-column: 1 / -1; }
+    .go { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><div class="brand">🗺 Route Weather<small>KAPA</small></div><div class="who" id="who"></div></div>
+  <form id="f" autocomplete="off">
+    <input id="flt" placeholder="Flight # (UA805)" autocapitalize="characters" spellcheck="false" aria-label="편명">
+    <input id="from" placeholder="From" maxlength="4" autocapitalize="characters" aria-label="출발 공항">
+    <span class="arrow" aria-hidden="true">→</span>
+    <input id="to" placeholder="To" maxlength="4" autocapitalize="characters" aria-label="도착 공항">
+    <button class="go" type="submit">Show</button>
+  </form>
+  <p class="msg" id="msg"></p>
+</header>
+<div class="bar" id="bar"></div>
+<div id="map"></div>
+<div class="panel">
+  <h2>Turbulence near route <small id="count"></small></h2>
+  <div id="list"><p class="muted">편명이나 출발·도착 공항을 넣고 Show를 눌러 주세요.</p></div>
+  <p class="note">Route line is the great-circle path between airports, not the filed route. Radar: NEXRAD (U.S., IEM) · RainViewer (world). Turbulence: PIREPs (last 3 h), SIGMET/G-AIRMET from aviationweather.gov. For reference only — not for operational use.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  // KAPA 테스트 서버 (getRoute / getRouteWx). 로그인은 사이트와 같은 저장소(pc_key)를 씀
+  const API_URL = 'https://script.google.com/macros/s/AKfycbxM8aE3mSczAAv6SxyngKNPxyeY7q0Mw4QF1-F-GGvnxpNXEpURJsOaolXf7S1DHuU/exec';
+  const store = { get(k) { try { return localStorage.getItem(k) || ''; } catch (_) { return ''; } }, set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (_) {} } };
+  let key = store.get('pc_key');
+  const $ = id => document.getElementById(id);
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function el(tag, attrs, ...kids) {
+    const e = document.createElement(tag);
+    Object.entries(attrs || {}).forEach(([k, v]) => { if (k === 'onclick') e.addEventListener('click', v); else if (k === 'style') e.setAttribute('style', v); else if (v != null) e.setAttribute(k, v); });
+    kids.flat().forEach(c => { if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(String(c))); });
+    return e;
+  }
+  function call(fn, ...args) {
+    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, page: 'test' }), redirect: 'follow' })
+      .then(r => { if (!r.ok) throw new Error('서버에 연결하지 못했어요 (' + r.status + ')'); return r.json(); }, () => { throw new Error('인터넷 연결을 확인해 주세요.'); })
+      .then(j => {
+        if (!j || !j.ok) { const m = (j && j.error) || '서버 오류'; if (/AUTH_REQUIRED/.test(m)) { store.set('pc_key', ''); key = ''; showLogin('입장이 끝났어요. 다시 입장해 주세요.'); throw new Error('__auth'); } throw new Error(m); }
+        return j.data;
+      });
+  }
+  // ---- 입장 (사이트에 입장돼 있으면 바로 씀) ----
+  function showLogin(note) {
+    $('who').textContent = '';
+    const inp = el('input', { type: 'password', placeholder: '개인 입장 코드', autocomplete: 'current-password', 'aria-label': '개인 입장 코드' });
+    const m = el('p', { class: 'msg' }, note || '');
+    const b = el('button', { type: 'button' }, '입장');
+    const go = async () => {
+      if (!inp.value.trim()) return;
+      b.disabled = true; m.textContent = '';
+      try {
+        const r = await call('enter', inp.value.trim(), '');
+        if (!r || r.error) throw new Error((r && r.error) || '코드가 맞지 않아요.');
+        key = r.token; store.set('pc_key', key); box.remove(); start();
+      } catch (e) { if (e.message !== '__auth') m.textContent = e.message; b.disabled = false; }
+    };
+    b.addEventListener('click', go); inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    const box = el('div', { class: 'login' }, el('h2', {}, 'KAPA 회원 입장'), el('p', { class: 'muted' }, '승인 메일로 받은 개인 입장 코드를 넣어 주세요. 카파 사이트에 이미 입장돼 있으면 이 화면은 안 나와요.'), inp, b, m);
+    document.querySelectorAll('.login').forEach(x => x.remove());
+    $('map').before(box);
+  }
+  // ---- 지도 ----
+  const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
+  function gcPoints(a, b, n) {
+    const [la1, lo1, la2, lo2] = [rad(a[0]), rad(a[1]), rad(b[0]), rad(b[1])];
+    const d = 2 * Math.asin(Math.sqrt(Math.sin((la2 - la1) / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin((lo2 - lo1) / 2) ** 2));
+    const out = []; let prev = null;
+    for (let i = 0; i <= n; i++) {
+      const f = i / n, A = Math.sin((1 - f) * d) / Math.sin(d), B = Math.sin(f * d) / Math.sin(d);
+      const x = A * Math.cos(la1) * Math.cos(lo1) + B * Math.cos(la2) * Math.cos(lo2), y = A * Math.cos(la1) * Math.sin(lo1) + B * Math.cos(la2) * Math.sin(lo2), z = A * Math.sin(la1) + B * Math.sin(la2);
+      let lon = deg(Math.atan2(y, x)); const lat = deg(Math.atan2(z, Math.sqrt(x * x + y * y)));
+      if (prev != null) { while (lon - prev > 180) lon -= 360; while (prev - lon > 180) lon += 360; }
+      out.push([lat, lon]); prev = lon;
+    }
+    return { pts: out, nm: d * 3440.065 };
+  }
+  const nmBetween = (a, b) => { const [la1, la2] = [rad(a[0]), rad(b[0])]; return 2 * 3440.065 * Math.asin(Math.sqrt(Math.sin((la2 - la1) / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(rad(b[1] - a[1]) / 2) ** 2)); };
+  const near = (lon, ref) => { while (lon - ref > 180) lon -= 360; while (ref - lon > 180) lon += 360; return lon; };
+  const TURB = ['NEG', 'LGT', 'MOD', 'SEV', 'EXTRM'], TCOL = ['#94A3B8', '#EAB308', '#F97316', '#DC2626', '#7C3AED'];
+  let airportsP = null;
+  const loadAirports = () => airportsP || (airportsP = fetch('airports.txt').then(r => { if (!r.ok) throw new Error(); return r.text(); })
+    .then(t => t.split(';').filter(Boolean).map(x => { const [lat, lon] = x.slice(3).split(','); return [x.slice(0, 3), +lat, +lon]; }))
+    .catch(() => { airportsP = null; throw new Error('공항 목록을 불러오지 못했어요.'); }));
+
+  const map = L.map('map', { zoomControl: true }).setView([38, -100], 3);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 10, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
+  const layers = { radar: L.layerGroup(), pirep: L.layerGroup(), area: L.layerGroup(), route: L.layerGroup().addTo(map) };
+  const on = { radar: true, pirep: true, area: true };
+  L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', { opacity: .55, maxZoom: 10, attribution: 'NEXRAD &copy; IEM' }).addTo(layers.radar);
+  fetch('https://api.rainviewer.com/public/weather-maps.json').then(r => r.json()).then(j => {
+    const f = j && j.radar && j.radar.past && j.radar.past[j.radar.past.length - 1];
+    if (f) L.tileLayer(j.host + f.path + '/256/{z}/{x}/{y}/2/1_1.png', { opacity: .5, maxNativeZoom: 7, maxZoom: 10, attribution: 'RainViewer' }).addTo(layers.radar);
+  }).catch(() => {});
+  Object.keys(on).forEach(k => { if (on[k]) layers[k].addTo(map); });
+  $('bar').append(...[['radar', '🌧 Radar'], ['pirep', '⚡ PIREPs'], ['area', '🟧 SIGMET/G-AIRMET']].map(([k, t]) => {
+    const b = el('button', { type: 'button', class: 'tg on', 'aria-pressed': 'true' }, t);
+    b.addEventListener('click', () => { on[k] = !on[k]; b.classList.toggle('on', on[k]); b.setAttribute('aria-pressed', String(on[k])); on[k] ? layers[k].addTo(map) : layers[k].remove(); });
+    return b;
+  }), el('span', { class: 'legend' }, TURB.slice(1, 4).map((t, i) => el('span', {}, el('i', { style: 'background:' + TCOL[i + 1] }), t))));
+
+  const msg = (t, err) => { $('msg').textContent = t; $('msg').classList.toggle('err', !!err); };
+  ['flt', 'from', 'to'].forEach(id => $(id).addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }));
+  $('f').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = $('flt').value, a = $('from').value, b = $('to').value;
+    history.replaceState(null, '', '#' + [f, a, b].filter(Boolean).join('_'));
+    show(f, a, b);
+  });
+
+  async function show(f, a, b) {
+    if (!key) return showLogin();
+    if (!f && !(a && b)) return msg('편명이나 출발·도착 공항을 넣어 주세요.', true);
+    msg('불러오는 중…'); $('list').replaceChildren(); $('count').textContent = '';
+    let from, to, label;
+    try {
+      if (a && b) {
+        const aps = await loadAirports();
+        const find = c => { const x = aps.find(p => p[0] === c.replace(/^K(?=[A-Z]{3}$)/, '')); return x ? { code: x[0], lat: x[1], lon: x[2] } : null; };
+        from = find(a); to = find(b);
+        if (!from || !to) throw new Error('공항 코드를 찾지 못했어요: ' + [!from ? a : '', !to ? b : ''].filter(Boolean).join(', '));
+        label = (f ? f + ' · ' : '') + from.code + ' → ' + to.code;
+      } else {
+        const r = await call('getRoute', key, f);
+        if (!r.found) throw new Error(f + ' 노선을 찾지 못했어요. 출발·도착 공항을 직접 넣어 주세요.');
+        from = r.from; to = r.to; label = f + ' · ' + from.code + ' → ' + to.code;
+        $('from').value = from.code; $('to').value = to.code;
+      }
+    } catch (e) { if (e.message !== '__auth') msg(e.message, true); return; }
+    const gc = gcPoints([from.lat, from.lon], [to.lat, to.lon], 96);
+    layers.route.clearLayers();
+    L.polyline(gc.pts, { color: '#1F5FD6', weight: 3, dashArray: '6 6' }).addTo(layers.route);
+    [[from, gc.pts[0]], [to, gc.pts[gc.pts.length - 1]]].forEach(([p, ll]) => L.circleMarker(ll, { radius: 6, color: '#0B1220', weight: 2, fillColor: '#fff', fillOpacity: 1 })
+      .bindTooltip(p.code, { permanent: true, direction: 'top', className: 'ap' }).addTo(layers.route));
+    map.fitBounds(L.latLngBounds(gc.pts).pad(0.12));
+    msg(label + ' · ' + Math.round(gc.nm).toLocaleString('en-US') + ' nm (great circle)');
+    const lats = gc.pts.map(p => p[0]), lons = gc.pts.map(p => p[1]);
+    const norm = x => ((x + 540) % 360) - 180;
+    const box = [Math.max(-90, Math.min(...lats) - 5), norm(Math.min(...lons) - 8), Math.min(90, Math.max(...lats) + 5), norm(Math.max(...lons) + 8)];
+    let wx;
+    try { wx = await call('getRouteWx', key, box); } catch (e) { if (e.message !== '__auth') msg(label + ' · 터뷸런스 정보를 불러오지 못했어요', true); return; }
+    const mid = gc.pts[Math.floor(gc.pts.length / 2)][1];
+    layers.area.clearLayers(); layers.pirep.clearLayers();
+    wx.areas.forEach(z => {
+      const col = z.k === 'G-AIRMET' ? '#F97316' : '#DC2626';
+      L.polygon(z.c.map(p => [p[0], near(p[1], mid)]), { color: col, weight: 1.5, fillColor: col, fillOpacity: .12, dashArray: z.k === 'G-AIRMET' ? '4 4' : null })
+        .bindPopup('<b>' + esc(z.k) + ' · TURB</b>' + (z.lo || z.hi ? '<br>FL' + Math.round(z.lo / 100) + '–FL' + Math.round(z.hi / 100) : '') + (z.fir ? '<br>' + esc(z.fir) : '') + '<br><small>' + esc(z.raw) + '</small>').addTo(layers.area);
+    });
+    const ago = t => { const m = Math.max(0, Math.round((Date.now() / 1000 - t) / 60)); return m < 60 ? m + ' min ago' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm ago'; };
+    const rows = wx.pireps.map(p => {
+      const ll = [p[0], near(p[1], mid)];
+      let dmin = Infinity, at = 0; gc.pts.forEach((q, i) => { const d = nmBetween(ll, q); if (d < dmin) { dmin = d; at = i; } });
+      return { p, ll, d: dmin, along: Math.round(gc.nm * at / (gc.pts.length - 1)) };
+    });
+    rows.forEach(({ p, ll }) => L.circleMarker(ll, { radius: p[3] >= 3 ? 7 : 5, color: '#fff', weight: 1, fillColor: TCOL[p[3]], fillOpacity: .95 })
+      .bindPopup('<b>' + TURB[p[3]] + ' turbulence</b><br>FL' + String(p[2]).padStart(3, '0') + ' · ' + esc(p[4] || '?') + ' · ' + ago(p[5]) + '<br><small>' + esc(p[6]) + '</small>').addTo(layers.pirep));
+    const close = rows.filter(r => r.d <= 150 && r.p[3] >= 1).sort((x, y) => y.p[3] - x.p[3] || y.p[5] - x.p[5]);
+    $('count').textContent = close.length ? '(' + close.length + ' PIREPs within 150 nm · ' + wx.areas.length + ' areas)' : (wx.areas.length ? '(' + wx.areas.length + ' areas)' : '');
+    $('list').replaceChildren(...(close.length ? close.slice(0, 40).map(r => el('button', { type: 'button', class: 'row', onclick: () => map.setView(r.ll, 6) },
+      el('span', { class: 'sev', style: 'background:' + TCOL[r.p[3]] }, TURB[r.p[3]]),
+      el('b', {}, 'FL' + String(r.p[2]).padStart(3, '0')),
+      el('span', { class: 'd' }, [r.p[4] || '?', ago(r.p[5]), Math.round(r.d) + ' nm off · ' + r.along.toLocaleString('en-US') + ' nm from ' + from.code].join(' · '))))
+      : [el('p', { class: 'muted' }, 'No turbulence PIREPs within 150 nm in the last 3 hours.')]));
+  }
+
+  function start() {
+    $('who').replaceChildren('입장됨', el('button', { type: 'button', onclick: () => { store.set('pc_key', ''); key = ''; showLogin(); } }, '나가기'));
+    const parts = decodeURIComponent(location.hash.slice(1)).split('_').filter(Boolean);
+    let f = '', a = '', b = '';
+    parts.forEach(x => { x = x.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (/\d/.test(x) && !f) f = x; else if (!a) a = x; else b = x; });
+    $('flt').value = f; $('from').value = a; $('to').value = b;
+    if (f || (a && b)) show(f, a, b);
+  }
+  if (key) start(); else showLogin();
+})();
+</script>
+</body>
+</html>
