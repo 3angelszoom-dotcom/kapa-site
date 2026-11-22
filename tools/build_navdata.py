@@ -120,13 +120,16 @@ def main():
             proc = code.split('.')[0] if kind == 'DP' else (code.split('.')[-1] if '.' in code else code)
             if not proc: continue
             port = (r.get(cport) or '').upper()
-            tname = '*' if 'BODY' in port else (r.get(cname) or '').strip().upper()
+            rname = (r.get(cname) or '').strip().upper()
+            tname = ('*' + rname) if 'BODY' in port else rname   # 본체는 활주로별로 따로 ('*RWY 24L' 등)
             key = (proc, tname, r.get(cbody) or '')
             try: s = int(float(r.get(cseq) or 0))
             except Exception: s = 0
             grp.setdefault(key, []).append((s, (r.get(cpt) or '').strip().upper()))
         for (proc, tname, body), v in grp.items():
-            seq = [p for _, p in sorted(v) if p]
+            seq = []
+            for _, p in sorted(v):
+                if p and (not seq or seq[-1] != p): seq.append(p)   # 같은 점 연속은 하나로
             d = procs.setdefault(proc, {'k': kind, 't': {}})
             d['t'].setdefault(tname, []).append(seq)
         note('  procedures', sum(1 for p in procs.values() if p['k'] == kind))
