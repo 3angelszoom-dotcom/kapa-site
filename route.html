@@ -20,7 +20,7 @@
   .brand small { font-weight: 600; color: #8EC5FF; margin-left: 6px; font-size: 12px; }
   .who { font-size: 12px; color: #B8C4D9; }
   .who button { background: none; border: 0; color: #8EC5FF; font: inherit; cursor: pointer; padding: 0 0 0 6px; }
-  form { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .8fr) auto minmax(0, .8fr) auto; gap: 6px; align-items: center; margin-top: 10px; }
+  form { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; gap: 6px; align-items: center; margin-top: 10px; }
   input { width: 100%; min-width: 0; padding: 10px 9px; border-radius: 10px; border: 1px solid #2B3F66; background: #13284F; color: #fff; font: 600 15px/1.2 var(--f); text-transform: uppercase; }
   input::placeholder { color: #6F82A6; text-transform: none; font-weight: 500; }
   .arrow { color: #6F82A6; font-size: 13px; }
@@ -46,6 +46,8 @@
   .note { font-size: 11px; color: #94A3B8; margin: 8px 0 0; line-height: 1.45; }
   .muted { color: var(--muted); font-size: 13px; margin: 0; }
   .ap { font: 800 12px/1 var(--f); }
+  .leaflet-control-attribution { font-size: 9px !important; line-height: 1.3 !important; background: rgba(255,255,255,.6) !important; color: #64748B !important; max-width: 70%; }
+  .leaflet-control-attribution a { color: #64748B !important; }
   .login { padding: 16px; max-width: 420px; margin: 24px auto; background: #fff; border: 1px solid var(--line); border-radius: 16px; }
   .login h2 { margin: 0 0 6px; font-size: 17px; }
   .login input { background: #fff; color: var(--ink); border-color: var(--line); margin: 10px 0; text-transform: none; }
@@ -53,7 +55,6 @@
   .login .msg { color: #B91C1C; }
   @media (max-width: 480px) {
     form { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
-    #flt { grid-column: 1 / -1; }
     .go { grid-column: 1 / -1; }
   }
 </style>
@@ -62,7 +63,6 @@
 <header>
   <div class="top"><div class="brand">🗺 Route Weather<small>KAPA</small></div><div class="who" id="who"></div></div>
   <form id="f" autocomplete="off">
-    <input id="flt" placeholder="Flight # (UA805)" autocapitalize="characters" spellcheck="false" aria-label="편명">
     <input id="from" placeholder="From" maxlength="4" autocapitalize="characters" aria-label="출발 공항">
     <span class="arrow" aria-hidden="true">→</span>
     <input id="to" placeholder="To" maxlength="4" autocapitalize="characters" aria-label="도착 공항">
@@ -76,7 +76,7 @@
 <div id="map"></div>
 <div class="panel">
   <h2>Turbulence near route <small id="count"></small></h2>
-  <div id="list"><p class="muted">편명이나 출발·도착 공항을 넣고 Show를 눌러 주세요.</p></div>
+  <div id="list"><p class="muted">출발·도착 공항을 넣거나 릴리스 루트를 붙여 넣고 Show를 눌러 주세요.</p></div>
   <p class="note">Solid line: route pasted from the release, drawn with FAA NASR data (U.S. fixes, airways, SIDs/STARs; lat/lon waypoints anywhere). Dashed line: great-circle between airports. Radar: NEXRAD (U.S., IEM) · RainViewer (world). Turbulence: PIREPs (last 3 h), SIGMET/G-AIRMET from aviationweather.gov. For reference only — not for operational use.</p>
 </div>
 
@@ -84,7 +84,7 @@
 <script>
 (function () {
   'use strict';
-  // KAPA 테스트 서버 (getRoute / getRouteWx). 로그인은 사이트와 같은 저장소(pc_key)를 씀
+  // KAPA 테스트 서버 (getRouteWx: 터뷸런스). 로그인은 사이트와 같은 저장소(pc_key)를 씀
   const API_URL = 'https://script.google.com/macros/s/AKfycbxM8aE3mSczAAv6SxyngKNPxyeY7q0Mw4QF1-F-GGvnxpNXEpURJsOaolXf7S1DHuU/exec';
   const store = { get(k) { try { return localStorage.getItem(k) || ''; } catch (_) { return ''; } }, set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (_) {} } };
   let key = store.get('pc_key');
@@ -148,6 +148,7 @@
     .catch(() => { airportsP = null; throw new Error('공항 목록을 불러오지 못했어요.'); }));
 
   const map = L.map('map', { zoomControl: true }).setView([38, -100], 3);
+  map.attributionControl.setPrefix(false);   // "Leaflet" 글자는 빼고, 지도·레이더 출처만 작게
   // 바탕 지도: Esri 연회색 (키 없이 사용) → 안 되면 OpenStreetMap으로
   const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 10, attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }).addTo(map);
   let baseErr = 0;
@@ -167,12 +168,12 @@
   }), el('span', { class: 'legend' }, TURB.slice(1, 4).map((t, i) => el('span', {}, el('i', { style: 'background:' + TCOL[i + 1] }), t))));
 
   const msg = (t, err) => { $('msg').textContent = t; $('msg').classList.toggle('err', !!err); };
-  ['flt', 'from', 'to'].forEach(id => $(id).addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }));
+  ['from', 'to'].forEach(id => $(id).addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }));
   $('f').addEventListener('submit', e => {
     e.preventDefault();
-    const f = $('flt').value, a = $('from').value, b = $('to').value, rt = $('rte').value.trim();
+    const f = '', a = $('from').value, b = $('to').value, rt = $('rte').value.trim();
     store.set('pc_rt_last', rt);
-    history.replaceState(null, '', '#' + [f, a, b].filter(Boolean).join('_'));
+    history.replaceState(null, '', '#' + [a, b].filter(Boolean).join('_'));
     show(f, a, b, rt);
   });
 
@@ -270,23 +271,16 @@
       const w = rt.toUpperCase().split(/\s+/).map(x => x.replace(/\/.*$/, '')).filter(x => /^[A-Z]{4}$/.test(x) && !/\d/.test(x));
       if (w.length >= 2) { a = a || w[0]; b = b || w[w.length - 1]; $('from').value = a; $('to').value = b; }
     }
-    if (!f && !(a && b)) return msg('편명이나 출발·도착 공항을 넣어 주세요.', true);
+    if (!(a && b)) return msg('출발·도착 공항을 넣거나 릴리스 루트를 붙여 넣어 주세요.', true);
     $('skip').hidden = true;
     msg('불러오는 중…'); $('list').replaceChildren(); $('count').textContent = '';
     let from, to, label;
     try {
-      if (a && b) {
-        const aps = await loadAirports();
-        const find = c => { const k = ICAO3[c] || c.replace(/^K(?=[A-Z]{3}$)/, ''); const x = aps.find(p => p[0] === k); return x ? { code: x[0], lat: x[1], lon: x[2] } : null; };
-        from = find(a); to = find(b);
-        if (!from || !to) throw new Error('공항 코드를 찾지 못했어요: ' + [!from ? a : '', !to ? b : ''].filter(Boolean).join(', '));
-        label = (f ? f + ' · ' : '') + from.code + ' → ' + to.code;
-      } else {
-        const r = await call('getRoute', key, f);
-        if (!r.found) throw new Error(f + ' 노선을 찾지 못했어요. 출발·도착 공항을 직접 넣어 주세요.');
-        from = r.from; to = r.to; label = f + ' · ' + from.code + ' → ' + to.code;
-        $('from').value = from.code; $('to').value = to.code;
-      }
+      const aps = await loadAirports();
+      const find = c => { const k = ICAO3[c] || c.replace(/^K(?=[A-Z]{3}$)/, ''); const x = aps.find(p => p[0] === k); return x ? { code: x[0], lat: x[1], lon: x[2] } : null; };
+      from = find(a); to = find(b);
+      if (!from || !to) throw new Error('공항 코드를 찾지 못했어요: ' + [!from ? a : '', !to ? b : ''].filter(Boolean).join(', '));
+      label = from.code + ' → ' + to.code;
     } catch (e) { if (e.message !== '__auth') msg(e.message, true); return; }
     let gc = gcPoints([from.lat, from.lon], [to.lat, to.lon], 96), filed = null;
     if (rt) {
@@ -338,10 +332,10 @@
     $('who').replaceChildren('입장됨', el('button', { type: 'button', onclick: () => { store.set('pc_key', ''); key = ''; showLogin(); } }, '나가기'));
     const parts = decodeURIComponent(location.hash.slice(1)).split('_').filter(Boolean);
     let f = '', a = '', b = '';
-    parts.forEach(x => { x = x.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (/\d/.test(x) && !f) f = x; else if (!a) a = x; else b = x; });
-    $('flt').value = f; $('from').value = a; $('to').value = b;
+    parts.forEach(x => { x = x.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (/\d/.test(x)) return; if (!a) a = x; else b = x; });
+    $('from').value = a; $('to').value = b;
     const rt = store.get('pc_rt_last'); if (rt) $('rte').value = rt;
-    if (f || (a && b)) show(f, a, b, (a && b && rt && rt.toUpperCase().indexOf(a) >= 0) ? rt : '');
+    if (a && b) show('', a, b, (rt && rt.toUpperCase().indexOf(a) >= 0) ? rt : '');
   }
   if (key) start(); else showLogin();
 })();
