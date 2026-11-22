@@ -75,8 +75,6 @@
 <div class="bar" id="bar"></div>
 <div id="map"></div>
 <div class="panel">
-  <h2>Turbulence near route <small id="count"></small></h2>
-  <div id="list"><p class="muted">출발·도착 공항을 넣거나 릴리스 루트를 붙여 넣고 Show를 눌러 주세요.</p></div>
   <p class="note">Solid line: route pasted from the release, drawn with FAA NASR data (U.S. fixes, airways, SIDs/STARs; lat/lon waypoints anywhere). Dashed line: great-circle between airports. Radar: NEXRAD (U.S., IEM, ~1 km) · World: RainViewer (lower resolution, off by default). Turbulence: PIREPs (last 3 h), SIGMET/G-AIRMET from aviationweather.gov. For reference only — not for operational use.</p>
 </div>
 
@@ -275,7 +273,7 @@
     }
     if (!(a && b)) return msg('출발·도착 공항을 넣거나 릴리스 루트를 붙여 넣어 주세요.', true);
     $('skip').hidden = true;
-    msg('불러오는 중…'); $('list').replaceChildren(); $('count').textContent = '';
+    msg('불러오는 중…');
     let from, to, label;
     try {
       const aps = await loadAirports();
@@ -321,13 +319,6 @@
     });
     rows.forEach(({ p, ll }) => L.circleMarker(ll, { radius: p[3] >= 3 ? 7 : 5, color: '#fff', weight: 1, fillColor: TCOL[p[3]], fillOpacity: .95 })
       .bindPopup('<b>' + TURB[p[3]] + ' turbulence</b><br>FL' + String(p[2]).padStart(3, '0') + ' · ' + esc(p[4] || '?') + ' · ' + ago(p[5]) + '<br><small>' + esc(p[6]) + '</small>').addTo(layers.pirep));
-    const close = rows.filter(r => r.d <= 150 && r.p[3] >= 1).sort((x, y) => y.p[3] - x.p[3] || y.p[5] - x.p[5]);
-    $('count').textContent = '(' + close.length + ' within 150 nm · ' + wx.pireps.length + ' PIREPs on map · ' + wx.areas.length + ' areas)';
-    $('list').replaceChildren(...(close.length ? close.slice(0, 40).map(r => el('button', { type: 'button', class: 'row', onclick: () => map.setView(r.ll, 6) },
-      el('span', { class: 'sev', style: 'background:' + TCOL[r.p[3]] }, TURB[r.p[3]]),
-      el('b', {}, 'FL' + String(r.p[2]).padStart(3, '0')),
-      el('span', { class: 'd' }, [r.p[4] || '?', ago(r.p[5]), Math.round(r.d) + ' nm off · ' + r.along.toLocaleString('en-US') + ' nm from ' + from.code].join(' · '))))
-      : [el('p', { class: 'muted' }, 'No turbulence PIREPs within 150 nm in the last 3 hours.')]));
   }
 
   function start() {
