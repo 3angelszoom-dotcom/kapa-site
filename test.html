@@ -3311,12 +3311,10 @@
           el('span', { class: 'dl-d' }, x.d || x.text)))));
     };
     const shown = dlOpen ? rows : rows.slice(0, N);
-    const okMine = mine.filter(c => !all.some(d => d.code === c));
     box.replaceChildren(
       el('div', { class: 'dl-card' }, ...shown.map(row),
         rows.length > N ? el('button', { class: 'dl-more', type: 'button', onclick: () => { dlOpen = !dlOpen; drawDelays(r); } },
-          dlOpen ? 'Show less' : 'Show more (' + (rows.length - N) + ')') : null),
-      ...(okMine.length ? [el('div', { class: 'dl-okmine' }, '✅ No delays at ' + okMine.join(', '))] : []));
+          dlOpen ? 'Show less' : 'Show more (' + (rows.length - N) + ')') : null));
   }
   function drawWx(r) {
     drawDelays(r);
