@@ -402,6 +402,9 @@
   .recent-list { border-top: 0; display: grid; gap: 8px; }
   .recent-row { border: 1px solid #EEEEEA; border-radius: 16px; padding: 16px 14px; background: #fff; }
   .recent-row:hover { background: #F7F7F5; }
+  .recent-news, .recent-news:hover { background: linear-gradient(180deg, #FFF9EB 0%, #FFF3D6 100%); border-color: #F6DFA6; }
+  .recent-news .recent-main small { color: #8A5A00; }
+  .recent-news .recent-main b { white-space: normal; }
   .recent-empty { border: 1px dashed #E2E2DE; border-radius: 16px; padding: 18px; }
   .aside-box { border-color: #E8E8E4; border-radius: 20px; box-shadow: 0 10px 26px -18px rgba(15, 23, 42, .25); }
   .aside-dark { background: linear-gradient(180deg, #2B3648 0%, #0B1220 100%); border-color: #0B1220; }
@@ -611,6 +614,13 @@
   .me-card .me-row { display: flex; align-items: center; gap: 12px; }
   .me-card .me-av { width: 44px; height: 44px; font-size: 18px; flex: none; }
   .me-card p { margin: 0; color: var(--muted); font-size: 14px; }
+  .me-card .me-edit { margin-left: auto; flex: none; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 12px; font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1; color: var(--text); cursor: pointer; }
+  .mi-form { display: grid; gap: 14px; }
+  .mi-job { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); }
+  .mi-moved { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .mi-moved input { width: 18px; height: 18px; margin: 0; accent-color: var(--ink); }
+  .mi-note { color: var(--muted); font-weight: 400; line-height: 1.5; }
+  .mi-msg { margin: 0; color: #B42318; font-size: 13.5px; min-height: 1em; }
   /* 승인된 회원: 카톡방 참여 버튼 (카카오 노란색) */
   .me-kakao { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border-radius: 14px; background: #FEE500; color: #191919 !important; font: 700 15px/1.2 var(--body); text-decoration: none; }
   .me-kakao small { font-weight: 500; opacity: .7; }
@@ -759,6 +769,12 @@
   }
   .a-secret code { word-break: break-all; max-width: 100%; }
   /* About Us */
+  /* 기존 회원 등록 (#existing): 안내글·카톡방 카드는 숨기고 양식만 */
+  .ab-ex-only, .ab-form .ab-ex-only, .ab-card .ab-ex-only { display: none; }
+  body.is-existing .ab-ex-only { display: block; }
+  body.is-existing fieldset.ab-ex-only { display: flex; }
+  body.is-existing .ab-new-only, body.is-existing .ab-main, body.is-existing #invite { display: none; }
+  body.is-existing .ab-layout { display: block; max-width: 560px; margin-left: auto; margin-right: auto; }
   .ab-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 64px; align-items: start; padding-block: 64px 0; }
   @media (max-width: 900px) { .ab-layout { grid-template-columns: minmax(0, 1fr); gap: 40px; padding-block: 40px 0; } }
   .ab-main { max-width: 680px; min-width: 0; }
@@ -852,6 +868,77 @@
   .ld-nums.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ld-nums.n1 { grid-template-columns: minmax(0, 1fr); max-width: 220px; margin: 0 auto; }
   .ld-legs { display: grid; gap: 10px; }
+  .br-sec { padding-top: 22px !important; padding-bottom: 0 !important; }
+  .br-sec + #recent { padding-top: 22px; }
+  .rt-wrap { padding-top: 18px; padding-bottom: 40px; }
+  .rt-h { font: 800 24px/1.2 var(--body); margin: 0 0 12px; }
+  .rt-form { display: grid; grid-template-columns: minmax(0, 1.4fr) auto minmax(0, .8fr) auto minmax(0, .8fr) auto; gap: 6px; align-items: center; }
+  .rt-form input { text-transform: uppercase; min-width: 0; padding: 10px 8px; }
+  .rt-form .primary { padding: 10px 14px; }
+  .rt-or, .rt-arrow { font-size: 12px; color: #94A3B8; }
+  @media (max-width: 520px) { .rt-form { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); } .rt-form #rt-flt { grid-column: 1 / -1; } .rt-form .rt-or { display: none; } .rt-form .primary { grid-column: 1 / -1; } }
+  .rt-msg { margin: 8px 0; font: 600 14px/1.4 var(--body); color: #334155; min-height: 1.4em; }
+  .rt-toggles { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .rt-tg { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 10px; font: 700 12.5px/1 var(--body); color: #64748B; cursor: pointer; }
+  .rt-tg.on { background: #0B1F45; color: #fff; border-color: #0B1F45; }
+  .rt-legend { display: inline-flex; gap: 8px; margin-left: auto; font: 700 11px/1 var(--body); color: #64748B; }
+  .rt-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 3px; vertical-align: -1px; }
+  .rt-map { position: relative; z-index: 0; isolation: isolate; height: 58vh; min-height: 320px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: #E5E7EB; }
+  .rt-ap { font: 800 12px/1 var(--body); }
+  .rt-note { font-size: 11.5px; color: #94A3B8; margin: 6px 2px 0; line-height: 1.5; }
+  .rt-sub { font: 800 17px/1.3 var(--body); margin: 18px 0 8px; } .rt-sub small { font-size: 12px; color: #94A3B8; font-weight: 600; }
+  .rt-list { display: grid; gap: 6px; }
+  .rt-row { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px; align-items: center; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-align: left; font: 500 13px/1.35 var(--body); color: #475569; cursor: pointer; }
+  .rt-row b { color: #0B1220; }
+  .rt-sev { color: #fff; font: 800 10.5px/1 var(--body); letter-spacing: .05em; padding: 4px 7px; border-radius: 999px; }
+  .rt-d { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wx-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .wx-h .br-edit { margin: 0; font-size: 13px; }
+  .wx-card { border: 1px solid var(--line); border-radius: 16px; background: #fff; overflow: hidden; }
+  .wx-row { display: grid; grid-template-columns: 34px auto 30px minmax(0, 1fr); align-items: center; gap: 6px; width: 100%; padding: 10px 12px; border: 0; border-top: 1px solid #EEF1F5; background: none; text-align: left; font: 500 13px/1.35 var(--body); color: #334155; cursor: pointer; }
+  .wx-row:first-child { border-top: 0; }
+  .wx-code { font: 800 15px/1 var(--body); color: #0B1220; letter-spacing: .02em; }
+  .wx-temp { font-weight: 700; color: #0B1220; text-align: right; }
+  .wx-rest { white-space: pre; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .wx-row .br-raw { grid-column: 1 / -1; margin-top: 2px; }
+  .wx-row .br-cat { justify-self: start; font-size: 10px; padding: 3px 5px; }
+  .wx-rest { font-size: 12.5px; letter-spacing: -.01em; }
+  .br-wx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .br-card { display: grid; align-content: start; gap: 3px; text-align: left; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: #fff; font: 500 13.5px/1.4 var(--body); color: #334155; cursor: pointer; min-width: 0; }
+  .br-top { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+  .br-code { font: 800 20px/1 var(--body); color: #0B1220; letter-spacing: .02em; }
+  .br-cat { font-size: 11px; font-weight: 800; padding: 3px 7px; border-radius: 6px; letter-spacing: .04em; }
+  .br-cat.vfr { background: #DCFCE7; color: #166534; } .br-cat.mvfr { background: #DBEAFE; color: #1E40AF; }
+  .br-cat.ifr { background: #FEE2E2; color: #B91C1C; } .br-cat.lifr { background: #FAE8FF; color: #86198F; }
+  .br-temp { margin-left: auto; font-weight: 700; color: #0B1220; }
+  .br-line { overflow-wrap: anywhere; } .br-wxs { color: #B45309; font-weight: 600; }
+  .br-meta { font-size: 12px; color: #94A3B8; }
+  .br-raw { display: block; margin-top: 4px; font: 11.5px/1.4 ui-monospace, Menlo, monospace; color: #475569; background: #F1F5F9; padding: 6px 8px; border-radius: 8px; overflow-wrap: anywhere; white-space: normal; }
+  .br-raw[hidden] { display: none; }
+  .dl-card { border: 1px solid var(--line); border-radius: 16px; background: #fff; overflow: hidden; }
+  .dl-row { padding: 12px 14px 12px 16px; border-top: 1px solid #EEF1F5; position: relative; }
+  .dl-row:first-child { border-top: 0; }
+  .dl-row::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: #22C55E; }
+  .dl-row.s-gs::before, .dl-row.s-clsd::before { background: #EF4444; } .dl-row.s-gdp::before { background: #F97316; } .dl-row.s-dly::before { background: #EAB308; }
+  .dl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .dl-code { font: 800 17px/1.3 var(--body); color: #0B1220; letter-spacing: .02em; }
+  .dl-items { display: grid; gap: 6px; margin-top: 6px; }
+  .dl-item { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .dl-pill { flex: none; font: 800 10.5px/1 var(--body); letter-spacing: .05em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; }
+  .dl-pill.ok { background: #DCFCE7; color: #15803D; }
+  .dl-mine { font: 800 10px/1 var(--body); letter-spacing: .06em; color: #1F5FD6; background: #EEF4FF; padding: 4px 7px; border-radius: 999px; }
+  .dl-more { display: block; width: 100%; padding: 12px; border: 0; border-top: 1px solid #EEF1F5; background: #FAFBFD; color: #1F5FD6; font: 700 14px/1.2 var(--body); cursor: pointer; }
+  .dl-okmine { margin-top: 8px; font: 600 13px/1.4 var(--body); color: #15803D; }
+  .dl-allok { padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: #fff; font: 600 14px/1.4 var(--body); color: #15803D; }
+  .dl-pill.gs, .dl-pill.clsd { background: #FEE2E2; color: #B91C1C; } .dl-pill.gdp { background: #FFEDD5; color: #C2410C; } .dl-pill.dly { background: #FEF9C3; color: #854D0E; }
+  .dl-d { font-size: 13.5px; line-height: 1.45; color: #475569; overflow-wrap: anywhere; }
+  .dl-src { font-size: 12px; font-weight: 600; color: #94A3B8; margin-left: 4px; letter-spacing: .04em; }
+  .br-faa { font-size: 12.5px; font-weight: 700; padding: 4px 8px; border-radius: 8px; margin-top: 2px; overflow-wrap: anywhere; }
+  .br-faa.gs, .br-faa.clsd { background: #FEE2E2; color: #B91C1C; } .br-faa.gdp { background: #FFEDD5; color: #C2410C; } .br-faa.dly { background: #FEF9C3; color: #854D0E; }
+  .br-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .br-edit { margin-top: 8px; border: 0; background: none; color: #1F5FD6; font: 700 14px/1.2 var(--body); cursor: pointer; padding: 6px 0; }
+  .br-editbox { display: grid; gap: 8px; } .br-editbox label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: #475569; }
+  .br-editbox input { text-transform: uppercase; }
   .ld-leg { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: #FAFBFD; }
   .ld-leg-g { display: grid; grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1.7fr); gap: 8px; align-items: end; }
   .ld-leg-g label { display: grid; gap: 3px; font-size: 12px; font-weight: 600; color: #64748B; min-width: 0; }
@@ -895,7 +982,8 @@
   .ld-route { font: 600 16px/1.3 var(--body); color: #334155; margin-top: 2px; }
   .ld-h2 { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   .ld-h2 .ld-day { font-size: .62em; }
-  .ld-route-big { font-size: 19px; margin: -4px 0 8px; }
+  .ld-route-big { font-size: 19px; margin: -4px 0 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ld-rtw { font: 700 12.5px/1 var(--body); color: #1F5FD6; background: #EEF4FF; padding: 6px 10px; border-radius: 999px; text-decoration: none; }
   .ld-head { margin: 12px 0 0 !important; }
   body.is-loads .aside > .aside-box:first-child { display: none; }
   .ld-chip { margin-left: auto; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
@@ -982,6 +1070,16 @@
           <a class="hm-tile" href="#guide" data-route="guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r=".7" fill="currentColor"/></svg><span>이용 안내</span></a>
         </nav>
       </div>
+    </section>
+
+    <section class="section container br-sec" id="brief" hidden>
+      <div class="wx-h"><h2 class="recent-h"><span aria-hidden="true">☀️</span> Weather</h2><span id="wx-edit"></span></div>
+      <div class="br-wx" id="br-wx"></div>
+    </section>
+
+    <section class="section container br-sec" id="delay" hidden>
+      <h2 class="recent-h"><span aria-hidden="true">🚦</span> Delays <small class="dl-src">FAA · U.S.</small></h2>
+      <div class="dl-list" id="dl-list"></div>
     </section>
 
     <section class="section container" id="recent">
@@ -1081,8 +1179,9 @@
 
       <aside class="ab-side">
         <div class="ab-card">
-          <h2>인적사항 양식</h2>
-          <p class="ab-hint">항목을 입력하면 아래에 인적사항이 자동으로 만들어져요. "제출하기"를 누르면 가입 신청이 제출되고, 관리자가 확인 후 개인 입장 코드를 보내드려요.</p>
+          <h2 id="ab-form-h">인적사항 양식</h2>
+          <p class="ab-hint ab-ex-only">이미 카파 카톡방에 계신 회원님은 아래 양식만 내 주시면 돼요. 운영진이 확인하고 이메일로 <b>카파 사이트 개인 입장 코드</b>를 보내 드려요. 카톡방은 그대로예요.</p>
+          <p class="ab-hint ab-new-only">항목을 입력하면 아래에 인적사항이 자동으로 만들어져요. "제출하기"를 누르면 가입 신청이 제출되고, 관리자가 확인 후 개인 입장 코드를 보내드려요.</p>
           <form class="ab-form" id="ab-form" autocomplete="on">
             <label>한글이름<input id="ab-f-ko" name="ko" autocomplete="name"></label>
             <label>영문 이름<input id="ab-f-en" name="en"></label>
@@ -1106,7 +1205,7 @@
           <code class="ab-ex" id="ab-example">홍길동 / Gil Dong Hong / 1990 / Air Wisconsin / ORD / Fort Lee, NJ / Kakaotalk / 908-xxx-xxxx / Yes</code>
           <p class="ab-missing" id="ab-missing">위는 예시예요. 항목을 입력해 보세요.</p>
           <button type="button" class="primary ab-copy" id="ab-copy">제출하기</button>
-          <p class="ab-hint" id="ab-copy-msg">누르면 인적사항이 관리자에게 전달돼요. 승인되면 위 이메일로 개인 입장 코드와 카톡방 아이디 형식이 와요.</p>
+          <p class="ab-hint ab-new-only" id="ab-copy-msg">누르면 인적사항이 관리자에게 전달돼요. 승인되면 위 이메일로 개인 입장 코드와 카톡방 아이디 형식이 와요.</p>
         </div>
         <div class="ab-card ab-invite" id="invite">
           <h2>카톡방 참여</h2>
@@ -1161,6 +1260,33 @@
       </div>
     </section>
     <div class="container ly-wrap"><div class="w" id="layover-app"></div></div>
+  </div>
+
+  <!-- ROUTE MAP: 메뉴에는 없고 #route 또는 #route/UA805 (좌석 조회 글의 "Route weather" 버튼) 로 들어옴 -->
+  <div id="view-route" hidden>
+    <section class="page-band">
+      <div class="container">
+        <div class="eyebrow">Route Weather</div>
+        <h1>🗺 루트 날씨</h1>
+        <p>Radar · PIREP turbulence · SIGMET/G-AIRMET</p>
+      </div>
+    </section>
+    <div class="container rt-wrap">
+      <form class="rt-form" id="rt-form" autocomplete="off">
+        <input id="rt-flt" placeholder="Flight # (UA805)" autocapitalize="characters" spellcheck="false" aria-label="편명">
+        <span class="rt-or">or</span>
+        <input id="rt-from" placeholder="SFO" maxlength="4" autocapitalize="characters" aria-label="출발 공항">
+        <span class="rt-arrow" aria-hidden="true">→</span>
+        <input id="rt-to" placeholder="ICN" maxlength="4" autocapitalize="characters" aria-label="도착 공항">
+        <button class="primary" type="submit">Show</button>
+      </form>
+      <p class="rt-msg" id="rt-msg"></p>
+      <div class="rt-toggles" id="rt-toggles"></div>
+      <div class="rt-map" id="rt-map"></div>
+      <p class="rt-note">Route line is the great-circle path between airports, not the filed route. Radar: NEXRAD (U.S., IEM) · RainViewer (world). Turbulence: PIREPs, SIGMET/G-AIRMET from aviationweather.gov. For reference only — not for operational use.</p>
+      <h2 class="rt-sub">Turbulence reports near route <small id="rt-count"></small></h2>
+      <div class="rt-list" id="rt-list"></div>
+    </div>
   </div>
 
   <!-- ADMIN: 메뉴에는 없고 맨 아래 "관리자" 링크나 주소 끝 #admin 으로 들어옴 -->
@@ -1391,13 +1517,55 @@
     openSheet('입장 상태', close => el('div', { class: 'me-card' },
       el('div', { class: 'me-row' }, av, el('div', {},
         el('b', {}, personal ? m.name + '님' : m.type === 'admin' ? '관리자' : '회원'),
-        el('p', {}, personal ? '✓ 개인 입장 코드로 입장 중 (실명)' : m.type === 'admin' ? '관리자 비밀번호로 입장 중' : '회원 비밀번호로 입장 중 · 글쓰기·체크인은 개인 입장 코드가 필요해요'))),
+        el('p', {}, personal ? '✓ 개인 입장 코드로 입장 중 (실명)' : m.type === 'admin' ? '관리자 비밀번호로 입장 중' : '회원 비밀번호로 입장 중 · 글쓰기·체크인은 개인 입장 코드가 필요해요')),
+        personal ? el('button', { class: 'me-edit', type: 'button', onclick: () => { close(); openMyInfo(); } }, '정보 변경') : null),
       personal && m.kakaoRoom && m.kakaoRoom.url ? el('a', { class: 'me-kakao', href: m.kakaoRoom.url, target: '_blank', rel: 'noopener' },
         '💬 카톡방 참여하기', el('small', {}, m.kakaoRoom.room === 'small' ? '카파 GC 작은방' : '카파 큰방')) : null,
       personal && m.isAdmin ? el('button', { class: 'ghost', type: 'button', onclick: () => { close(); location.hash = 'admin'; } }, '🛠 관리자 페이지') : null,
       personal ? pushCard(true) : null,
       !personal ? el('button', { class: 'primary', type: 'button', onclick: () => { close(); setMemberKey(''); after(); openMe(); } }, '개인 입장 코드로 입장') : null,
       el('button', { class: 'me-out', type: 'button', onclick: () => { close(); setMemberKey(''); after(); } }, '이 기기에서 로그아웃')));
+  }
+  // 내 정보 변경: 이직 표시 → 새 직장 칸이 열리고, 저장하면 축하 글이 "새로 올라온 글"에 자동으로 올라감
+  function openMyInfo() {
+    openSheet('내 정보 변경', close => {
+      const box = el('div', { class: 'mi' }, el('p', { class: 'muted' }, '불러오는 중…'));
+      call('getMyInfo', memberKey).then(v => {
+        const inp = (val, o) => el('input', Object.assign({ value: val || '' }, o || {}));
+        const moved = el('input', { type: 'checkbox' });
+        const job = inp('', { placeholder: '새 직장 이름 (예: ABC Airlines)', autocomplete: 'organization' });
+        const jobRow = el('label', { class: 'field', hidden: '' }, '새 직장', job,
+          el('small', { class: 'mi-note' }, '🎉 저장하면 자유게시판에 "' + v.ko + '님이 새 직장으로 이직하셨습니다. 축하합니다!" 글이 자동으로 올라가요. 회원들이 댓글로 축하할 수 있어요.'));
+        moved.addEventListener('change', () => { jobRow.hidden = !moved.checked; if (moved.checked) job.focus(); });
+        const base = inp(v.base, { maxlength: 5, autocapitalize: 'characters', placeholder: 'SFO' });
+        base.addEventListener('input', () => { base.value = base.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+        const phone = inp(v.phone, { type: 'tel', autocomplete: 'tel' }), email = inp(v.email, { type: 'email', autocomplete: 'email' });
+        const msg = el('p', { class: 'mi-msg' });
+        const save = el('button', { class: 'primary', type: 'submit' }, '저장');
+        const form = el('form', { class: 'mi-form' },
+          el('div', { class: 'field' }, '현재 직장', el('div', { class: 'mi-job' }, el('b', {}, v.job || '—'),
+            el('label', { class: 'mi-moved' }, moved, '이직했어요'))),
+          jobRow,
+          el('label', { class: 'field' }, '베이스 공항', base),
+          el('label', { class: 'field' }, '전화번호', phone),
+          el('label', { class: 'field' }, '이메일', email),
+          msg, save);
+        form.addEventListener('submit', async e => {
+          e.preventDefault();
+          if (moved.checked && !job.value.trim()) { msg.textContent = '새 직장 이름을 넣어 주세요.'; job.focus(); return; }
+          save.disabled = true; msg.textContent = '저장 중…';
+          try {
+            const r = await call('updateMyInfo', memberKey, { moved: moved.checked, job: job.value.trim(), base: base.value, phone: phone.value.trim(), email: email.value.trim() });
+            if (r.postId) { feed = null; try { render(currentRoute); } catch (_) {} }
+            close();
+            openSheet('내 정보 변경', c2 => el('div', { class: 'mi' }, el('p', {}, r.changed ? (r.postId ? '저장했어요. 🎉 자유게시판에 이직 축하 글이 올라갔어요. 회원들이 댓글로 축하할 수 있어요.' : '저장했어요.') : '바뀐 내용이 없어요.'),
+              el('button', { class: 'primary', type: 'button', onclick: c2 }, '확인')));
+          } catch (err) { msg.textContent = String(err.message || err); save.disabled = false; }
+        });
+        box.replaceChildren(form);
+      }).catch(err => box.replaceChildren(el('p', { class: 'mi-msg' }, String(err.message || err))));
+      return box;
+    });
   }
   { const b = document.getElementById('hd-me'); if (b) b.addEventListener('click', openMe); setTimeout(updateMe, 0); }
   // ===== 한 줄 맞춤 (.fit1): 화면 폭에 맞춰 글씨를 줄여 한 줄로. data-min(기본 14px)보다 작아져야 하면 원래 크기로 줄바꿈 =====
@@ -1974,7 +2142,8 @@
         el('span', { class: 'badge' }, (boardOf(p.board) || {}).name || ''),
         p.board === LOADS && p.meta ? el('div', { class: 'ld-top ld-head' }, kindTag(p.meta), loadChip(p)) : null,
         p.board === LOADS && p.meta ? el('h2', { class: 'ld-h2' }, (p.meta.air || '') + (p.meta.flt || ''), el('span', { class: 'ld-day' }, loadDate(p.meta))) : el('h2', {}, p.title),
-        p.board === LOADS && p.meta ? el('div', { class: 'ld-route ld-route-big' }, (p.meta.from || '') + ' → ' + (p.meta.to || '')) : null,
+        p.board === LOADS && p.meta ? el('div', { class: 'ld-route ld-route-big' }, (p.meta.from || '') + ' → ' + (p.meta.to || ''),
+          el('a', { class: 'ld-rtw', href: '#route/' + (p.meta.air || '') + (p.meta.flt || '') + '_' + (p.meta.from || '') + '_' + (p.meta.to || '') }, '🗺 Route weather')) : null,
         el('div', { class: 'meta' }, p.author, vf(p.verified), ` · ${fmt(p.createdAt)}`, p.editedAt ? ' · 수정됨' : '', p.mine ? ' · 내 글' : ''),
         p.body ? el('div', { class: 'body' }, p.body) : null,
         renderAttachments(p),
@@ -2337,9 +2506,12 @@
       { id: 'pw', label: '비밀번호', render: passwords },
       { id: 'notice', label: '공지·카톡방', render: notice },
       { id: 'apply', label: '가입 신청', render: applicants },
+      { id: 'existing', label: '기존 회원 등록', render: existingTab, hidden: true },   // 링크(#admin-existing)로만 열림
       { id: 'live', label: '접속자', render: live },
     ];
-    let tab = 'dash';
+    const firstTab = () => currentRoute === 'admin-existing' ? 'existing' : 'dash';   // #admin-existing 링크로 왔으면 기존 회원 등록부터
+    let tab = firstTab();
+    root.openTab = id => { tab = id; if (key) shell(); };   // 주소로 특정 탭 열기
     // 새 가입 신청(대기) 개수: 탭과 "대기" 버튼 옆에 빨간 숫자로 보여줌
     let pendingN = 0;
     const pendBadges = new Set();
@@ -2393,7 +2565,7 @@
         try {
           const ok = await call('adminLogin', pw.value);
           if (!ok) { msg.textContent = '관리자 비밀번호가 맞지 않아요.'; btn.disabled = false; return; }
-          setKey(pw.value); tab = 'dash'; shell();
+          setKey(pw.value); tab = firstTab(); shell();
         } catch (e) { msg.textContent = e.message || e; btn.disabled = false; }
       }
       btn.addEventListener('click', go);
@@ -2405,7 +2577,7 @@
     }
 
     function shell() {
-      nav.replaceChildren(...TABS.map(t => el('button', {
+      nav.replaceChildren(...TABS.filter(t => !t.hidden || t.id === tab).map(t => el('button', {
         class: 'a-tab' + (t.id === tab ? ' on' : ''), role: 'tab', 'aria-selected': String(t.id === tab),
         onclick: () => { tab = t.id; shell(); } }, t.label, t.id === 'apply' ? pendBadge() : null)),
         el('button', { class: 'a-logout', onclick: () => { setKey(''); login(); } }, '로그아웃'));
@@ -2764,6 +2936,80 @@
       return box;
     }
 
+    // ---- 기존 회원 등록 (임시) ----
+    // #existing 양식으로 들어온 줄만 (같은 Applicants 시트, src=기존). 승인하면 사이트 개인 입장 코드만 만들고 이메일로 보냄 (카톡 초대 코드 없음)
+    const ef = { status: '대기' };
+    async function existingTab() {
+      const link = location.origin + location.pathname + '#existing';
+      const cp = el('button', { class: 'a-btn sm' }, '등록 양식 주소 복사');
+      cp.addEventListener('click', () => copyText(link, cp));
+      const seg = el('div', { class: 'a-seg', role: 'group', 'aria-label': '상태' },
+        [['대기', '대기'], ['승인', '승인'], ['보류', '보류'], ['all', '전체']].map(([v, l]) =>
+          el('button', { class: ef.status === v ? 'on' : '', 'aria-pressed': String(ef.status === v), onclick: () => { ef.status = v; existingTab(); } }, l)));
+      const list = el('div', { class: 'a-list' }, loadingEl());
+      view.replaceChildren(
+        el('section', { class: 'a-card' },
+          el('b', {}, '기존 회원 등록 양식'),
+          el('p', { class: 'a-muted' }, '이미 카톡방에 있는 회원에게 이 주소를 보내 주세요. 들어온 등록은 아래에 모이고, 승인하면 회원 시트(Applicants)에 새 가입 회원과 똑같이 들어가요. 카톡 초대 코드는 만들지 않고 사이트 개인 입장 코드만 보내요.'),
+          el('div', { class: 'a-secret' }, el('code', {}, link), cp)),
+        el('div', { class: 'a-filters' }, seg), list);
+      let rows; try { rows = await api('adminListApplicants', ef.status, 'existing'); } catch (e) { return fail(e, list); }
+      if (!rows.length) { list.replaceChildren(el('p', { class: 'a-muted' }, '해당하는 등록이 없어요.')); return; }
+      list.replaceChildren(...rows.map(exCard));
+    }
+    function exCard(a) {
+      const pill = { '대기': 'warn', '승인': 'ok', '보류': 'warn', '거절': 'del' }[a.status] || 'warn';
+      const box = el('div', { class: 'a-card a-app' });
+      const msg = el('p', { class: 'a-ok' });
+      const fl = appFlash[a.id]; if (fl) { msg.className = fl[0]; msg.textContent = fl[1]; delete appFlash[a.id]; }
+      const roomSel = el('select', { 'aria-label': '카톡방' }, el('option', { value: 'big' }, '큰방'), el('option', { value: 'small' }, '영주권 작은방'));
+      roomSel.value = a.room === 'small' ? 'small' : 'big';
+      const go = async send => {
+        if (a.status === '승인' && !window.confirm(a.ko + '님의 개인 입장 코드를 새로 만들어' + (send ? ' 이메일로 보낼까요?' : '까요?') + '\n예전 코드는 바로 안 돼요.')) return;
+        msg.className = 'a-ok'; msg.textContent = send ? a.email + ' 주소로 보내는 중…' : '코드 만드는 중…';
+        try {
+          const r = await api('adminApproveExisting', a.id, roomSel.value, !!send);
+          Object.assign(a, r);
+          appFlash[a.id] = ['a-ok', send ? a.email + ' 주소로 개인 입장 코드를 보냈어요.' : '개인 입장 코드를 만들었어요. 이 화면을 벗어나면 다시 볼 수 없으니 복사해 두세요.'];
+          box.replaceWith(exCard(a));
+        } catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
+      };
+      const setSt = async st => {
+        try { await api('adminSetApplicantStatus', a.id, st); a.status = st; a.siteOn = false; a.siteCode = ''; box.replaceWith(exCard(a)); }
+        catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
+      };
+      const actions = el('div', { class: 'a-actions' });
+      if (a.status === '승인') {
+        if (a.siteCode) {
+          const cpc = el('button', { class: 'a-btn ghost sm' }, '코드 복사');
+          cpc.addEventListener('click', () => copyText(a.siteCode, cpc));
+          const cpm = el('button', { class: 'a-btn sm' }, '안내 문자 복사');
+          cpm.addEventListener('click', () => copyText(`[KAPA] ${a.ko}님, 카파 사이트 개인 입장 코드예요.\n\n개인 입장 코드: ${a.siteCode}\n\n1. ${location.origin}/ 를 여세요.\n2. 오른쪽 위 "입장"을 누르고 위 코드를 넣으세요.\n※ 본인 전용이에요. 안전한 곳에 저장해 두세요.`, cpm));
+          actions.append(el('div', { class: 'a-secret' }, el('code', {}, a.siteCode), cpc, cpm), el('span', { class: 'a-muted' }, '지금만 보여요'));
+        }
+        actions.append(el('span', { class: 'a-muted' }, roomName(a.room) + (a.sentAt ? ' · 이메일 보냄 ' + fmt(a.sentAt) : '')),
+          a.email ? el('button', { class: 'a-btn sm', onclick: () => go(true) }, '새 코드 이메일로 다시 보내기') : '',
+          el('button', { class: 'a-link', onclick: () => go(false) }, '새 코드 만들기'),
+          el('button', { class: 'a-link', onclick: () => setSt('보류') }, '승인 취소(보류)'));
+      } else {
+        actions.append(roomSel,
+          a.email ? el('button', { class: 'a-btn sm', onclick: () => go(true) }, '승인하고 코드 이메일로 보내기') : '',
+          el('button', { class: a.email ? 'a-btn ghost sm' : 'a-btn sm', onclick: () => go(false) }, '코드만 만들기'),
+          a.status !== '보류' ? el('button', { class: 'a-btn ghost sm', onclick: () => setSt('보류') }, '보류') : '',
+          a.status !== '대기' ? el('button', { class: 'a-btn ghost sm', onclick: () => setSt('대기') }, '대기로') : '');
+      }
+      const copyLine = el('button', { class: 'a-link' }, '인적사항 복사');
+      copyLine.addEventListener('click', () => copyText(a.line, copyLine));
+      box.append(
+        el('div', { class: 'a-row-between' }, el('b', {}, `${a.ko} · ${a.en}`), el('span', { class: 'a-pill ' + pill }, a.status)),
+        el('div', { class: 'a-app-grid' },
+          [['카톡방 (영주권 기준)', roomName(a.room)], ['생년', a.yy], ['직장', a.job], ['베이스', a.base], ['도시', a.city], ['주', a.state || '-'], ['카톡 ID', a.kakao], ['전화', a.phone], ['영주권', a.gc], ['이메일', a.email || '없음']]
+            .map(([k, v]) => el('div', {}, el('span', { class: 'a-label' }, k), el('span', {}, v)))),
+        el('div', { class: 'a-row-between' }, el('span', { class: 'a-muted' }, '등록 ' + fmt(a.createdAt)), copyLine),
+        actions, msg);
+      return box;
+    }
+
     // ---- 접속자 ----
     let liveTimer = null;
     const ago = ms => {
@@ -2975,7 +3221,7 @@
     if (key) shell();
     else if (mk && /^p[A-Za-z0-9]+\./.test(mk)) {
       root.replaceChildren(el('p', { class: 'a-muted' }, '확인 중…'));
-      call('adminLogin', mk).then(ok => { if (ok) { setKey(mk); tab = 'dash'; shell(); } else login(); }, () => login());
+      call('adminLogin', mk).then(ok => { if (ok) { setKey(mk); tab = firstTab(); shell(); } else login(); }, () => login());
     } else login();
   }
 
@@ -2991,18 +3237,115 @@
     return new Date(iso).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
   }
   const recentSide = n => el('span', { class: 'recent-side' + (n ? '' : ' zero'), 'aria-label': '댓글 ' + n }, '💬', String(n || 0));
+  // ===== 오늘의 브리핑: 사이트 소식(좌석 대기·오늘 새 글·이번 주 채용) + 내 공항 날씨 =====
+  let wxCache = null;   // { at, key, data }
+  const wxCodes = () => String(store.get('pc_wx') || '').split(/[\s,]+/).filter(Boolean);
+  function drawBrief() {
+    const sec = document.getElementById('brief');
+    if (!sec) return;
+    sec.hidden = !memberKey || !feed;
+    if (sec.hidden) { const d = document.getElementById('delay'); if (d) d.hidden = true; return; }
+    loadWx();
+  }
+  async function loadWx(force) {
+    const box = document.getElementById('br-wx');
+    if (!box || !memberKey) return;
+    const codes = wxCodes(), k = codes.join(',');
+    if (!force && wxCache && wxCache.key === k && Date.now() - wxCache.at < 600000) return drawWx(wxCache.data);
+    if (!box.children.length) box.replaceChildren(el('p', { class: 'muted br-wx-load' }, '날씨 불러오는 중…'));
+    try {
+      const r = await call('getBriefing', memberKey, codes);
+      wxCache = { at: Date.now(), key: k, data: r };
+      drawWx(r);
+    } catch (e) { if (e.message !== '__auth') box.replaceChildren(el('p', { class: 'muted' }, '날씨를 불러오지 못했어요.')); }
+  }
+  const CAT_KO = { VFR: 'VFR', MVFR: 'MVFR', IFR: 'IFR', LIFR: 'LIFR' };
+  // 딜레이 칸: 고른 공항 중 미국 공항만 FAA 현황 (없으면 "No FAA delays")
+  // 딜레이 칸: 미국 전체 FAA 현황. 내 공항(날씨에 등록한 미국 공항)이 맨 위, 처음엔 3개만 → Show more로 펼침
+  let dlOpen = false;
+  function drawDelays(r) {
+    const sec = document.getElementById('delay');
+    const box = document.getElementById('dl-list');
+    const all = r.delays || [];
+    sec.hidden = false;
+    if (!all.length) { box.replaceChildren(el('div', { class: 'dl-allok' }, '✅ No FAA delays nationwide')); return; }
+    const mine = r.mine || [];
+    const rows = all.filter(d => mine.indexOf(d.code) >= 0).concat(all.filter(d => mine.indexOf(d.code) < 0));
+    const LBL = { GS: 'Ground Stop', CLSD: 'Closed', GDP: 'Ground Delay', DLY: 'Delays' };
+    const ORDER = { GS: 0, CLSD: 1, GDP: 2, DLY: 3 };
+    const N = 3;
+    const row = d => {
+      const f = d.faa.slice().sort((a, b) => ORDER[a.t] - ORDER[b.t]);
+      return el('div', { class: 'dl-row s-' + f[0].t.toLowerCase() },
+        el('div', { class: 'dl-head' }, el('b', { class: 'dl-code' }, d.code), mine.indexOf(d.code) >= 0 ? el('span', { class: 'dl-mine' }, 'MY AIRPORT') : null),
+        el('div', { class: 'dl-items' }, f.map(x => el('div', { class: 'dl-item' },
+          el('span', { class: 'dl-pill ' + x.t.toLowerCase() }, LBL[x.t] || x.t),
+          el('span', { class: 'dl-d' }, x.d || x.text)))));
+    };
+    const shown = dlOpen ? rows : rows.slice(0, N);
+    const okMine = mine.filter(c => !all.some(d => d.code === c));
+    box.replaceChildren(
+      el('div', { class: 'dl-card' }, ...shown.map(row),
+        rows.length > N ? el('button', { class: 'dl-more', type: 'button', onclick: () => { dlOpen = !dlOpen; drawDelays(r); } },
+          dlOpen ? 'Show less' : 'Show more (' + (rows.length - N) + ')') : null),
+      okMine.length ? el('div', { class: 'dl-okmine' }, '✅ No delays at ' + okMine.join(', ')) : null);
+  }
+  function drawWx(r) {
+    drawDelays(r);
+    const box = document.getElementById('br-wx');
+    const eb = el('button', { class: 'br-edit', type: 'button', onclick: () => editWx(box, r) }, r.wx.length ? '✏️ 공항 바꾸기' : '＋ 내 공항 추가');
+    document.getElementById('wx-edit').replaceChildren(eb);
+    if (!r.wx.length) return box.replaceChildren(el('p', { class: 'muted' }, '날씨 볼 공항을 추가해 주세요.'));
+    // 공항마다 한 줄: 코드 · 등급 · 기온 · 바람 · 구름/시정 · 날씨  (누르면 METAR 원문)
+    box.replaceChildren(el('div', { class: 'wx-card' }, r.wx.map(w => {
+      if (w.none) return el('div', { class: 'wx-row none' }, el('b', { class: 'wx-code' }, w.code), el('span', { class: 'wx-rest muted' }, 'No report'));
+      const raw = el('code', { class: 'br-raw', hidden: '' }, w.raw);
+      const mins = w.obs ? Math.max(0, Math.round((Date.now() - w.obs) / 60000)) : null;
+      // METAR식 짧은 표기: 290/16G24 · OVC006 · 1.5SM · Mist
+      const wind = String(w.wind || '').replace(/°\s*/, '/').replace(/kt$/, '');
+      const m = String(w.sky || '').match(/^([A-Z]+)\s+([\d,]+)ft$/);
+      const sky = m ? m[1] + String(Math.round(Number(m[2].replace(/,/g, '')) / 100)).padStart(3, '0') : String(w.sky || '');
+      const bits = [wind, sky, w.vis, w.wx].filter(Boolean);
+      return el('button', { class: 'wx-row', type: 'button', 'aria-label': w.code + ' weather, tap for raw METAR',
+        title: mins != null ? (mins < 60 ? mins + ' min ago' : Math.floor(mins / 60) + ' hr ago') : '', onclick: () => { raw.hidden = !raw.hidden; } },
+        el('b', { class: 'wx-code' }, w.code),
+        el('span', { class: 'br-cat ' + w.cat.toLowerCase() }, w.cat),
+        el('span', { class: 'wx-temp' }, w.temp),
+        el('span', { class: 'wx-rest' }, bits.join('  ')),
+        raw);
+    })));
+  }
+  function editWx(box, r) {
+    const cur = wxCodes().length ? wxCodes() : r.wx.map(w => w.code);
+    const inp = el('input', { type: 'text', value: cur.join(' '), placeholder: '예: SFO ICN LAX', autocapitalize: 'characters', autocomplete: 'off', spellcheck: 'false', 'aria-label': '날씨 볼 공항 코드' });
+    const save = el('button', { class: 'primary small', type: 'button' }, '저장');
+    const go = async () => {
+      const list = inp.value.toUpperCase().split(/[^A-Z0-9]+/).filter(c => c.length === 3 || c.length === 4).slice(0, 4);
+      store.set('pc_wx', list.join(',')); wxCache = null;
+      save.disabled = true;
+      box.replaceChildren(el('p', { class: 'muted br-wx-load' }, '날씨 불러오는 중…')); loadWx(true);
+    };
+    save.addEventListener('click', go);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    box.replaceChildren(el('div', { class: 'br-editbox' }, el('label', {}, '날씨 볼 공항 (최대 4개, 띄어쓰기로 구분)', inp),
+      el('p', { class: 'hint', style: 'margin:-4px 0 0' }, '비워 두면 내 베이스 공항을 보여 줘요.'),
+      save));
+    inp.focus();
+  }
   async function loadRecent() {
     const box = document.getElementById('recent-list');
     const fill = (...kids) => box.replaceChildren(...kids.flat().filter(Boolean));
     if (!memberKey) return loadPublicRecent(box, fill);
     const draw = () => {
+      drawBrief();
       const posts = feed.posts.slice(0, 8);
       if (!posts.length) return fill(el('p', { class: 'recent-empty' }, '아직 글이 없어요. 게시판에 첫 글을 남겨보세요!'));
       fill(posts.map(p => {
         const b = boardOf(p.board) || { code: '', name: '' };
-        return el('button', { class: 'recent-row', onclick: () => openPost(p.board, p.id) },
-          el('span', { class: 'recent-ico', 'aria-hidden': 'true' }, b.ico || '📝'),
-          el('span', { class: 'recent-main' }, el('b', {}, p.title), el('small', {}, `${b.name} · ${p.author} · ${ago(p.createdAt)}`)),
+        const news = !!(p.meta && p.meta.news);   // 이직 축하 같은 회원 소식: 노란 🎉 카드
+        return el('button', { class: 'recent-row' + (news ? ' recent-news' : ''), onclick: () => openPost(p.board, p.id) },
+          el('span', { class: 'recent-ico', 'aria-hidden': 'true' }, news ? '🎉' : b.ico || '📝'),
+          el('span', { class: 'recent-main' }, el('b', {}, news ? p.title.replace(/^🎉\s*/, '') : p.title), el('small', {}, news ? `KAPA 소식 · ${ago(p.createdAt)} · 축하 댓글 남기기` : `${b.name} · ${p.author} · ${ago(p.createdAt)}`)),
           recentSide(p.comments));
       }));
     };
@@ -3192,6 +3535,128 @@
       .then(t => t.split(';').filter(Boolean).map(x => { const [lat, lon] = x.slice(3).split(','); return [x.slice(0, 3), +lat, +lon]; }))
       .catch(e => { airportsP = null; throw new Error('공항 목록을 불러오지 못했어요. 공항 코드를 직접 넣어 주세요.'); });
     return airportsP;
+  }
+  // ===== 루트 지도: 편명 → 대권 항로 + 레이더 + 터뷸런스(PIREP, SIGMET/G-AIRMET) =====
+  let rtMap = null, rtLayers = {}, rtOn = { radar: true, pirep: true, area: true }, rtLeaflet = null;
+  function loadLeaflet() {
+    if (rtLeaflet) return rtLeaflet;
+    rtLeaflet = new Promise((ok, no) => {
+      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
+      const js = document.createElement('script'); js.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+      js.onload = () => ok(window.L); js.onerror = () => { rtLeaflet = null; no(new Error('지도를 불러오지 못했어요.')); }; document.head.appendChild(js);
+    });
+    return rtLeaflet;
+  }
+  const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
+  function gcPoints(a, b, n) {   // 대권 항로 점들 (경도는 이어지게 펼침)
+    const [la1, lo1, la2, lo2] = [rad(a[0]), rad(a[1]), rad(b[0]), rad(b[1])];
+    const d = 2 * Math.asin(Math.sqrt(Math.sin((la2 - la1) / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin((lo2 - lo1) / 2) ** 2));
+    const out = []; let prev = null;
+    for (let i = 0; i <= n; i++) {
+      const f = i / n, A = Math.sin((1 - f) * d) / Math.sin(d), B = Math.sin(f * d) / Math.sin(d);
+      const x = A * Math.cos(la1) * Math.cos(lo1) + B * Math.cos(la2) * Math.cos(lo2), y = A * Math.cos(la1) * Math.sin(lo1) + B * Math.cos(la2) * Math.sin(lo2), z = A * Math.sin(la1) + B * Math.sin(la2);
+      let lon = deg(Math.atan2(y, x)); const lat = deg(Math.atan2(z, Math.sqrt(x * x + y * y)));
+      if (prev != null) while (lon - prev > 180) lon -= 360; while (prev != null && prev - lon > 180) lon += 360;
+      out.push([lat, lon]); prev = lon;
+    }
+    return { pts: out, nm: d * 3440.065 };
+  }
+  const nmBetween = (a, b) => { const [la1, la2] = [rad(a[0]), rad(b[0])]; return 2 * 3440.065 * Math.asin(Math.sqrt(Math.sin((la2 - la1) / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(rad(b[1] - a[1]) / 2) ** 2)); };
+  const near = (lon, ref) => { while (lon - ref > 180) lon -= 360; while (ref - lon > 180) lon += 360; return lon; };
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const TURB = ['NEG', 'LGT', 'MOD', 'SEV', 'EXTRM'], TCOL = ['#94A3B8', '#EAB308', '#F97316', '#DC2626', '#7C3AED'];
+  async function openRoute(arg) {
+    const msg = document.getElementById('rt-msg');
+    const form = document.getElementById('rt-form');
+    if (!form.dataset.on) {
+      form.dataset.on = '1';
+      ['rt-flt', 'rt-from', 'rt-to'].forEach(id => document.getElementById(id).addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }));
+      form.addEventListener('submit', e => { e.preventDefault();
+        const f = document.getElementById('rt-flt').value, a = document.getElementById('rt-from').value, b = document.getElementById('rt-to').value;
+        const key = [f, a, b].filter(Boolean).join('_'); syncUrl('route/' + key, false); showRoute(f, a, b); });
+    }
+    if (!memberKey) { msg.textContent = '회원 입장 후 볼 수 있어요. 오른쪽 위 "입장"을 눌러 주세요.'; return; }
+    const parts = String(arg || '').split('_').filter(Boolean);
+    let f = '', a = '', b = '';
+    parts.forEach(x => { if (/\d/.test(x) && !f) f = x; else if (!a) a = x; else b = x; });
+    document.getElementById('rt-flt').value = f; document.getElementById('rt-from').value = a; document.getElementById('rt-to').value = b;
+    if (f || (a && b)) showRoute(f, a, b); else { msg.textContent = '편명이나 출발·도착 공항을 넣어 주세요.'; initMap().catch(() => {}); }
+  }
+  async function initMap() {
+    const L = await loadLeaflet();
+    if (rtMap) { setTimeout(() => rtMap.invalidateSize(), 50); return L; }
+    rtMap = L.map('rt-map', { worldCopyJump: false, zoomControl: true, attributionControl: true }).setView([38, -100], 3);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 10,
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(rtMap);
+    rtLayers.radar = L.layerGroup();
+    L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', { opacity: .55, maxZoom: 10, attribution: 'NEXRAD &copy; IEM' }).addTo(rtLayers.radar);
+    fetch('https://api.rainviewer.com/public/weather-maps.json').then(r => r.json()).then(j => {
+      const f = j && j.radar && j.radar.past && j.radar.past[j.radar.past.length - 1];
+      if (f) L.tileLayer(j.host + f.path + '/256/{z}/{x}/{y}/2/1_1.png', { opacity: .5, maxNativeZoom: 7, maxZoom: 10, attribution: 'RainViewer' }).addTo(rtLayers.radar);
+    }).catch(() => {});
+    rtLayers.route = L.layerGroup().addTo(rtMap); rtLayers.pirep = L.layerGroup(); rtLayers.area = L.layerGroup();
+    const tg = document.getElementById('rt-toggles');
+    tg.replaceChildren(...[['radar', '🌧 Radar'], ['pirep', '⚡ PIREPs'], ['area', '🟧 SIGMET/G-AIRMET']].map(([k, t]) => {
+      const b = el('button', { type: 'button', class: 'rt-tg' + (rtOn[k] ? ' on' : ''), 'aria-pressed': String(rtOn[k]) }, t);
+      b.addEventListener('click', () => { rtOn[k] = !rtOn[k]; b.classList.toggle('on', rtOn[k]); b.setAttribute('aria-pressed', String(rtOn[k])); rtOn[k] ? rtLayers[k].addTo(rtMap) : rtLayers[k].remove(); });
+      return b;
+    }), el('span', { class: 'rt-legend' }, TURB.slice(1, 4).map((t, i) => el('span', {}, el('i', { style: 'background:' + TCOL[i + 1] }), t))));
+    Object.keys(rtOn).forEach(k => { if (rtOn[k]) rtLayers[k].addTo(rtMap); });
+    return L;
+  }
+  async function showRoute(f, a, b) {
+    const msg = document.getElementById('rt-msg'), list = document.getElementById('rt-list');
+    msg.textContent = '불러오는 중…'; list.replaceChildren();
+    let L; try { L = await initMap(); } catch (e) { msg.textContent = e.message; return; }
+    let from = null, to = null, label = '';
+    try {
+      if (a && b) {
+        const aps = await loadAirports();
+        const find = c => { const x = aps.find(p => p[0] === c.replace(/^K(?=[A-Z]{3}$)/, '')); return x ? { code: x[0], lat: x[1], lon: x[2] } : null; };
+        from = find(a); to = find(b);
+        if (!from || !to) throw new Error('공항 코드를 찾지 못했어요: ' + [!from ? a : '', !to ? b : ''].filter(Boolean).join(', '));
+        label = (f ? f + ' · ' : '') + from.code + ' → ' + to.code;
+      } else {
+        const r = await call('getRoute', memberKey, f);
+        if (!r.found) throw new Error(f + ' 노선을 찾지 못했어요. 출발·도착 공항을 직접 넣어 주세요.');
+        from = r.from; to = r.to; label = f + ' · ' + from.code + ' → ' + to.code;
+        document.getElementById('rt-from').value = from.code; document.getElementById('rt-to').value = to.code;
+      }
+    } catch (e) { if (e.message !== '__auth') msg.textContent = e.message; return; }
+    const gc = gcPoints([from.lat, from.lon], [to.lat, to.lon], 96);
+    rtLayers.route.clearLayers();
+    L.polyline(gc.pts, { color: '#1F5FD6', weight: 3, dashArray: '6 6' }).addTo(rtLayers.route);
+    [[from, gc.pts[0]], [to, gc.pts[gc.pts.length - 1]]].forEach(([p, ll]) => L.circleMarker(ll, { radius: 6, color: '#0B1220', weight: 2, fillColor: '#fff', fillOpacity: 1 })
+      .bindTooltip(p.code, { permanent: true, direction: 'top', className: 'rt-ap' }).addTo(rtLayers.route));
+    rtMap.fitBounds(L.latLngBounds(gc.pts).pad(0.15));
+    msg.textContent = label + ' · ' + Math.round(gc.nm).toLocaleString('en-US') + ' nm (great circle)';
+    // 루트 주변 범위 (서버에 보냄): 경도는 -180~180으로 되돌림
+    const lats = gc.pts.map(p => p[0]), lons = gc.pts.map(p => p[1]);
+    const norm = x => ((x + 540) % 360) - 180;
+    const box = [Math.max(-90, Math.min(...lats) - 5), norm(Math.min(...lons) - 8), Math.min(90, Math.max(...lats) + 5), norm(Math.max(...lons) + 8)];
+    let wx; try { wx = await call('getRouteWx', memberKey, box); } catch (e) { if (e.message !== '__auth') msg.textContent += ' · 터뷸런스 정보를 불러오지 못했어요'; return; }
+    const mid = gc.pts[Math.floor(gc.pts.length / 2)][1];
+    rtLayers.area.clearLayers(); rtLayers.pirep.clearLayers();
+    wx.areas.forEach(z => {
+      const col = z.k === 'G-AIRMET' ? '#F97316' : '#DC2626';
+      L.polygon(z.c.map(p => [p[0], near(p[1], mid)]), { color: col, weight: 1.5, fillColor: col, fillOpacity: .12, dashArray: z.k === 'G-AIRMET' ? '4 4' : null })
+        .bindPopup('<b>' + z.k + ' · TURB</b>' + (z.lo || z.hi ? '<br>FL' + Math.round(z.lo / 100) + '–FL' + Math.round(z.hi / 100) : '') + (z.fir ? '<br>' + esc(z.fir) : '') + '<br><small>' + esc(z.raw) + '</small>').addTo(rtLayers.area);
+    });
+    const ago = t => { const m = Math.max(0, Math.round((Date.now() / 1000 - t) / 60)); return m < 60 ? m + ' min ago' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm ago'; };
+    const rows = wx.pireps.map(p => {
+      const ll = [p[0], near(p[1], mid)];
+      let dmin = Infinity, at = 0; gc.pts.forEach((q, i) => { const d = nmBetween(ll, q); if (d < dmin) { dmin = d; at = i; } });
+      return { p, ll, d: dmin, along: Math.round(gc.nm * at / (gc.pts.length - 1)) };
+    });
+    rows.forEach(({ p, ll }) => L.circleMarker(ll, { radius: p[3] >= 3 ? 7 : 5, color: '#fff', weight: 1, fillColor: TCOL[p[3]], fillOpacity: .95 })
+      .bindPopup('<b>' + TURB[p[3]] + ' turbulence</b><br>FL' + String(p[2]).padStart(3, '0') + ' · ' + esc(p[4] || '?') + ' · ' + ago(p[5]) + '<br><small>' + esc(p[6]) + '</small>').addTo(rtLayers.pirep));
+    const close = rows.filter(r => r.d <= 150 && r.p[3] >= 1).sort((x, y) => y.p[3] - x.p[3] || y.p[5] - x.p[5]);
+    document.getElementById('rt-count').textContent = close.length ? '(' + close.length + ' within 150 nm)' : '';
+    list.replaceChildren(...(close.length ? close.slice(0, 30).map(r => el('button', { type: 'button', class: 'rt-row', onclick: () => { rtMap.setView(r.ll, 6); window.scrollTo({ top: document.getElementById('rt-map').getBoundingClientRect().top + scrollY - 200, behavior: 'smooth' }); } },
+      el('span', { class: 'rt-sev', style: 'background:' + TCOL[r.p[3]] }, TURB[r.p[3]]),
+      el('b', {}, 'FL' + String(r.p[2]).padStart(3, '0')),
+      el('span', { class: 'rt-d' }, [r.p[4] || '?', ago(r.p[5]), Math.round(r.d) + ' nm off · ' + r.along.toLocaleString('en-US') + ' nm from ' + from.code].join(' · '))))
+      : [el('p', { class: 'muted' }, 'No turbulence PIREPs within 150 nm in the last 3 hours.')]));
   }
   function myPosition() {
     return new Promise((ok, no) => {
@@ -3637,14 +4102,17 @@
       const email = form.elements.email.value.trim();
       if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)) { msg.textContent = '입장 코드를 받을 이메일 주소를 확인해 주세요.'; form.elements.email.focus(); return; }
       if (!/^(19|20)\d{2}$/.test(val('yy'))) { msg.textContent = '생년은 1990처럼 4자리로 입력해 주세요.'; form.elements.yy.focus(); return; }
+      const existing = document.body.classList.contains('is-existing');
       if (!form.elements.agree.checked) { msg.textContent = '인적사항 공유 동의에 체크해 주세요.'; return; }
       // 관리자에게 저장
       btn.disabled = true; btn.textContent = '제출 중…'; msg.textContent = '';
       const info = { agree: true, email: email, device: typeof deviceId === 'string' ? deviceId : '' };
+      if (existing) info.existing = true;
       F.forEach(([k]) => (info[k] = val(k)));
       try {
         await rawCall('submitApplication', info);
-        msg.textContent = '제출했어요. 관리자가 확인 후 ' + email + ' 주소로 개인 입장 코드를 보내드려요.';
+        msg.textContent = existing ? '등록했어요. 운영진이 확인하면 ' + email + ' 주소로 카파 사이트 개인 입장 코드를 보내 드려요.'
+          : '제출했어요. 관리자가 확인 후 ' + email + ' 주소로 개인 입장 코드를 보내드려요.';
       } catch (e) {
         msg.textContent = '제출하지 못했어요: ' + (e && e.message || e);
       }
@@ -3712,9 +4180,18 @@
     currentRoute = route;
     if (changed || !lastPing) setTimeout(() => ping(true), 1500);   // 화면을 옮기면 기록 (게시판 로딩을 방해하지 않게 조금 뒤에)
     const b = boardOf(route);
-    const isAdmin = route === 'admin';
-    const isAbout = route === 'about';
+    const isAdmin = route === 'admin' || route === 'admin-existing';   // #admin-existing: 기존 회원 승인 (링크로만)
+    const isExisting = route === 'existing';   // 기존 회원 등록 (임시): About Us 양식만 따로 보여 줌
+    const isAbout = route === 'about' || isExisting;
+    document.body.classList.toggle('is-existing', isExisting);
+    const abH = document.getElementById('ab-form-h'); if (abH) abH.textContent = isExisting ? '기존 회원 등록' : '인적사항 양식';
     const isLay = route === 'layover';
+    const rtm = String(route || '').match(/^route(?:\/([\w-]+))?$/);   // 루트 지도 (링크로만)
+    const isRoute = !!rtm;
+    document.getElementById('view-route').hidden = !isRoute;
+    if (isRoute) { document.getElementById('view-home').hidden = true; document.getElementById('view-layover').hidden = true;
+      document.getElementById('view-about').hidden = true; document.getElementById('view-board').hidden = true; document.getElementById('view-admin').hidden = true;
+      document.body.classList.remove('is-home', 'is-lay'); window.scrollTo(0, 0); openRoute(rtm[1] || ''); return; }
     document.getElementById('view-home').hidden = !!b || isAdmin || isAbout || isLay;
     document.body.classList.toggle('is-home', !b && !isAdmin && !isAbout && !isLay);
     document.body.classList.toggle('is-lay', !!isLay);
@@ -3745,6 +4222,7 @@
       syncInvite();
     } else if (isAdmin) {
       if (!adminMounted) { mountAdmin(document.getElementById('admin-root'), rawCall, SERVER_BOARDS, () => memberKey); adminMounted = true; }
+      else if (route === 'admin-existing') { const ar = document.getElementById('admin-root'); if (ar.openTab) ar.openTab('existing'); }
       window.scrollTo(0, 0);
     } else if (route === 'guide') {
       loadRecent();
