@@ -1311,9 +1311,7 @@
       <p class="rt-msg" id="rt-msg"></p>
       <div class="rt-toggles" id="rt-toggles"></div>
       <div class="rt-map" id="rt-map"></div>
-      <p class="rt-note">Route line is the great-circle path between airports, not the filed route. Radar: NEXRAD (U.S., IEM) · RainViewer (world). Turbulence: PIREPs, SIGMET/G-AIRMET from aviationweather.gov. For reference only — not for operational use.</p>
-      <h2 class="rt-sub">Turbulence reports near route <small id="rt-count"></small></h2>
-      <div class="rt-list" id="rt-list"></div>
+      <div id="rt-list" hidden></div><small id="rt-count" hidden></small>
     </div>
   </div>
 
@@ -1392,9 +1390,19 @@
     if (GAS) return new Promise((resolve, reject) =>
       google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn](...args));
     // 내 도메인: Apps Script 데이터 창구로 POST (text/plain이라 추가 확인 요청 없이 바로 감, 구글 로그인과 무관)
-    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, page: IS_TEST ? 'test' : '' }), redirect: 'follow' })
-      .then(r => { if (!r.ok) throw new Error('서버에 연결하지 못했어요 (' + r.status + '). 잠시 후 다시 시도해 주세요.'); return r.json(); },
-            () => { throw new Error('인터넷 연결을 확인해 주세요.'); })
+    // 연결이 끊긴 채로 계속 기다리지 않게: 25초 넘게 답이 없으면 끊고 알려 줌.
+    // 읽기 요청(get·list·check)은 연결 문제일 때 한 번 더 자동으로 시도 (쓰기 요청은 두 번 올라갈 수 있어서 자동 재시도 안 함)
+    const READ = /^(get|list|check)/.test(fn);
+    const once = () => {
+      const ac = typeof AbortController === 'function' ? new AbortController() : null;
+      const timer = ac ? setTimeout(() => ac.abort(), 25000) : 0;
+      return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, page: IS_TEST ? 'test' : '' }), redirect: 'follow', signal: ac ? ac.signal : undefined })
+        .then(r => { clearTimeout(timer); if (!r.ok) throw new Error('서버에 연결하지 못했어요 (' + r.status + '). 잠시 후 다시 시도해 주세요.'); return r.json(); },
+              e => { clearTimeout(timer); const t = e && e.name === 'AbortError';
+                const err = new Error(t ? (READ ? '인터넷 연결이 느려요. 잠시 후 다시 시도해 주세요.' : '인터넷 연결이 느려요. 새로고침해서 올라갔는지 확인한 뒤 다시 시도해 주세요.') : '인터넷 연결을 확인해 주세요.');
+                err.net = true; throw err; });
+    };
+    return (READ ? once().catch(e => { if (!e.net) throw e; return new Promise(r => setTimeout(r, 1500)).then(once); }) : once())
       .then(j => { if (!j || !j.ok) throw new Error((j && j.error) || '서버 오류'); return j.data; });
   }
 
@@ -1417,7 +1425,15 @@
   applySiteConfig();
   // 내 도메인에서는 문의처·메인 사진을 따로 받아 옴 (화면은 먼저 그리고 나중에 채움)
   let PUSH = null;   // 폰 앱 알림 설정 (Firebase 공개 설정). 관리자가 설정을 다 넣어야 생김
-  const siteCfgP = GAS ? Promise.resolve(null) : rawCall('getSiteConfig').then(c => { CONTACT = c.contact || ''; HERO_IMAGE = c.heroImage || ''; PUSH = c.push || null; applySiteConfig(); return c; }, () => null);
+  // 지난번 받은 설정을 기기에 저장해 두고 먼저 씀 → 연결이 느려도 체크인 화면·폰 알림 칸이 바로 뜸. 새 설정은 뒤에서 받아서 바꿈 (실패하면 몇 번 더 시도)
+  const useCfg = c => { CONTACT = c.contact || ''; HERO_IMAGE = c.heroImage || ''; PUSH = c.push || null; applySiteConfig(); return c; };
+  let cfgCached = null;
+  try { cfgCached = JSON.parse(store.get('pc_cfg') || 'null'); } catch (_) {}
+  if (!GAS && cfgCached) useCfg(cfgCached);
+  const fetchCfg = (n = 0) => rawCall('getSiteConfig').then(c => { const hadPush = !!PUSH; store.set('pc_cfg', JSON.stringify(c)); useCfg(c);
+      if (!hadPush && PUSH) { try { updateMe(); if (currentRoute === 'layover') render(currentRoute); } catch (_) {} } return c; },
+    () => { if (n < 3) setTimeout(() => fetchCfg(n + 1), [3000, 10000, 30000][n]); return null; });   // 다시 시도는 뒤에서 (기다리게 하지 않음)
+  const siteCfgP = GAS ? Promise.resolve(null) : cfgCached ? (fetchCfg(), Promise.resolve(cfgCached)) : fetchCfg();
   // 메뉴·전광판·카드 4개는 HTML에 직접 들어 있음 (게시판을 바꾸면 위 HTML과 Code.gs의 BOARDS를 같이 고치기)
 
   // ===== 게시판 =====
@@ -3487,7 +3503,9 @@
       [nI, cI, kI, aI, ...bs.map(b => b.c[0])].forEach(i => i.addEventListener('change', save));
       box.replaceChildren(el('b', { class: 'ly-prefs-h' }, '받을 알림', note), el('div', { class: 'ly-sw-list' }, nL, cL, kL, p.isAdmin ? aL : null),
         el('b', { class: 'ly-prefs-h' }, '새 글 알림 받을 게시판'), el('div', { class: 'ly-prefs-boards' }, bs.map(b => b.c[1])));
-    }, e => { box.replaceChildren(el('p', { class: 'msg' }, e.message === '__auth' ? '' : '알림 설정을 불러오지 못했어요.')); });
+    }, e => { if (e.message === '__auth') { box.replaceChildren(); return; }
+      box.replaceChildren(el('p', { class: 'msg' }, e.net ? e.message : '알림 설정을 불러오지 못했어요.'),
+        el('button', { class: 'ly-link', type: 'button', onclick: () => box.replaceWith(prefsBox()) }, '다시 시도')); });
     return box;
   }
   let pushOpen = false;   // 폰 알림 칸 펼침 여부
@@ -3613,14 +3631,16 @@
     const L = await loadLeaflet();
     if (rtMap) { setTimeout(() => rtMap.invalidateSize(), 50); return L; }
     rtMap = L.map('rt-map', { worldCopyJump: false, zoomControl: true, attributionControl: true }).setView([38, -100], 3);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 10,
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(rtMap);
+    rtMap.attributionControl.setPrefix(false);
+    // 바탕 지도: Esri 연회색 (키 없이 사용, CARTO는 이제 키가 있어야 해서 "API KEY REQUIRED"가 찍힘) → 안 되면 OpenStreetMap
+    const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12,
+      attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }).addTo(rtMap);
+    let baseErr = 0;
+    base.on('tileerror', () => { if (++baseErr === 4) { rtMap.removeLayer(base); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12, attribution: '&copy; OpenStreetMap contributors' }).addTo(rtMap).bringToBack(); } });
     rtLayers.radar = L.layerGroup();
-    L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', { opacity: .55, maxZoom: 10, attribution: 'NEXRAD &copy; IEM' }).addTo(rtLayers.radar);
-    fetch('https://api.rainviewer.com/public/weather-maps.json').then(r => r.json()).then(j => {
-      const f = j && j.radar && j.radar.past && j.radar.past[j.radar.past.length - 1];
-      if (f) L.tileLayer(j.host + f.path + '/256/{z}/{x}/{y}/2/1_1.png', { opacity: .5, maxNativeZoom: 7, maxZoom: 10, attribution: 'RainViewer' }).addTo(rtLayers.radar);
-    }).catch(() => {});
+    // 미국 NEXRAD(약 1 km): 진하게, 레티나 화면에선 더 촘촘한 타일 (5분마다 새 이미지). 흐린 세계 레이더는 겹치면 번져 보여서 뺌
+    L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?' + Math.floor(Date.now() / 300000),
+      { opacity: .8, maxZoom: 12, maxNativeZoom: 11, detectRetina: true, zIndex: 3, attribution: 'NEXRAD &copy; IEM' }).addTo(rtLayers.radar);
     rtLayers.route = L.layerGroup().addTo(rtMap); rtLayers.pirep = L.layerGroup(); rtLayers.area = L.layerGroup();
     const tg = document.getElementById('rt-toggles');
     tg.replaceChildren(...[['radar', '🌧 Radar'], ['pirep', '⚡ PIREPs'], ['area', '🟧 SIGMET/G-AIRMET']].map(([k, t]) => {
@@ -3763,8 +3783,8 @@
     };
     const alertRow = (btn, t) => { const p = el('p', { class: 'msg' }, t); (btn && btn.closest('.ly-row') || box).append(p); };
 
-    // 0) 폰 앱 알림
-    await siteCfgP;
+    // 0) 폰 앱 알림 (설정이 늦게 오면 3초만 기다리고 먼저 그림. 설정이 오면 폰 알림 칸이 다시 그려짐)
+    await Promise.race([siteCfgP, new Promise(r => setTimeout(r, 3000))]);
     const pb = personal ? pushBar() : null;   // 안내 상자 오른쪽 종 버튼
     // 맨 위 한 줄: 안내 상자(폰에서만, 넓은 화면은 위 사진 화면에 있음) + 그 오른쪽 알림 켜짐/꺼짐
     const pushSec = personal ? [el('div', { class: 'ly-top' }, el('p', { class: 'ly-lead' }, '같은 공항, 같은 시간에 있는 회원과 ☕ 🍽️'), pb && pb.btn), pb && pb.slot] : null;
