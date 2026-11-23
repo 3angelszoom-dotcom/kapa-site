@@ -282,6 +282,27 @@
   .ly-prefs-h { display: flex; justify-content: space-between; font-size: 13px; margin-top: 4px; }
   .ly-prefs-note { font-weight: 400; color: var(--muted); font-size: 12px; }
   .ly-prefs-boards { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  /* 폰 알림 설정: 스위치 줄 + 게시판 칩 */
+  .ly-push .ly-prefs { background: none; padding: 0; gap: 8px; }
+  .ly-push .ly-prefs-h { font-size: 12.5px; font-weight: 700; color: var(--muted); margin-top: 6px; letter-spacing: .01em; }
+  .ly-sw-list { border: 1px solid #EEF0F3; border-radius: 12px; overflow: hidden; background: #fff; }
+  .ly-sw { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; font-size: 15px; color: var(--text); cursor: pointer; }
+  .ly-sw + .ly-sw { border-top: 1px solid #F1F3F6; }
+  .ly-sw input[type=checkbox] { appearance: none; -webkit-appearance: none; flex: none; box-sizing: border-box; width: 42px !important; height: 26px !important; min-height: 0 !important; padding: 0 !important; border: 0 !important; margin: 0; border-radius: 999px !important; background: #D7DCE3; position: relative; cursor: pointer; transition: background .15s; }
+  .ly-sw input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s; }
+  .ly-sw input:checked { background: #10B981; }
+  .ly-sw input:checked::after { transform: translateX(16px); }
+  .ly-sw input:focus-visible, .ly-chip:focus-within { outline: 2px solid #93C5FD; outline-offset: 2px; }
+  .ly-push .ly-prefs-boards { gap: 8px; }
+  .ly-chip { display: inline-flex; align-items: center; padding: 8px 13px; border-radius: 999px; border: 1px solid #E2E5EA; background: #fff; color: #475569; font-size: 14px; font-weight: 500; cursor: pointer; user-select: none; }
+  .ly-chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .ly-chip:has(input:checked) { background: #0B1F45; border-color: #0B1F45; color: #fff; }
+  .ly-chip:has(input:checked)::before { content: '✓'; margin-right: 5px; font-size: 12px; }
+  .ly-push-btns:has(.ly-link) { align-items: center; gap: 6px; }
+  .ly-link { border: 0; background: none; padding: 4px 2px; font: 600 13.5px/1.2 var(--body); color: #1F5FD6; cursor: pointer; }
+  .ly-link.danger { color: #B42318; }
+  .ly-link:disabled { opacity: .5; }
+  .ly-dot { color: #CBD2DB; }
   .a2hs { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 60; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
   .a2hs[hidden], .a2hs-sheet[hidden] { display: none; }
   .a2hs-btn { display: inline-flex; align-items: center; gap: 7px; padding: 11px 16px 11px 13px; border-radius: 999px; border: 1px solid rgba(52, 211, 153, .5);
@@ -624,6 +645,8 @@
   /* 승인된 회원: 카톡방 참여 버튼 (카카오 노란색) */
   .me-kakao { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border-radius: 14px; background: #FEE500; color: #191919 !important; font: 700 15px/1.2 var(--body); text-decoration: none; }
   .me-kakao small { font-weight: 500; opacity: .7; }
+  .me-kakao { gap: 6px; padding: 12px 16px; }
+  .me-kakao-ico { font-size: 11px; line-height: 1; }
   .me-out { border: 1px solid #E2E5EA; background: #fff; color: #B42318; border-radius: 999px; padding: 11px 16px; font: 600 14px/1 var(--body); cursor: pointer; }
   /* ---- KAPA 로고 입체감 (B: 위쪽 흰 빛 + 아래 그림자) ---- */
   .logo img { filter: drop-shadow(0 -1px 0 rgba(255, 255, 255, .9)) drop-shadow(0 1px 0 rgba(0, 0, 0, .35)) drop-shadow(0 2px 0 rgba(0, 0, 0, .18)) drop-shadow(0 6px 8px rgba(15, 23, 42, .22)); }
@@ -1517,10 +1540,10 @@
     openSheet('입장 상태', close => el('div', { class: 'me-card' },
       el('div', { class: 'me-row' }, av, el('div', {},
         el('b', {}, personal ? m.name + '님' : m.type === 'admin' ? '관리자' : '회원'),
-        el('p', {}, personal ? '✓ 개인 입장 코드로 입장 중 (실명)' : m.type === 'admin' ? '관리자 비밀번호로 입장 중' : '회원 비밀번호로 입장 중 · 글쓰기·체크인은 개인 입장 코드가 필요해요')),
+        personal ? null : el('p', {}, m.type === 'admin' ? '관리자 비밀번호로 입장 중' : '회원 비밀번호로 입장 중 · 글쓰기·체크인은 개인 입장 코드가 필요해요')),
         personal ? el('button', { class: 'me-edit', type: 'button', onclick: () => { close(); openMyInfo(); } }, '정보 변경') : null),
       personal && m.kakaoRoom && m.kakaoRoom.url ? el('a', { class: 'me-kakao', href: m.kakaoRoom.url, target: '_blank', rel: 'noopener' },
-        '💬 카톡방 참여하기', el('small', {}, m.kakaoRoom.room === 'small' ? '카파 GC 작은방' : '카파 큰방')) : null,
+        el('span', { class: 'me-kakao-ico', 'aria-hidden': 'true' }, '💬'), '카톡방 참여하기', el('small', {}, m.kakaoRoom.room === 'small' ? '카파 GC 작은방' : '카파 큰방')) : null,
       personal && m.isAdmin ? el('button', { class: 'ghost', type: 'button', onclick: () => { close(); location.hash = 'admin'; } }, '🛠 관리자 페이지') : null,
       personal ? pushCard(true) : null,
       !personal ? el('button', { class: 'primary', type: 'button', onclick: () => { close(); setMemberKey(''); after(); openMe(); } }, '개인 입장 코드로 입장') : null,
@@ -3288,7 +3311,7 @@
       el('div', { class: 'dl-card' }, ...shown.map(row),
         rows.length > N ? el('button', { class: 'dl-more', type: 'button', onclick: () => { dlOpen = !dlOpen; drawDelays(r); } },
           dlOpen ? 'Show less' : 'Show more (' + (rows.length - N) + ')') : null),
-      okMine.length ? el('div', { class: 'dl-okmine' }, '✅ No delays at ' + okMine.join(', ')) : null);
+      ...(okMine.length ? [el('div', { class: 'dl-okmine' }, '✅ No delays at ' + okMine.join(', '))] : []));
   }
   function drawWx(r) {
     drawDelays(r);
@@ -3446,19 +3469,20 @@
   function prefsBox() {
     const box = el('div', { class: 'ly-prefs' }, el('p', { class: 'muted' }, '알림 설정 불러오는 중…'));
     call('getPushPrefs', memberKey).then(p => {
-      const ck = (on, label) => { const i = el('input', { type: 'checkbox' }); i.checked = !!on; return [i, el('label', { class: 'ly-check' }, i, label)]; };
+      const ck = (on, label) => { const i = el('input', { type: 'checkbox', role: 'switch' }); i.checked = !!on; return [i, el('label', { class: 'ly-sw' }, el('span', {}, label), i)]; };
+      const chip = (on, label) => { const i = el('input', { type: 'checkbox' }); i.checked = !!on; return [i, el('label', { class: 'ly-chip' }, i, label)]; };
       const [nI, nL] = ck(p.notice, '공지사항');
       const [cI, cL] = ck(p.comments, '내 글에 댓글');
-      const [kI, kL] = ck(p.checkins !== false, '새 체크인 (누가 체크인하면)');
-      const [aI, aL] = ck(p.applicants !== false, '📝 새 가입 신청 (관리자)');   // 관리자 지정 회원에게만 보임
-      const bs = p.allBoards.map(b => ({ id: b.id, c: ck(p.boards.indexOf(b.id) >= 0, b.name) }));
+      const [kI, kL] = ck(p.checkins !== false, '새 체크인');
+      const [aI, aL] = ck(p.applicants !== false, '새 가입 신청 (관리자)');   // 관리자 지정 회원에게만 보임
+      const bs = p.allBoards.map(b => ({ id: b.id, c: chip(p.boards.indexOf(b.id) >= 0, b.name) }));
       const note = el('span', { class: 'ly-prefs-note' });
       let t = null;
       const save = () => { clearTimeout(t); note.textContent = '저장 중…'; t = setTimeout(async () => {
         try { await call('setPushPrefs', memberKey, { notice: nI.checked, comments: cI.checked, checkins: kI.checked, applicants: aI.checked, boards: bs.filter(b => b.c[0].checked).map(b => b.id) }); note.textContent = '저장됨 ✓'; }
         catch (e) { if (e.message !== '__auth') note.textContent = e.message; } }, 500); };
       [nI, cI, kI, aI, ...bs.map(b => b.c[0])].forEach(i => i.addEventListener('change', save));
-      box.replaceChildren(el('b', { class: 'ly-prefs-h' }, '받을 알림', note), nL, cL, kL, p.isAdmin ? aL : null,
+      box.replaceChildren(el('b', { class: 'ly-prefs-h' }, '받을 알림', note), el('div', { class: 'ly-sw-list' }, nL, cL, kL, p.isAdmin ? aL : null),
         el('b', { class: 'ly-prefs-h' }, '새 글 알림 받을 게시판'), el('div', { class: 'ly-prefs-boards' }, bs.map(b => b.c[1])));
     }, e => { box.replaceChildren(el('p', { class: 'msg' }, e.message === '__auth' ? '' : '알림 설정을 불러오지 못했어요.')); });
     return box;
@@ -3483,18 +3507,18 @@
       } else if (Notification.permission === 'denied') {
         body = [el('p', {}, '알림이 차단돼 있어요. 휴대폰 설정 → 알림 → KAPA (또는 브라우저 사이트 설정)에서 허용해 주세요.')];
       } else if (Notification.permission === 'granted' && store.get('pc_push_tok')) {
-        const test = el('button', { class: 'ly-pill', type: 'button' }, '🔔 시험 알림');
+        const test = el('button', { class: 'ly-link', type: 'button' }, '시험 알림 보내기');
         test.addEventListener('click', async () => { test.disabled = true; msg.textContent = ''; msg.className = 'msg';
           try { const r = await call('testMyPush', memberKey, lyPage()); if (r && r.sent) { msg.className = 'msg ok'; msg.textContent = '✓ 보냈어요. 몇 초 안에 알림이 와요.'; } else msg.textContent = '보내지 못했어요. 끄고 다시 켜 주세요.'; }
           catch (e) { if (e.message !== '__auth') msg.textContent = e.message; } test.disabled = false; });
-        const off = el('button', { class: 'ly-pill', type: 'button' }, '🔕 알림 끄기');
+        const off = el('button', { class: 'ly-link danger', type: 'button' }, '알림 끄기');
         off.addEventListener('click', async () => { off.disabled = true; await disablePush(); draw(); });
         // 켜진 뒤에는 한 줄로 접어 두고, 누르면 받을 알림 고르기·시험 알림을 펼침
         const tog = el('button', { class: 'ly-push-tog', type: 'button', 'aria-expanded': String(open) }, open ? '접기 ▲' : '설정 ▼');
         tog.addEventListener('click', () => { open = !open; if (!inSheet) pushOpen = open; draw(); });
         head.append(el('span', { class: 'ly-push-on' }, '켜짐 ✓'), tog);
         head.classList.add('tap'); head.addEventListener('click', e => { if (e.target !== tog) tog.click(); });
-        body = open ? [el('p', { class: 'ly-push-note' }, '커피 한잔 알림은 항상 와요. 아래에서 다른 알림을 고를 수 있어요.'), prefsBox(), el('div', { class: 'ly-push-btns' }, test, off)] : [];
+        body = open ? [prefsBox(), el('p', { class: 'ly-push-note' }, '☕ 커피 한잔 알림은 항상 와요.'), el('div', { class: 'ly-push-btns' }, test, el('span', { class: 'ly-dot', 'aria-hidden': 'true' }, '·'), off)] : [];
       } else {
         const on = el('button', { class: 'primary small' }, '폰 알림 켜기');
         on.addEventListener('click', async () => { on.disabled = true; on.textContent = '켜는 중…'; msg.textContent = '';
