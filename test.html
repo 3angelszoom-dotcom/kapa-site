@@ -1553,7 +1553,7 @@
       personal && m.isAdmin ? el('button', { class: 'ghost', type: 'button', onclick: () => { close(); location.hash = 'admin'; } }, '🛠 관리자 페이지') : null,
       personal ? pushCard(true) : null,
       !personal ? el('button', { class: 'primary', type: 'button', onclick: () => { close(); setMemberKey(''); after(); openMe(); } }, '개인 입장 코드로 입장') : null,
-      el('button', { class: 'me-out', type: 'button', onclick: () => { close(); setMemberKey(''); after(); } }, '이 기기에서 로그아웃')));
+      el('button', { class: 'me-out', type: 'button', onclick: () => { close(); setMemberKey(''); after(); } }, '로그아웃')));
   }
   // 내 정보 변경: 이직 표시 → 새 직장 칸이 열리고, 저장하면 축하 글이 "새로 올라온 글"에 자동으로 올라감
   function openMyInfo() {
@@ -1994,8 +1994,7 @@
         ? posts.map(p => el('button', { class: 'post-card', onclick: () => showPost(p.id) },
             el('h3', {}, p.title), el('p', { class: 'preview' }, p.preview),
             el('div', { class: 'meta' }, p.author, vf(p.verified), ` · ${fmt(p.createdAt)} · 💬 ${p.comments}${p.attachments ? ' · 📎 ' + p.attachments : ''}`)))
-        : el('p', { class: 'muted' }, state.q ? '검색 결과가 없어요.' : '아직 글이 없어요. 첫 글을 남겨보세요!'),
-      el('button', { class: 'logout', onclick: () => { setMemberKey(''); clearFeed(); showLogin(); } }, '이 기기에서 로그아웃'));
+        : el('p', { class: 'muted' }, state.q ? '검색 결과가 없어요.' : '아직 글이 없어요. 첫 글을 남겨보세요!'));
   }
 
 
