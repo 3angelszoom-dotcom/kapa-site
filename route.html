@@ -244,8 +244,9 @@
     'GMP HND KIX PUS CJU NGO FUK CTS OKA PKX SHA CAN SZX TSA KUL CGK DPS SGN HAN BOM SPN MEL AMS MUC ZRH MAD FCO').split(' ');
   const AP_MORE = 'OAK SJC SMF BUR ONT SNA LGB RNO BOI GEG ABQ ELP TUS SAT HOU DAL OKC TUL OMA DSM MKE MDW IND CMH CLE PIT CVG SDF MEM MSY BHM JAX RSW FLL PBI RDU RIC ORF BDL PVD BUF ALB SYR ROC GRR MSN FAR SAV CHS GSP ICT LIT OGG KOA LIH FAI PSP SBA MRY FAT BZN JAC MSO HDN EGE ASE COS GJT SLC'.split(' ');
   const apBig = L.layerGroup().addTo(map), apMid = L.layerGroup(), apMore = L.layerGroup();
-  const apMark = (code, ll, g) => L.circleMarker(ll, { radius: 3, color: '#334155', weight: 1, fillColor: '#fff', fillOpacity: 1, interactive: false })
-    .bindTooltip(code, { permanent: true, direction: 'right', offset: [4, 0], className: 'ap-lbl', interactive: false }).addTo(g);
+  // 태평양을 건너 지도를 옆으로 넘기면 경도가 ±360° 바뀐 '옆 지구'가 나옴 → 공항 표시를 옆 지구 두 바퀴씩 더 그려서 어디로 넘겨도 보이게
+  const apMark = (code, ll, g) => [-720, -360, 0, 360, 720].forEach(dx => L.circleMarker([ll[0], ll[1] + dx], { radius: 3, color: '#334155', weight: 1, fillColor: '#fff', fillOpacity: 1, interactive: false })
+    .bindTooltip(code, { permanent: true, direction: 'right', offset: [4, 0], className: 'ap-lbl', interactive: false }).addTo(g));
   // 공항 목록(airports.txt)을 못 받으면 점이 하나도 안 보임 → 3초·10초·30초 뒤 다시 시도, 새로고침 버튼으로도 다시
   let apDone = false, apTry = 0;
   const apLoad = () => loadAirports().then(list => {
