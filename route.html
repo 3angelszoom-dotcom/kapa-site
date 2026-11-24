@@ -159,6 +159,16 @@
   .ly-tg[aria-pressed="true"] { border-color: var(--blue); background: #EFF6FF; color: var(--navy); }
   .ly-tg .ly-ic { font-size: 14px; filter: grayscale(1); opacity: .55; }
   .ly-tg[aria-pressed="true"] .ly-ic { filter: none; opacity: 1; }
+  .ly-g { margin-top: 8px; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; }
+  .ly-grp { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 10px; border: 0; background: #F8FAFC; font: 800 12.5px/1 var(--f); color: var(--ink); letter-spacing: .04em; cursor: pointer; text-align: left; }
+  .ly-gt { flex: 1 1 auto; }
+  .ly-cnt { font: 800 10.5px/1 var(--f); padding: 3px 6px; border-radius: 999px; background: #DBEAFE; color: #1E40AF; letter-spacing: 0; }
+  .ly-cnt.off { background: #E2E8F0; color: #64748B; }
+  .ly-chev { font-size: 18px; line-height: 1; color: #94A3B8; transition: transform .15s; }
+  .ly-grp[aria-expanded="true"] .ly-chev { transform: rotate(90deg); }
+  .ly-sub { padding: 8px; grid-template-columns: 1fr 1fr; }
+  .ly-tg { min-width: 0; } .ly-tg span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ly-sub[hidden] { display: none; }
   .ly-leg { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #F1F5F9; font: 700 10.5px/1 var(--f); color: var(--muted); }
   .ly-leg i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 3px; vertical-align: -1px; }
   .ly-leg i.tri { width: 0; height: 0; border-radius: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 9px solid #0EA5E9; }
@@ -290,8 +300,8 @@
   const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, className: 'nseam', attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }).addTo(map);
   let baseErr = 0;
   base.on('tileerror', () => { if (++baseErr === 4) { map.removeLayer(base); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12, className: 'nseam', attribution: '&copy; OpenStreetMap contributors' }).addTo(map).bringToBack(); } });
-  const layers = { radar: L.layerGroup(), world: L.layerGroup(), pirep: L.layerGroup(), area: L.layerGroup(), turb: L.layerGroup(), ice: L.layerGroup(), conv: L.layerGroup(), ifr: L.layerGroup(), spc: L.layerGroup(), route: L.layerGroup().addTo(map) };
-  const on = BETA ? { radar: true, world: false, spc: true, ifr: false, conv: true, ice: true, turb: true, pirep: true } : { radar: true, world: false, pirep: true, area: true };
+  const layers = { radar: L.layerGroup(), world: L.layerGroup(), pirep: L.layerGroup(), area: L.layerGroup(), sTurb: L.layerGroup(), sIce: L.layerGroup(), sConv: L.layerGroup(), aTurb: L.layerGroup(), aIce: L.layerGroup(), aIfr: L.layerGroup(), spc: L.layerGroup(), route: L.layerGroup().addTo(map) };
+  const on = BETA ? { radar: true, world: false, pirep: true, spc: true, sTurb: true, sIce: true, sConv: true, aTurb: true, aIce: true, aIfr: false } : { radar: true, world: false, pirep: true, area: true };
   // 미국 NEXRAD(약 1 km 해상도): 진하게, 레티나 화면에선 한 단계 더 촘촘한 타일로
   const NEX = () => 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?' + Math.floor(Date.now() / 60000);
   const nexrad = L.tileLayer(NEX(), { opacity: .8, maxZoom: 12, maxNativeZoom: 11, detectRetina: true, zIndex: 3, attribution: 'NEXRAD &copy; IEM' }).addTo(layers.radar);
@@ -305,7 +315,9 @@
   // 날씨 레이어 켜고 끄기 (버튼·레이어 메뉴 공통). 테스트 화면은 고른 것을 기억
   const layerSync = [];
   function setLayer(k, v) { on[k] = v; v ? layers[k].addTo(map) : layers[k].remove(); layerSync.forEach(f => f()); if (BETA) store.set('rt_layers', JSON.stringify(on)); }
-  const CHIPS = BETA ? [['radar', '🌧 Radar'], ['world', '🌍 World'], ['pirep', '⚡ PIREP'], ['turb', '🟧 Turb'], ['ice', '🧊 Ice'], ['conv', '⛈ TS'], ['ifr', '☁️ IFR'], ['spc', '🟩 SPC']]
+  // 위험 구역 → 레이어 (SIGMET / AIRMET 따로, 종류별로)
+  const HZL = z => (z.k === 'SIGMET' ? 's' : 'a') + (z.h === 'TURB' ? 'Turb' : z.h === 'ICE' ? 'Ice' : (z.h === 'IFR' || z.h === 'MTN' || z.h === 'LLWS') ? (z.k === 'SIGMET' ? 'Conv' : 'Ifr') : (z.k === 'SIGMET' ? 'Conv' : 'Ifr'));
+  const CHIPS = BETA ? [['radar', '🌧 Radar'], ['world', '🌍 World'], ['pirep', '⚡ PIREP'], ['spc', '🟩 SPC']]
     : [['radar', '🌧 Radar'], ['world', '🌍 World'], ['pirep', '⚡ PIREP'], ['area', '🟧 Turbulence']];
   $('bar').append(...CHIPS.map(([k, t]) => {
     const b = el('button', { type: 'button', class: 'tg' + (on[k] ? ' on' : ''), 'aria-pressed': String(on[k]) }, t);
@@ -367,22 +379,35 @@
   $('bar').after(el('div', { class: 'bm', role: 'group', 'aria-label': '지도 종류' }, el('span', { class: 'bm-l' }, 'Map'), bmBtns, bmHint));
   // 테스트 화면: 위 버튼 줄 대신 지도 오른쪽 위 '레이어' 버튼 하나 → 누르면 지도 종류·날씨 레이어를 고르는 메뉴
   if (BETA) {
-    const LBL = { radar: ['🌧', 'Radar', 'US NEXRAD'], world: ['🌍', 'World', 'World radar'], pirep: ['⚡', 'PIREP', 'Turb · Icing PIREP'], turb: ['🟧', 'Turb', 'Turbulence SIGMET · G-AIRMET'],
-      ice: ['🧊', 'Icing', 'SIGMET · G-AIRMET'], conv: ['⛈', 'TS', 'Convective SIGMET · Ash · TC'], ifr: ['☁️', 'IFR', 'IFR · Mtn obsc G-AIRMET'], spc: ['🟩', 'SPC', 'SPC thunderstorm outlook'] };
+    const LBL = { radar: ['🌧', 'Radar', 'US NEXRAD'], world: ['🌍', 'World', 'World radar'], pirep: ['⚡', 'PIREP', 'Turb · Icing PIREP'], spc: ['🟩', 'SPC', 'SPC thunderstorm outlook'],
+      sTurb: ['🟥', 'Turb', 'Turbulence SIGMET'], sIce: ['🧊', 'Icing', 'Icing SIGMET'], sConv: ['⛈', 'TS · Ash', 'Convective SIGMET · Volcanic ash · Tropical cyclone'],
+      aTurb: ['🟧', 'Turb', 'Turbulence AIRMET · G-AIRMET'], aIce: ['🧊', 'Icing', 'Icing AIRMET · G-AIRMET'], aIfr: ['☁️', 'IFR · Mtn', 'IFR · Mtn obsc · LLWS G-AIRMET'] };
     const lyBtn = el('button', { type: 'button', class: 'me-loc ly-btn', title: '레이어', 'aria-label': '지도·날씨 레이어', 'aria-expanded': 'false' });
     lyBtn.innerHTML = '<svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><path d="M12 3 2.5 8 12 13l9.5-5L12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m2.5 12 9.5 5 9.5-5M2.5 16l9.5 5 9.5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
     const tiles = Object.keys(BASES).map(k => { const b = el('button', { type: 'button', class: 'ly-tile ly-' + k }, el('span', { class: 'ly-thumb' }), BASES[k].t);
       b.addEventListener('click', () => setBase(k)); layerSync.push(() => b.setAttribute('aria-pressed', String(bmKey === k))); return b; });
-    const rows = CHIPS.map(([k]) => { const L0 = LBL[k] || ['', k, ''];
+    const tg = k => { const L0 = LBL[k] || ['', k, ''];
       const b = el('button', { type: 'button', class: 'ly-tg', title: L0[2] || L0[1] }, el('span', { class: 'ly-ic', 'aria-hidden': 'true' }, L0[0]), el('span', {}, L0[1]));
       b.addEventListener('click', () => setLayer(k, !on[k]));
       layerSync.push(() => b.setAttribute('aria-pressed', String(!!on[k])));
-      return b; });
+      return b; };
+    const rows = CHIPS.map(([k]) => tg(k));
+    // SIGMET · AIRMET: 눌러서 펼치는 칸, 안에서 종류별로 켜고 끄기. 제목 옆 '켜진 수/전체'
+    const grpBox = (id, title, keys) => {
+      const cnt = el('span', { class: 'ly-cnt' }), body = el('div', { class: 'ly-rows ly-sub' }, keys.map(tg));
+      let openG = store.get('rt_ly_' + id) === '1';
+      const head = el('button', { type: 'button', class: 'ly-grp', 'aria-expanded': String(openG) }, el('span', { class: 'ly-gt' }, title), cnt, el('span', { class: 'ly-chev', 'aria-hidden': 'true' }, '›'));
+      body.hidden = !openG;
+      head.addEventListener('click', () => { openG = !openG; body.hidden = !openG; head.setAttribute('aria-expanded', String(openG)); store.set('rt_ly_' + id, openG ? '1' : '0'); });
+      layerSync.push(() => { const n = keys.filter(k => on[k]).length; cnt.textContent = n + '/' + keys.length; cnt.classList.toggle('off', !n); });
+      return el('div', { class: 'ly-g' }, head, body);
+    };
+    const groups = [grpBox('sig', 'SIGMET', ['sTurb', 'sIce', 'sConv']), grpBox('air', 'AIRMET', ['aTurb', 'aIce', 'aIfr'])];
     const lg = el('div', { class: 'ly-leg' }, TURB.slice(1, 4).map((t, i) => el('span', {}, el('i', { style: 'background:' + TCOL[i + 1] }), t)),
       el('span', {}, el('i', { class: 'tri' }), 'Icing'));
     const pop = el('div', { class: 'ly-pop', hidden: '', role: 'dialog', 'aria-label': '레이어' },
       el('div', { class: 'ly-h' }, 'Map'), el('div', { class: 'ly-tiles' }, tiles),
-      el('div', { class: 'ly-h' }, 'Weather'), el('div', { class: 'ly-rows' }, rows), lg);
+      el('div', { class: 'ly-h' }, 'Weather'), el('div', { class: 'ly-rows' }, rows), groups, lg);
     const open = v => { pop.hidden = !v; lyBtn.setAttribute('aria-expanded', String(v)); lyBtn.classList.toggle('on', v); };
     lyBtn.addEventListener('click', () => open(pop.hidden));
     document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && !lyBtn.contains(e.target)) open(false); });
@@ -560,8 +585,8 @@
   const RP = (() => {
     const HZ = { TURB: { t: 'Turb', col: '#F97316', sig: '#DC2626' }, ICE: { t: 'Icing', col: '#0EA5E9' }, CONV: { t: 'Convective', col: '#DC2626' },
       IFR: { t: 'IFR', col: '#A855F7' }, MTN: { t: 'Mtn obsc', col: '#A16207' }, LLWS: { t: 'LLWS', col: '#DB2777' }, ASH: { t: 'Volcanic ash', col: '#7C3AED' }, TC: { t: 'Tropical cyclone', col: '#7C3AED' } };
-    const grp = h => h === 'TURB' ? 'turb' : h === 'ICE' ? 'ice' : (h === 'IFR' || h === 'MTN' || h === 'LLWS') ? 'ifr' : 'conv';
     const SURF = { IFR: 1, MTN: 1, LLWS: 1 };
+    const HZ_KEYS = ['sTurb', 'sIce', 'sConv', 'aTurb', 'aIce', 'aIfr', 'spc', 'pirep'];
     const PIREP_NM = 50;   // 루트 양옆 이 거리 안의 PIREP만 보여 줌
     const SPC = { TSTM: ['#55BB55', '#C1E9C1'], MRGL: ['#005500', '#66A366'], SLGT: ['#DDAA00', '#FFE066'], ENH: ['#FF6600', '#FFA366'], MDT: ['#CC0000', '#E06666'], HIGH: ['#CC00CC', '#EE99EE'] };
     const LV = [1000, 850, 700, 600, 500, 400, 300, 250, 200, 150];
@@ -696,7 +721,7 @@
     }
     function clear() {
       seq++; st = null; if (box) box.hidden = true;
-      ['turb', 'ice', 'conv', 'ifr', 'spc', 'pirep'].forEach(k => layers[k].clearLayers()); if (cur) cur.remove();
+      HZ_KEYS.forEach(k => layers[k].clearLayers()); if (cur) cur.remove();
     }
     // SPC 1일차는 다음 12Z까지 → 출발이 그 뒤면 2일차
     const spcDay = etd => { const d = new Date(); d.setUTCHours(12, 0, 0, 0); let n = d.getTime(); if (n <= Date.now()) n += 86400e3; return etd < n ? 1 : 2; };
@@ -704,7 +729,7 @@
       const my = ++seq, o = opts(), smp = sample(ctx.gc, o);
       st = Object.assign({}, ctx, smp, { o, P: prof(o, smp.tot), wx: null, om: false, omErr: '', sel: -1 });
       box.hidden = false; cur.remove();
-      ['turb', 'ice', 'conv', 'ifr', 'spc', 'pirep'].forEach(k => layers[k].clearLayers());
+      HZ_KEYS.forEach(k => layers[k].clearLayers());
       ui.apt.replaceChildren(el('p', { class: 'muted' }, '불러오는 중…'));
       drawSum(); drawXS(); ui.info.textContent = '단면도를 누르면 그 지점의 바람·기온·결빙 고도·위험 구역이 보여요.';
       call('getRoutePlan', key, ctx.box, { a: ctx.a, b: ctx.b, day: spcDay(o.etd) }).then(wx => {
@@ -723,7 +748,7 @@
     // ---- 지도 위 ----
     function drawMap() {
       const wx = st.wx, mid = st.gc.pts[Math.floor(st.gc.pts.length / 2)][1];
-      ['turb', 'ice', 'conv', 'ifr', 'spc', 'pirep'].forEach(k => layers[k].clearLayers());
+      HZ_KEYS.forEach(k => layers[k].clearLayers());
       (wx.spc && wx.spc.f || []).forEach(z => { const c = SPC[z.l] || SPC.TSTM;
         L.polygon(z.c.map(p => [p[0], near(p[1], mid)]), { color: c[0], weight: 1, fillColor: c[1], fillOpacity: .28, interactive: true })
           .bindPopup('<b>SPC Day ' + wx.spc.d + ' · ' + esc(z.l) + '</b><br>Convective outlook').addTo(layers.spc); });
@@ -731,7 +756,7 @@
         const H = HZ[z.h] || HZ.CONV, sig = z.k === 'SIGMET', col = z.h === 'TURB' && sig ? HZ.TURB.sig : H.col;
         L.polygon(z.c.map(p => [p[0], near(p[1], mid)]), { color: col, weight: sig ? 2 : 1.5, fillColor: col, fillOpacity: sig ? .16 : .09, dashArray: z.k === 'SIGMET' ? null : z.k === 'OUTLOOK' ? '2 6' : '5 4' })
           .bindPopup('<b>' + esc(z.k) + ' · ' + esc(H.t) + (z.sev ? ' · ' + esc(z.sev) : '') + '</b>' + (altTxt(z) ? '<br>' + altTxt(z) : '') + (z.to ? '<br>Until ' + zh(z.to) : '') + (z.fir ? '<br>' + esc(z.fir) : '') + '<br><small>' + esc(z.raw) + '</small>')
-          .addTo(layers[grp(z.h)]);
+          .addTo(layers[HZL(z)]);
       });
       const ago = t => { const m = Math.max(0, Math.round((Date.now() / 1000 - t) / 60)); return m < 60 ? m + ' min ago' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm ago'; };
       const ICN = L.divIcon({ className: 'ic-pirep', iconSize: [14, 14], iconAnchor: [7, 7], html: '<svg viewBox="0 0 14 14" width="14" height="14"><path d="M7 1.5 13 12.5H1z" fill="#0EA5E9" stroke="#fff" stroke-width="1.3"/></svg>' });
@@ -742,10 +767,11 @@
       });
     }
     // ---- 단면도에 쓸 값들 ----
-    function hazRuns() {   // 루트가 지나는 위험 구역: [{z, a, b}] (샘플 번호 구간)
+    function hazRuns(vis) {   // 루트가 지나는 위험 구역: [{z, a, b}] (샘플 번호 구간). vis = 레이어 메뉴에서 켜 둔 것만
       if (!st.wx) return [];
       const out = [];
       st.wx.areas.forEach(z => {
+        if (vis && !on[HZL(z)]) return;
         const ins = st.S.map(s => inPoly(s.lat, s.lonR, z.c));
         for (let k = 0; k < ins.length; k++) if (ins[k]) { let e = k; while (e + 1 < ins.length && ins[e + 1]) e++; out.push({ z, a: k, b: e }); k = e; }
       });
@@ -805,7 +831,7 @@
           g.push('<rect x="' + r1(x0) + '" y="' + r1(y0) + '" width="' + r1(x1 - x0 + .5) + '" height="' + r1(y1 - y0 + .5) + '" fill="#64748B" fill-opacity="' + (l.cc / 100 * .5).toFixed(2) + '"/>');
           if (l.cc >= 50 && l.t != null && l.t <= 0 && l.t >= -20) g.push('<rect x="' + r1(x0) + '" y="' + r1(y0) + '" width="' + r1(x1 - x0 + .5) + '" height="' + r1(y1 - y0 + .5) + '" fill="url(#icp)"/>'); });
       });
-      hazRuns().forEach(r => {   // 위험 구역 (고도 범위가 있으면 그 높이만)
+      hazRuns(true).forEach(r => {   // 위험 구역 (고도 범위가 있으면 그 높이만)
         const z = r.z, Hh = HZ[z.h] || HZ.CONV, col = z.h === 'TURB' && z.k === 'SIGMET' ? HZ.TURB.sig : Hh.col;
         const x0 = cx(r.a)[0], x1 = cx(r.b)[1];
         if (SURF[z.h]) { g.push('<rect x="' + r1(x0) + '" y="' + r1(Y(0) - 5) + '" width="' + r1(x1 - x0) + '" height="5" fill="' + col + '" fill-opacity=".75"><title>' + esc(z.k + ' ' + Hh.t) + '</title></rect>'); return; }
@@ -820,7 +846,7 @@
       }
       // 내 비행 (상승·순항·강하)
       g.push('<polyline points="' + [[0, 0], [st.P.c, o.fl * 100], [tot - st.P.dsc, o.fl * 100], [tot, 0]].map(p => r1(X(p[0])) + ',' + r1(Y(p[1]))).join(' ') + '" fill="none" stroke="#0B1220" stroke-width="2" stroke-linejoin="round"/>');
-      if (st.wx) st.wx.pireps.forEach(p => {   // 루트 50 nm 안 PIREP
+      if (st.wx && on.pirep) st.wx.pireps.forEach(p => {   // 루트 50 nm 안 PIREP
         if (!(p[2] > 0)) return; const a = along(st, [p[0], p[1]]); if (a.off > PIREP_NM) return;
         const x = r1(X(a.d)), y = r1(Y(p[2] * 100)), tt = '<title>PIREP FL' + p[2] + ' ' + [p[3] >= 0 ? TURB[p[3]] + ' turb' : '', p[4] >= 1 ? TURB[p[4]] + ' ice' : ''].filter(Boolean).join(', ') + '</title>';
         if (p[3] >= 1) g.push('<circle cx="' + x + '" cy="' + y + '" r="' + (p[3] >= 3 ? 4.5 : 3.5) + '" fill="' + TCOL[p[3]] + '" stroke="#fff" stroke-width="1">' + tt + '</circle>');
@@ -857,7 +883,7 @@
         if (s.fz != null) a2.push('0°C ' + fmtN(Math.round(s.fz * 3.28084 / 100) * 100) + ' ft');
         if (s.cape != null) a2.push('CAPE ' + fmtN(s.cape));
         if (s.L) { const cl = s.L.map((l, j) => l.cc >= 50 ? j : -1).filter(j => j >= 0); if (cl.length) a2.push('Cloud ' + (cl[0] === 0 ? 'SFC' : 'FL' + z2(Math.round(LVF[cl[0]] / 1000)) + '0') + '–FL' + z2(Math.round(LVF[cl[cl.length - 1]] / 1000)) + '0'); }
-        hazRuns().filter(r => r.a <= k && k <= r.b).forEach(r => a2.push((HZ[r.z.h] || {}).t + ' ' + r.z.k + (altTxt(r.z) ? ' ' + altTxt(r.z) : '')));
+        hazRuns(true).filter(r => r.a <= k && k <= r.b).forEach(r => a2.push((HZ[r.z.h] || {}).t + ' ' + r.z.k + (altTxt(r.z) ? ' ' + altTxt(r.z) : '')));
         ui.info.replaceChildren(...a1, el('br'), a2.join(' · ') || '—');
       }
     }
@@ -885,9 +911,9 @@
       };
       ui.apt.replaceChildren(...[one(wx.a, st.o.etd, 'DEP'), one(wx.b, st.eta || st.o.etd, 'ARR')].filter(Boolean));
     }
-    return { addInputs, build, run, clear };
+    return { addInputs, build, run, clear, redraw: () => { if (st) drawXS(); } };
   })();
-  if (BETA) { RP.addInputs(); RP.build(); }
+  if (BETA) { RP.addInputs(); RP.build(); layerSync.push(() => RP.redraw()); }
 
   async function show(f, a, b, rt) {
     if (!key) return showLogin();
