@@ -1680,10 +1680,10 @@
   }
   // Route Weather(route.html)를 앱 안에서 전체 화면으로 (오른쪽 위 ✕로 닫기). 같은 사이트라 입장 정보도 그대로 씀
   // (좌석 조회 안의 구간 날씨 openRoute와 다른 것)
-  function openRouteFull() {
+  function openRouteFull(fromTo) {
     if (document.getElementById('route-ov')) return;
     const ov = el('div', { id: 'route-ov', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Route Weather' });
-    const fr = el('iframe', { src: 'route.html', title: 'Route Weather', allow: 'geolocation' });   // 📍 내 위치를 쓰려면 위치 권한을 넘겨줘야 함
+    const fr = el('iframe', { src: 'route.html' + (fromTo ? '#' + encodeURIComponent(fromTo) : ''), title: 'Route Weather', allow: 'geolocation' });   // 📍 내 위치를 쓰려면 위치 권한을 넘겨줘야 함
     const x = el('button', { class: 'route-x', type: 'button', 'aria-label': '닫기' }, '✕');
     // 닫으면 열기 전 화면·스크롤 위치로 그대로 (아이폰은 뒤 화면 스크롤을 막을 때 맨 위로 튀는 일이 있어서 위치를 기억했다가 되돌림)
     const y = window.scrollY, hash = location.hash;
@@ -2098,9 +2098,8 @@
     search.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
     const m = me();
     const whoBar = m.type === 'personal'
-      ? el('div', { class: 'who-bar' }, el('span', {}, el('b', {}, m.name), ' 님 · 실명으로 입장 중'), vf(true),
-          // 익명 상담소: 실명으로 입장해 있어도 글·댓글은 익명으로 올라간다고 한 번 더 알려줌
-          state.board === ANON ? el('span', { class: 'who-anon' }, '🕶️ 이 게시판의 글·댓글은 익명으로 올라가요') : null)
+      // 개인 코드로 입장하면 이름 줄은 안 보여줌. 익명 상담소에서만 "익명으로 올라가요" 안내
+      ? (state.board === ANON ? el('div', { class: 'who-bar' }, el('span', { class: 'who-anon' }, '🕶️ 이 게시판의 글·댓글은 익명으로 올라가요')) : null)
       : el('div', { class: 'who-bar' }, el('span', {}, '회원 비밀번호로 입장 중 · ',
           m.canWrite ? '개인 입장 코드로 입장하면 실명(✓)으로 글을 써요.' : '글쓰기는 개인 입장 코드로 입장해야 해요.'),
           el('button', { class: 'ghost small', onclick: () => { setMemberKey(''); clearFeed(); showLogin(); } }, '개인 코드로 입장'));
@@ -2227,13 +2226,14 @@
 
   let onReplyCmt = null;   // 답글 버튼을 누르면 부르는 함수 (댓글 쓰기 칸이 있을 때만 drawPost가 넣어 줌)
   function commentList(p) {
+    const W = p.board === LOADS ? '답변' : '댓글';   // 좌석 조회 글은 '댓글' 대신 '답변'
     // 답글은 원래 댓글 바로 아래에 들여서 (한 단계만). 원래 댓글이 지워졌으면 그냥 댓글처럼 보여줌
     const ids = new Set(p.comments.map(c => c.id));
     const kids = {};
     p.comments.forEach(c => { if (c.parentId && ids.has(c.parentId)) (kids[c.parentId] = kids[c.parentId] || []).push(c); });
     const tops = p.comments.filter(c => !(c.parentId && ids.has(c.parentId)));
     const one = (c, isReply) => el('div', { class: 'comment' + (isReply ? ' reply' : '') },
-        el('div', { class: 'meta' }, isReply ? el('span', { class: 'reply-mark', 'aria-hidden': 'true' }, '↳ ') : null, c.author, vf(c.verified), ` · ${fmt(c.createdAt)}`, c.mine ? ' · 내 댓글' : ''),
+        el('div', { class: 'meta' }, isReply ? el('span', { class: 'reply-mark', 'aria-hidden': 'true' }, '↳ ') : null, c.author, vf(c.verified), ` · ${fmt(c.createdAt)}`, c.mine ? ' · 내 ' + W : ''),
         c.loads ? el('div', { class: 'ld-ans' }, [['avail', 'Available'], ['sb', 'Standby'], ['js', 'Jumpseat']].filter(([k]) => c.loads[k] !== undefined)
           .map(([k, t]) => el('span', { class: 'ld-ans-i ' + k }, el('small', {}, t), el('b', {}, String(c.loads[k]))))) : null,
         c.body ? el('div', { class: 'body' }, c.body) : null,
@@ -2242,7 +2242,7 @@
           onReplyCmt && c.id !== 'tmp' ? el('button', { class: 'c-reply', type: 'button', onclick: () => onReplyCmt(c) }, '답글') : null,   // 답글에도 답글 가능 (화면에는 같은 줄기 아래로 모임)
           c.id === 'tmp' || !c.mine ? null : deleteControl('삭제', 'deleteComment', c.id, () => showPost(p.id), c.mine)));
     return el('div', { id: 'c-list' },
-      el('h4', {}, `댓글 ${p.comments.length}`),
+      el('h4', {}, `${W} ${p.comments.length}`),
       tops.flatMap(c => [one(c, false)].concat((kids[c.id] || []).map(k => one(k, true)))));
   }
   function replaceComments(p) {
@@ -2265,17 +2265,18 @@
     const m = me(), anon = p.board === ANON, fixedName = anon || m.type === 'personal';
     const cName = el('input', { id: 'c-name', placeholder: '이름', maxlength: '30', 'aria-label': '이름' }); cName.value = store.get('pc_name');
     const cPw = el('input', { id: 'c-pw', type: 'password', placeholder: '비밀번호 (삭제용, 선택)', 'aria-label': '비밀번호' });
-    const cBody = el('textarea', { id: 'c-body', placeholder: '댓글을 입력하세요', maxlength: '2000', 'aria-label': '댓글' }); cBody.style.minHeight = '80px';
+    const CW = p.board === LOADS ? '답변' : '댓글';   // 좌석 조회 글은 '답변'
+    const cBody = el('textarea', { id: 'c-body', placeholder: CW + '을 입력하세요', maxlength: '2000', 'aria-label': CW }); cBody.style.minHeight = '80px';
     const cMsg = el('p', { class: 'msg' });
-    const cBtn = el('button', { class: 'primary' }, '댓글 등록');
+    const cBtn = el('button', { class: 'primary' }, CW + ' 등록');
     // 답글 대상 표시: "↳ 송동영님에게 답글 · 취소"
     let replyTo = null;
     const replyBar = el('div', { class: 'reply-bar', hidden: '' });
     const setReply = c => {
       replyTo = c || null;
       replyBar.hidden = !replyTo;
-      cBtn.textContent = replyTo ? '답글 등록' : '댓글 등록';
-      cBody.placeholder = replyTo ? replyTo.author + '님에게 답글을 입력하세요' : '댓글을 입력하세요';
+      cBtn.textContent = replyTo ? '답글 등록' : CW + ' 등록';
+      cBody.placeholder = replyTo ? replyTo.author + '님에게 답글을 입력하세요' : CW + '을 입력하세요';
       if (replyTo) {
         replyBar.replaceChildren(el('span', {}, '↳ ', el('b', {}, replyTo.author), '님에게 답글'),
           el('button', { class: 'c-reply', type: 'button', onclick: () => setReply(null) }, '취소'));
@@ -2338,7 +2339,9 @@
         p.board === LOADS && p.meta ? el('div', { class: 'ld-top ld-head' }, kindTag(p.meta), loadChip(p)) : null,
         p.board === LOADS && p.meta ? el('h2', { class: 'ld-h2' }, (p.meta.air || '') + (p.meta.flt || ''), el('span', { class: 'ld-day' }, loadDate(p.meta))) : el('h2', {}, p.title),
         p.board === LOADS && p.meta ? el('div', { class: 'ld-route ld-route-big' }, (p.meta.from || '') + ' → ' + (p.meta.to || ''),
-          el('a', { class: 'ld-rtw', href: '#route/' + (p.meta.air || '') + (p.meta.flt || '') + '_' + (p.meta.from || '') + '_' + (p.meta.to || '') }, '🗺 Route weather')) : null,
+          // Route Weather 페이지(route.html)와 똑같은 지도를 전체 화면으로 (출발·도착 채워서)
+          el('a', { class: 'ld-rtw', href: 'route.html#' + (p.meta.from || '') + '_' + (p.meta.to || ''),
+            onclick: e => { e.preventDefault(); openRouteFull((p.meta.from || '') + '_' + (p.meta.to || '')); } }, '🗺 Route weather')) : null,
         el('div', { class: 'meta' }, p.author, vf(p.verified), ` · ${fmt(p.createdAt)}`, p.editedAt ? ' · 수정됨' : '', p.mine ? ' · 내 글' : ''),
         p.body ? el('div', { class: 'body' }, p.body) : null,
         renderAttachments(p),
@@ -2353,8 +2356,8 @@
           deleteControl('삭제', 'deletePost', p.id, showList, p.mine)) : null,
         el('div', { class: 'comments' },
           commentList(p),
-          !m.canWrite ? needCode('댓글 달기')
-            : el('div', { class: 'form' }, asWho(p.board, '댓글이'),
+          !m.canWrite ? needCode(CW + ' 달기')
+            : el('div', { class: 'form' }, asWho(p.board, CW + '이'),
                 fixedName ? (anon ? el('div', { class: 'row' }, cPw) : null) : el('div', { class: 'row' }, cName, cPw),
                 replyBar, cBody, cBtn, cMsg))));
   }
