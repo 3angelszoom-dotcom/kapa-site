@@ -1851,20 +1851,8 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden && tzTimer) tzDraw(); });   // 앱으로 돌아오면 바로 맞춤
   { const sc = () => document.body.classList.toggle('scrolled', window.scrollY > 8); window.addEventListener('scroll', sc, { passive: true }); sc(); }
   // ===== 홈 화면 앱으로 연 사람만: 오른쪽 아래 새로고침 버튼 (앱에는 브라우저 새로고침이 없어서) =====
-  // 누를 때 짧은 진동: 안드로이드는 vibrate, 아이폰(iOS 18+)은 숨긴 스위치를 눌러 '톡' 햅틱
-  function haptic(ms) {
-    try { if (navigator.vibrate && navigator.vibrate(ms || 15)) return; } catch (_) {}
-    try {
-      let l = document.getElementById('hap-l');
-      if (!l) {
-        l = document.createElement('label'); l.id = 'hap-l';
-        l.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
-        const i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); i.tabIndex = -1;
-        l.append(i); document.body.append(l);
-      }
-      l.click();
-    } catch (_) {}
-  }
+  // 누를 때 진동 (안드로이드만. 아이폰은 웹에서 진동을 막아 둬서 안 됨)
+  function haptic(ms) { try { navigator.vibrate && navigator.vibrate(ms || 15); } catch (_) {} }
   // 버튼·링크를 누르면 1초 진동 (새로고침 버튼은 따로 2초)
   document.addEventListener('click', e => {
     const t = e.target.closest && e.target.closest('a[href], button, [role="button"]');

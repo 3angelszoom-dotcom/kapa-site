@@ -316,20 +316,8 @@
   const MeCtl = L.Control.extend({ options: { position: 'topleft' }, onAdd: () => { const d = L.DomUtil.create('div', 'me-ctl'); d.append(meBtn); L.DomEvent.disableClickPropagation(d); return d; } });
   map.addControl(new MeCtl());
   // 새로고침: 오른쪽 아래 반투명 버튼 — 레이더 새 이미지 + 보던 루트가 있으면 터뷸런스·PIREP 다시 받기
-  // 누를 때 짧은 진동: 안드로이드는 vibrate, 아이폰(iOS 18+)은 숨긴 스위치를 눌러 '톡' 햅틱
-  function haptic(ms) {
-    try { if (navigator.vibrate && navigator.vibrate(ms || 15)) return; } catch (_) {}
-    try {
-      let l = document.getElementById('hap-l');
-      if (!l) {
-        l = document.createElement('label'); l.id = 'hap-l';
-        l.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
-        const i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); i.tabIndex = -1;
-        l.append(i); document.body.append(l);
-      }
-      l.click();
-    } catch (_) {}
-  }
+  // 누를 때 진동 (안드로이드만. 아이폰은 웹에서 진동을 막아 둬서 안 됨)
+  function haptic(ms) { try { navigator.vibrate && navigator.vibrate(ms || 15); } catch (_) {} }
   const rfBtn = el('button', { type: 'button', class: 'me-loc rf', title: '새로고침', 'aria-label': '새로고침' });
   rfBtn.innerHTML = '<svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   rfBtn.addEventListener('click', () => {
