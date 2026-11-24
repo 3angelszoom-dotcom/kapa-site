@@ -667,10 +667,10 @@
       const lg = (c, t, pat) => el('span', {}, el('i', { style: pat ? 'background:repeating-linear-gradient(45deg,' + c + ' 0 2px,transparent 2px 5px);border:1px solid ' + c : 'background:' + c }), t);
       ui.apt = el('div', { class: 'apt' });
       box = el('div', { id: 'rp', hidden: '' },
-        card('Route', ui.when, ui.sum),
         card('Vertical profile', el('small', {}, 'tap to inspect'), ui.xs, ui.info,
           el('div', { class: 'xs-leg' }, lg('rgba(100,116,139,.45)', 'Cloud'), lg('#0EA5E9', 'Icing possible', 1), el('span', {}, el('i', { style: 'height:0;border-top:2px dashed #2563EB;border-radius:0' }), '0°C'),
             lg('rgba(249,115,22,.35)', 'SIGMET/AIRMET'), el('span', {}, el('i', { style: 'height:0;border-top:2px solid #0B1220;border-radius:0' }), 'Your flight'))),
+        card('Route', ui.when, ui.sum),
         card('Airports', el('small', {}, 'METAR · TAF'), ui.apt));
       document.querySelector('.panel').prepend(box);
       cur = L.circleMarker([0, 0], { radius: 7, color: '#0B1220', weight: 2, fillColor: '#FACC15', fillOpacity: 1, interactive: false });
