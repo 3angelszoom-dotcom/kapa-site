@@ -643,6 +643,8 @@
   .me-card .me-av { width: 44px; height: 44px; font-size: 18px; flex: none; }
   .me-card p { margin: 0; color: var(--muted); font-size: 14px; }
   .me-card .me-edit { margin-left: auto; flex: none; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 12px; font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1; color: var(--text); cursor: pointer; }
+  .mi-newjob.off { color: #A8B0BC; }
+  .mi-newjob.off input { opacity: .55; background: #F1F3F6; cursor: not-allowed; }
   .mi-form { display: grid; gap: 14px; }
   .mi-job { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); }
   .mi-moved { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; white-space: nowrap; }
@@ -1703,9 +1705,15 @@
         const inp = (val, o) => el('input', Object.assign({ value: val || '' }, o || {}));
         const moved = el('input', { type: 'checkbox' });
         const job = inp('', { placeholder: '새 직장 이름 (예: ABC Airlines)', autocomplete: 'organization' });
-        const jobRow = el('label', { class: 'field', hidden: '' }, '새 직장', job,
-          el('small', { class: 'mi-note' }, '🎉 저장하면 자유게시판에 "' + v.ko + '님이 새 직장으로 이직하셨습니다. 축하합니다!" 글이 자동으로 올라가요. 회원들이 댓글로 축하할 수 있어요.'));
-        moved.addEventListener('change', () => { jobRow.hidden = !moved.checked; if (moved.checked) job.focus(); });
+        // 새 직장 칸은 늘 보이되, "이직했어요"를 체크해야 쓸 수 있음 (그 전엔 흐리게 잠김). 축하 글 안내도 체크했을 때만
+        job.disabled = true;
+        const jobRow = el('label', { class: 'field mi-newjob off' }, '새 직장', job,
+          el('small', { class: 'mi-note', style: 'display:none' }, '🎉 저장하면 자유게시판에 "' + v.ko + '님이 새 직장으로 이직하셨습니다. 축하합니다!" 글이 자동으로 올라가요. 회원들이 댓글로 축하할 수 있어요.'));
+        moved.addEventListener('change', () => {
+          job.disabled = !moved.checked; jobRow.classList.toggle('off', !moved.checked);
+          const note = jobRow.querySelector('.mi-note'); if (note) note.style.display = moved.checked ? '' : 'none';
+          if (moved.checked) job.focus(); else job.value = '';
+        });
         const base = inp(v.base, { maxlength: 5, autocapitalize: 'characters', placeholder: 'SFO' });
         base.addEventListener('input', () => { base.value = base.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
         const phone = inp(v.phone, { type: 'tel', autocomplete: 'tel' }), email = inp(v.email, { type: 'email', autocomplete: 'email' });
