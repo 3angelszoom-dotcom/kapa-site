@@ -242,6 +242,7 @@
   // 지도·레이더 출처: 지도 위를 가리지 않게 지도 바로 아래 작은 글씨로 (켜진 레이어에 맞춰 바뀜)
   const credUpd = () => { const c = $('credits'); if (!c) return;
     const a = []; map.eachLayer(l => { const t = l.getAttribution && l.getAttribution(); if (t && a.indexOf(t) < 0) a.push(t); });
+    if (BETA) a.push('Forecast &copy; Open-Meteo (CC BY 4.0)', 'NOAA AWC · SPC');
     c.innerHTML = a.join(' · '); };
   map.on('layeradd layerremove', () => setTimeout(credUpd, 0));   // "Leaflet" 글자는 빼고, 지도·레이더 출처만 작게
   // 바탕 지도: Esri 연회색 (키 없이 사용) → 안 되면 OpenStreetMap으로
@@ -600,8 +601,7 @@
         card('Route', ui.when, ui.sum),
         card('Vertical profile', el('small', {}, 'tap to inspect'), ui.xs, ui.info,
           el('div', { class: 'xs-leg' }, lg('rgba(100,116,139,.45)', 'Cloud'), lg('#0EA5E9', 'Icing possible', 1), el('span', {}, el('i', { style: 'height:0;border-top:2px dashed #2563EB;border-radius:0' }), '0°C'),
-            lg('rgba(249,115,22,.35)', 'SIGMET/AIRMET'), el('span', {}, el('i', { style: 'height:0;border-top:2px solid #0B1220;border-radius:0' }), 'Your flight')),
-          el('p', { class: 'xs-note' }, 'Model forecast (Open-Meteo, CC BY 4.0) at the time you pass each point. Icing = cloud with −20…0 °C. Hazards: NOAA AWC · SPC. 참고용 — 공식 브리핑을 대신하지 않아요.')),
+            lg('rgba(249,115,22,.35)', 'SIGMET/AIRMET'), el('span', {}, el('i', { style: 'height:0;border-top:2px solid #0B1220;border-radius:0' }), 'Your flight'))),
         card('Airports', el('small', {}, 'METAR · TAF'), ui.apt));
       document.querySelector('.panel').prepend(box);
       cur = L.circleMarker([0, 0], { radius: 7, color: '#0B1220', weight: 2, fillColor: '#FACC15', fillOpacity: 1, interactive: false });
