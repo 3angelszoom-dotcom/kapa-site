@@ -129,6 +129,13 @@
   .taf-src { margin-top: 4px; }
   .taf-src summary { font: 700 11px/1.4 var(--f); color: var(--muted); cursor: pointer; }
   .ic-pirep { width: 14px; height: 14px; }
+  /* 지금 Zulu 시각 (테스트 화면): 제목 옆 초록 알약, 점이 깜빡임 */
+  .zclk { display: inline-flex; align-items: center; gap: 5px; margin-left: 8px; padding: 4px 8px; border-radius: 999px; vertical-align: 2px;
+    background: rgba(16,185,129,.16); border: 1px solid rgba(110,231,183,.4); color: #6EE7B7; font: 800 12px/1 var(--f); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+  .zclk::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34D399; animation: zclk-b 2s ease-in-out infinite; }
+  .zclk[hidden] { display: none; }
+  @keyframes zclk-b { 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) { .zclk::before { animation: none; } }
   /* 테스트 화면: 레이어 메뉴 (위 버튼 줄 대신) */
   html.beta .bar, html.beta .bm { display: none; }
   .ly-ctl { position: relative; margin: 10px 10px 0 0 !important; }
@@ -160,7 +167,7 @@
 </head>
 <body>
 <header>
-  <div class="top"><div class="brand">🗺 Route Weather<small>KAPA</small></div><div class="who" id="who"></div></div>
+  <div class="top"><div class="brand">🗺 Route Weather<small>KAPA</small><span class="zclk" id="zclk" hidden></span></div><div class="who" id="who"></div></div>
   <form id="f" autocomplete="off">
     <input id="from" placeholder="From" maxlength="4" autocapitalize="characters" aria-label="출발 공항">
     <span class="arrow" aria-hidden="true">→</span>
@@ -188,6 +195,12 @@
   // 새 기능 미리 보기: 테스트 앱에서 열면 주소에 ?beta=1 (라이브 회원 화면은 그대로)
   const BETA = /[?&]beta=1(&|$)/.test(location.search);
   if (BETA) document.documentElement.classList.add('beta');
+  if (BETA) (function tick() {   // 제목 옆 지금 Zulu 시각 (DDHHMMZ, 20초마다)
+    const z = document.getElementById('zclk'); if (!z) return;
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    z.hidden = false; z.textContent = p(d.getUTCDate()) + p(d.getUTCHours()) + p(d.getUTCMinutes()) + 'Z';
+    setTimeout(tick, 20000 - d.getTime() % 20000 + 50);
+  })();
   const $ = id => document.getElementById(id);
   const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function el(tag, attrs, ...kids) {
