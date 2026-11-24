@@ -1413,7 +1413,19 @@
         '<b style="color:' + col + '">' + s(r.total) + '</b><span>' + s(r.g) + '</span><span>' + s(r.ms) + '</span><span>' + (r.err ? esc(r.err.slice(0, 18)) : s(rest)) + '</span></div>';
     }).join('');
   }
+  // 같은 읽기 요청이 동시에 여러 번 나가면 하나만 보내고 결과를 같이 씀 (요청 수를 줄여서 멈춤도 줄임)
+  const inflight = new Map();
   function rawCall(fn, ...args) {
+    if (!GAS && /^(get[A-Z]|listPosts$|admin(Dashboard|Get[A-Z]\w*|List\w+|Members|Presence)$)/.test(fn)) {
+      const k = fn + '|' + JSON.stringify(args);
+      if (inflight.has(k)) return inflight.get(k);
+      const pr = rawCall1(fn, ...args); inflight.set(k, pr);
+      const done = () => inflight.delete(k); pr.then(done, done);
+      return pr;
+    }
+    return rawCall1(fn, ...args);
+  }
+  function rawCall1(fn, ...args) {
     if (GAS) return new Promise((resolve, reject) =>
       google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn](...args));
     // 내 도메인: Apps Script 데이터 창구로 POST (text/plain이라 추가 확인 요청 없이 바로 감, 구글 로그인과 무관)
@@ -1421,7 +1433,7 @@
     // 읽기 요청(get·list·check)은 연결 문제일 때 한 번 더 자동으로 시도 (쓰기 요청은 두 번 올라갈 수 있어서 자동 재시도 안 함)
     // 읽기 요청: 평소 2~4초면 끝나는데, 구글 입구에서 가끔 요청이 통째로 멈춤(서버 실행은 1초 안팎) →
     // 8초(날씨·경로는 12초) 넘게 답이 없으면 버리고 바로 다시 보냄, 최대 3번. 쓰기 요청은 두 번 올라갈 수 있어서 25초 한 번만
-    const READ = /^(get[A-Z]|listPosts$|checkMember$|ping$|admin(Dashboard|GetAdminMembers|GetAnonViewers|GetPost|GetSettings|ListApplicants|ListPosts|Login|Members|Presence)$)/.test(fn);
+    const READ = /^(get[A-Z]|listPosts$|checkMember$|ping$|admin(Dashboard|GetAdminMembers|GetAnonViewers|GetPost|GetSettings|GetApplicantsSheet|ListApplicants|ListPosts|Login|Members|Presence)$)/.test(fn);
     const LIMIT = !READ ? 25000 : /^get(Route|RouteWx|Briefing)$/.test(fn) ? 12000 : 8000;
     const once = () => {
       const ac = typeof AbortController === 'function' ? new AbortController() : null;
@@ -2594,7 +2606,10 @@
     const pendBadges = new Set();
     const showPending = () => pendBadges.forEach(b => { if (!b.isConnected) { pendBadges.delete(b); return; } b.hidden = !pendingN; b.textContent = pendingN; });
     const pendBadge = () => { const b = el('span', { class: 'a-badge', 'aria-label': '대기 신청 개수' }); b.hidden = !pendingN; b.textContent = pendingN; pendBadges.add(b); return b; };
-    async function refreshPending() {
+    let pendingAt = 0;
+    async function refreshPending(force) {
+      if (!force && Date.now() - pendingAt < 30000) return;   // 탭을 옮길 때마다 부르지 않게 30초에 한 번만 (승인·거절 뒤에는 바로)
+      pendingAt = Date.now();
       try { const r = await api('adminListApplicants', '대기'); pendingN = (r || []).length; } catch (_) { return; }
       showPending();
     }
@@ -2873,7 +2888,7 @@
         el('p', { class: 'a-muted' }, 'About Us의 인적사항 양식에서 들어온 신청이에요. 승인하면 개인 입장 코드가 만들어져요. 신청자가 그 코드로 사이트에 입장하면 카톡방 참여 버튼(승인할 때 고른 방)이 보여요.'),
         sheetBar(), el('div', { class: 'a-filters' }, seg), list);
       let rows; try { rows = await api('adminListApplicants', af.status); } catch (e) { return fail(e, list); }
-      if (af.status === '대기') { pendingN = rows.length; showPending(); } else refreshPending();
+      if (af.status === '대기') { pendingN = rows.length; pendingAt = Date.now(); showPending(); } else refreshPending();
       if (!rows.length) { list.replaceChildren(el('p', { class: 'a-muted' }, '해당하는 신청이 없어요.')); return; }
       list.replaceChildren(...rows.map(appCard));
     }
@@ -2940,7 +2955,7 @@
           if (a.status !== '승인') a.redeemCount = 0;
           Object.assign(a, r, { status: '승인', siteOn: true });
           appFlash[a.id] = ['a-ok', a.email + ' 주소로 개인 입장 코드를 보냈어요.'];
-          box.replaceWith(appCard(a)); refreshPending();
+          box.replaceWith(appCard(a)); refreshPending(true);
         } catch (e) {
           if (e.message === '__auth') return;
           appFlash[a.id] = ['a-err', e.message];
@@ -2949,11 +2964,11 @@
       }
       async function approve() {
         msg.className = 'a-ok'; msg.textContent = '코드 만드는 중…';
-        try { const r = await api('adminApprove', a.id, roomSel.value); Object.assign(a, r, { status: '승인', redeemCount: 0, siteOn: true }); box.replaceWith(appCard(a)); refreshPending(); }
+        try { const r = await api('adminApprove', a.id, roomSel.value); Object.assign(a, r, { status: '승인', redeemCount: 0, siteOn: true }); box.replaceWith(appCard(a)); refreshPending(true); }
         catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
       }
       async function setStatus(st) {
-        try { await api('adminSetApplicantStatus', a.id, st); a.status = st; a.code = ''; a.siteOn = false; a.siteCode = ''; box.replaceWith(appCard(a)); refreshPending(); }
+        try { await api('adminSetApplicantStatus', a.id, st); a.status = st; a.code = ''; a.siteOn = false; a.siteCode = ''; box.replaceWith(appCard(a)); refreshPending(true); }
         catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
       }
       if (a.status === '승인' && a.code) {
