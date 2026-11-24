@@ -573,7 +573,20 @@
     const fmtN = n => Math.round(n).toLocaleString('en-US');
     const hm = h => { const m = Math.round(h * 60); return Math.floor(m / 60) + ':' + z2(m % 60); };
     const ftOf = v => v > 0 && v < 700 ? v * 100 : v;   // FL240 → 24,000 ft
-    const altTxt = z => { const lo = ftOf(z.lo), hi = ftOf(z.hi); if (!lo && !hi) return ''; const f = v => v ? 'FL' + z2(Math.round(v / 100)).padStart(3, '0') : 'SFC'; return f(lo) + '–' + (hi ? f(hi) : '?'); };
+    const altTxt = z => { const lo = ftOf(z.lo), hi = ftOf(z.hi); if (!lo && !hi) return ''; const f = v => 'FL' + String(Math.round(v / 100)).padStart(3, '0');
+      return !hi ? 'ABV ' + f(lo) : !lo ? 'SFC–' + f(hi) : f(lo) + '–' + f(hi); };
+    // 고도 숫자가 비어 오는 SIGMET이 있음 → 원문에서 읽기 (BLW 100 · BTN FL300 AND FL390 · FL250/400 · SFC/FL100 · TOPS TO FL450 · ABV FL300)
+    function altRaw(t) {
+      t = String(t || '').toUpperCase(); let m;
+      const ft = v => +v * 100;
+      if ((m = t.match(/\bBTN\s+(?:FL)?(\d{3})\s+AND\s+(?:FL)?(\d{3})/))) return [ft(m[1]), ft(m[2])];
+      if ((m = t.match(/\bFL(\d{3})\s*[\/-]\s*(?:FL)?(\d{3})\b/))) return [ft(m[1]), ft(m[2])];
+      if ((m = t.match(/\bSFC\s*[\/-]\s*(?:FL)?(\d{3})\b/))) return [0, ft(m[1])];
+      if ((m = t.match(/\bBLW\s+(?:FL)?(\d{3})\b/))) return [0, ft(m[1])];
+      if ((m = t.match(/\bTOPS?\s+(?:TO\s+|ABV\s+)?(?:FL)?(\d{3})\b/))) return [0, ft(m[1])];
+      if ((m = t.match(/\bABV\s+(?:FL)?(\d{3})\b/))) return [ft(m[1]), 0];
+      return null;
+    }
     const bearing = (a, b) => { const p1 = rad(a[0]), p2 = rad(b[0]), dl = rad(b[1] - a[1]); return (deg(Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl))) + 360) % 360; };
     function inPoly(lat, lon, c) {
       let ins = false;
@@ -695,7 +708,9 @@
       ui.apt.replaceChildren(el('p', { class: 'muted' }, '불러오는 중…'));
       drawSum(); drawXS(); ui.info.textContent = '단면도를 누르면 그 지점의 바람·기온·결빙 고도·위험 구역이 보여요.';
       call('getRoutePlan', key, ctx.box, { a: ctx.a, b: ctx.b, day: spcDay(o.etd) }).then(wx => {
-        if (my !== seq) return; st.wx = wx; drawMap(); drawXS(); drawSum(); drawApt();
+        if (my !== seq) return; st.wx = wx;
+        wx.areas.forEach(z => { if (!z.lo && !z.hi && !SURF[z.h]) { const a = altRaw(z.raw); if (a) { z.lo = a[0]; z.hi = a[1]; } } if (/^\d+$/.test(z.sev)) z.sev = ''; });
+        drawMap(); drawXS(); drawSum(); drawApt();
         if (wx.fail && wx.fail.length) msg(ctx.label + ' · 일부 자료를 못 받았어요 (' + wx.fail.join(', ') + ')', true);
       }).catch(e => {
         if (my !== seq || e.message === '__auth') return;
