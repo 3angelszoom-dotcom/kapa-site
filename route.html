@@ -557,6 +557,7 @@
       IFR: { t: 'IFR', col: '#A855F7' }, MTN: { t: 'Mtn obsc', col: '#A16207' }, LLWS: { t: 'LLWS', col: '#DB2777' }, ASH: { t: 'Volcanic ash', col: '#7C3AED' }, TC: { t: 'Tropical cyclone', col: '#7C3AED' } };
     const grp = h => h === 'TURB' ? 'turb' : h === 'ICE' ? 'ice' : (h === 'IFR' || h === 'MTN' || h === 'LLWS') ? 'ifr' : 'conv';
     const SURF = { IFR: 1, MTN: 1, LLWS: 1 };
+    const PIREP_NM = 50;   // 루트 양옆 이 거리 안의 PIREP만 보여 줌
     const SPC = { TSTM: ['#55BB55', '#C1E9C1'], MRGL: ['#005500', '#66A366'], SLGT: ['#DDAA00', '#FFE066'], ENH: ['#FF6600', '#FFA366'], MDT: ['#CC0000', '#E06666'], HIGH: ['#CC00CC', '#EE99EE'] };
     const LV = [1000, 850, 700, 600, 500, 400, 300, 250, 200, 150];
     const paFt = p => 145366.45 * (1 - Math.pow(p / 1013.25, 0.190284));   // 기압면 → 표준대기 기압고도 (FL과 같은 기준)
@@ -714,7 +715,7 @@
       });
       const ago = t => { const m = Math.max(0, Math.round((Date.now() / 1000 - t) / 60)); return m < 60 ? m + ' min ago' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm ago'; };
       const ICN = L.divIcon({ className: 'ic-pirep', iconSize: [14, 14], iconAnchor: [7, 7], html: '<svg viewBox="0 0 14 14" width="14" height="14"><path d="M7 1.5 13 12.5H1z" fill="#0EA5E9" stroke="#fff" stroke-width="1.3"/></svg>' });
-      wx.pireps.forEach(p => {
+      wx.pireps.filter(p => along(st, [p[0], p[1]]).off <= PIREP_NM).forEach(p => {   // 루트 50 nm 안만
         const ll = [p[0], near(p[1], mid)], pop = '<b>' + [p[3] >= 0 ? TURB[p[3]] + ' turb' : '', p[4] >= 1 ? TURB[p[4]] + ' icing' : ''].filter(Boolean).join(' · ') + '</b><br>FL' + String(p[2]).padStart(3, '0') + ' · ' + esc(p[5] || '?') + ' · ' + ago(p[6]) + '<br><small>' + esc(p[7]) + '</small>';
         if (p[3] >= 0) L.circleMarker(ll, { radius: p[3] >= 3 ? 7 : 5, color: '#fff', weight: 1, fillColor: TCOL[p[3]], fillOpacity: .95 }).bindPopup(pop).addTo(layers.pirep);
         if (p[4] >= 1) L.marker(ll, { icon: ICN }).bindPopup(pop).addTo(layers.pirep);
@@ -760,7 +761,7 @@
         const ks = Object.keys(cnt);
         if (!ks.length) chips.push(el('span', { class: 'h-ok' }, '✓ No SIGMET/AIRMET on route'));
         ks.forEach(k => chips.push(el('span', { class: 'h-' + cnt[k].h }, (HZ[cnt[k].h] || {}).t + (/SIGMET/.test(k) ? ' SIGMET' : '') + ' ×' + cnt[k].n)));
-        const pr = st.wx.pireps.filter(p => (p[3] >= 2 || p[4] >= 2) && along(st, [p[0], p[1]]).off <= 60).length;
+        const pr = st.wx.pireps.filter(p => (p[3] >= 2 || p[4] >= 2) && along(st, [p[0], p[1]]).off <= PIREP_NM).length;
         if (pr) chips.push(el('span', { class: 'h-TURB' }, 'MOD+ PIREP ×' + pr));
       }
       ui.sum.replaceChildren(...chips);
@@ -799,8 +800,8 @@
       }
       // 내 비행 (상승·순항·강하)
       g.push('<polyline points="' + [[0, 0], [st.P.c, o.fl * 100], [tot - st.P.dsc, o.fl * 100], [tot, 0]].map(p => r1(X(p[0])) + ',' + r1(Y(p[1]))).join(' ') + '" fill="none" stroke="#0B1220" stroke-width="2" stroke-linejoin="round"/>');
-      if (st.wx) st.wx.pireps.forEach(p => {   // 루트 60 nm 안 PIREP
-        if (!(p[2] > 0)) return; const a = along(st, [p[0], p[1]]); if (a.off > 60) return;
+      if (st.wx) st.wx.pireps.forEach(p => {   // 루트 50 nm 안 PIREP
+        if (!(p[2] > 0)) return; const a = along(st, [p[0], p[1]]); if (a.off > PIREP_NM) return;
         const x = r1(X(a.d)), y = r1(Y(p[2] * 100)), tt = '<title>PIREP FL' + p[2] + ' ' + [p[3] >= 0 ? TURB[p[3]] + ' turb' : '', p[4] >= 1 ? TURB[p[4]] + ' ice' : ''].filter(Boolean).join(', ') + '</title>';
         if (p[3] >= 1) g.push('<circle cx="' + x + '" cy="' + y + '" r="' + (p[3] >= 3 ? 4.5 : 3.5) + '" fill="' + TCOL[p[3]] + '" stroke="#fff" stroke-width="1">' + tt + '</circle>');
         if (p[4] >= 1) g.push('<path d="M' + x + ' ' + (y - 5) + 'l4.5 8h-9z" fill="#0EA5E9" stroke="#fff" stroke-width="1">' + tt + '</path>');
