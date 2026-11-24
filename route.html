@@ -136,6 +136,9 @@
   .zclk[hidden] { display: none; }
   @keyframes zclk-b { 50% { opacity: .25; } }
   @media (prefers-reduced-motion: reduce) { .zclk::before { animation: none; } }
+  /* 아이폰은 16px보다 작은 글씨 칸을 누르면 화면을 확대함 → 테스트 화면은 입력칸 글씨를 16px로 (앱 안에서 열려도 확대 안 되게) */
+  html.beta input, html.beta textarea { font-size: 16px !important; }
+  html.beta #rte { line-height: 1.35; }
   /* 테스트 화면: 레이어 메뉴 (위 버튼 줄 대신) */
   html.beta .bar, html.beta .bm { display: none; }
   .ly-ctl { position: relative; margin: 10px 10px 0 0 !important; }
@@ -195,6 +198,8 @@
   // 새 기능 미리 보기: 테스트 앱에서 열면 주소에 ?beta=1 (라이브 회원 화면은 그대로)
   const BETA = /[?&]beta=1(&|$)/.test(location.search);
   if (BETA) document.documentElement.classList.add('beta');
+  // 아이폰: 칸을 누를 때 화면이 확대되는 것 막기 (손가락으로 벌려 확대하는 건 그대로 됨)
+  if (BETA) { const vp = document.querySelector('meta[name=viewport]'); if (vp && !/maximum-scale/.test(vp.content)) vp.content += ', maximum-scale=1'; }
   if (BETA) (function tick() {   // 제목 옆 지금 Zulu 시각 (DDHHMMZ, 20초마다)
     const z = document.getElementById('zclk'); if (!z) return;
     const d = new Date(), p = n => String(n).padStart(2, '0');
