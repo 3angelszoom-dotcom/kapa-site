@@ -129,6 +129,29 @@
   .taf-src { margin-top: 4px; }
   .taf-src summary { font: 700 11px/1.4 var(--f); color: var(--muted); cursor: pointer; }
   .ic-pirep { width: 14px; height: 14px; }
+  /* 테스트 화면: 레이어 메뉴 (위 버튼 줄 대신) */
+  html.beta .bar, html.beta .bm { display: none; }
+  .ly-ctl { position: relative; margin: 10px 10px 0 0 !important; }
+  html.beta .leaflet-top { z-index: 1001; }
+  .me-ctl .ly-btn.on { background: rgba(11,31,69,.85); }
+  .ly-pop { position: absolute; right: 0; top: 48px; width: 236px; max-height: calc(var(--mapH, 60vh) - 70px); overflow: auto; -webkit-overflow-scrolling: touch;
+    background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(11,18,32,.25), 0 1px 3px rgba(11,18,32,.12); padding: 10px 12px 12px; font-family: var(--f); cursor: default; }
+  .ly-pop[hidden] { display: none; }
+  .ly-h { font: 800 10.5px/1 var(--f); letter-spacing: .08em; color: var(--muted); text-transform: uppercase; margin: 4px 2px 8px; }
+  .ly-h + .ly-tiles { margin-bottom: 10px; }
+  .ly-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ly-tile { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px; border: 2px solid transparent; border-radius: 12px; background: #F8FAFC; font: 700 12px/1 var(--f); color: #334155; cursor: pointer; }
+  .ly-tile[aria-pressed="true"] { border-color: var(--blue); color: var(--blue); background: #EFF6FF; }
+  .ly-thumb { width: 100%; height: 30px; border-radius: 8px; background: #DDE3EA linear-gradient(135deg, #E9EDF2 0 40%, #D5DCE5 40% 60%, #E9EDF2 60%); }
+  .ly-sat .ly-thumb { background: linear-gradient(135deg, #2E5A3A, #6B7F4B 45%, #A68A5B 70%, #1F3B5A); }
+  .ly-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .ly-tg { display: flex; align-items: center; gap: 6px; padding: 8px 9px; border: 1.5px solid #E2E8F0; border-radius: 10px; background: #fff; font: 700 12.5px/1 var(--f); color: #64748B; cursor: pointer; text-align: left; }
+  .ly-tg[aria-pressed="true"] { border-color: var(--blue); background: #EFF6FF; color: var(--navy); }
+  .ly-tg .ly-ic { font-size: 14px; filter: grayscale(1); opacity: .55; }
+  .ly-tg[aria-pressed="true"] .ly-ic { filter: none; opacity: 1; }
+  .ly-leg { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #F1F5F9; font: 700 10.5px/1 var(--f); color: var(--muted); }
+  .ly-leg i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 3px; vertical-align: -1px; }
+  .ly-leg i.tri { width: 0; height: 0; border-radius: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 9px solid #0EA5E9; }
   @media (max-width: 480px) {
     form { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
     .go { grid-column: 1 / -1; }
@@ -236,7 +259,7 @@
   const map = L.map('map', { zoomControl: true }).setView([38, -100], 3);
   map.attributionControl.setPrefix(false);
   // 지도 높이를 정수 픽셀로 고정 (소수점이면 아이폰에서 조각 사이에 가는 줄이 생김)
-  const snapMap = () => { const m = $('map'); m.style.height = m.style.minHeight = m.style.flex = ''; const h = Math.round(m.getBoundingClientRect().height); m.style.flex = '0 0 auto'; m.style.height = m.style.minHeight = h + 'px'; map.invalidateSize(false); };
+  const snapMap = () => { const m = $('map'); m.style.height = m.style.minHeight = m.style.flex = ''; const h = Math.round(m.getBoundingClientRect().height); m.style.flex = '0 0 auto'; m.style.height = m.style.minHeight = h + 'px'; m.style.setProperty('--mapH', h + 'px'); map.invalidateSize(false); };
   window.addEventListener('resize', () => { clearTimeout(snapMap.t); snapMap.t = setTimeout(snapMap, 150); });
   setTimeout(snapMap, 0);
   // 지도·레이더 출처: 지도 위를 가리지 않게 지도 바로 아래 작은 글씨로 (켜진 레이어에 맞춰 바뀜)
@@ -259,12 +282,17 @@
     const f = j && j.radar && j.radar.past && j.radar.past[j.radar.past.length - 1];
     if (f) L.tileLayer(j.host + f.path + '/256/{z}/{x}/{y}/2/1_1.png', { opacity: .55, maxNativeZoom: 7, maxZoom: 12, zIndex: 2, attribution: 'RainViewer' }).addTo(layers.world);
   }).catch(() => {});
+  if (BETA) { try { const sv = JSON.parse(store.get('rt_layers') || 'null'); if (sv) Object.keys(on).forEach(k => { if (k in sv) on[k] = !!sv[k]; }); } catch (_) {} }
   Object.keys(on).forEach(k => { if (on[k]) layers[k].addTo(map); });
+  // 날씨 레이어 켜고 끄기 (버튼·레이어 메뉴 공통). 테스트 화면은 고른 것을 기억
+  const layerSync = [];
+  function setLayer(k, v) { on[k] = v; v ? layers[k].addTo(map) : layers[k].remove(); layerSync.forEach(f => f()); if (BETA) store.set('rt_layers', JSON.stringify(on)); }
   const CHIPS = BETA ? [['radar', '🌧 Radar'], ['world', '🌍 World'], ['pirep', '⚡ PIREP'], ['turb', '🟧 Turb'], ['ice', '🧊 Ice'], ['conv', '⛈ TS'], ['ifr', '☁️ IFR'], ['spc', '🟩 SPC']]
     : [['radar', '🌧 Radar'], ['world', '🌍 World'], ['pirep', '⚡ PIREP'], ['area', '🟧 Turbulence']];
   $('bar').append(...CHIPS.map(([k, t]) => {
     const b = el('button', { type: 'button', class: 'tg' + (on[k] ? ' on' : ''), 'aria-pressed': String(on[k]) }, t);
-    b.addEventListener('click', () => { on[k] = !on[k]; b.classList.toggle('on', on[k]); b.setAttribute('aria-pressed', String(on[k])); on[k] ? layers[k].addTo(map) : layers[k].remove(); });
+    b.addEventListener('click', () => setLayer(k, !on[k]));
+    layerSync.push(() => { b.classList.toggle('on', on[k]); b.setAttribute('aria-pressed', String(on[k])); });
     return b;
   }), el('span', { class: 'legend' }, TURB.slice(1, 4).map((t, i) => el('span', {}, el('i', { style: 'background:' + TCOL[i + 1] }), t))));
 
@@ -290,6 +318,7 @@
     $('map').classList.toggle('sat', k === 'sat');
     if (k === 'sat') { if (map.hasLayer(base)) base.remove(); } else if (!map.hasLayer(base)) base.addTo(map).bringToBack();
     bmBtns.forEach((b, i) => b.setAttribute('aria-pressed', String(Object.keys(BASES)[i] === k)));
+    layerSync.forEach(f => f());
     bmHintUpd();
   }
   map.on('zoomend', bmHintUpd);
@@ -318,6 +347,32 @@
   }).catch(() => { if (apTry < 3) setTimeout(apLoad, [3000, 10000, 30000][apTry++]); });
   apLoad();
   $('bar').after(el('div', { class: 'bm', role: 'group', 'aria-label': '지도 종류' }, el('span', { class: 'bm-l' }, 'Map'), bmBtns, bmHint));
+  // 테스트 화면: 위 버튼 줄 대신 지도 오른쪽 위 '레이어' 버튼 하나 → 누르면 지도 종류·날씨 레이어를 고르는 메뉴
+  if (BETA) {
+    const LBL = { radar: ['🌧', 'Radar', 'US NEXRAD'], world: ['🌍', 'World', 'World radar'], pirep: ['⚡', 'PIREP', 'Turb · Icing PIREP'], turb: ['🟧', 'Turb', 'Turbulence SIGMET · G-AIRMET'],
+      ice: ['🧊', 'Icing', 'SIGMET · G-AIRMET'], conv: ['⛈', 'TS', 'Convective SIGMET · Ash · TC'], ifr: ['☁️', 'IFR', 'IFR · Mtn obsc G-AIRMET'], spc: ['🟩', 'SPC', 'SPC thunderstorm outlook'] };
+    const lyBtn = el('button', { type: 'button', class: 'me-loc ly-btn', title: '레이어', 'aria-label': '지도·날씨 레이어', 'aria-expanded': 'false' });
+    lyBtn.innerHTML = '<svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><path d="M12 3 2.5 8 12 13l9.5-5L12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m2.5 12 9.5 5 9.5-5M2.5 16l9.5 5 9.5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+    const tiles = Object.keys(BASES).map(k => { const b = el('button', { type: 'button', class: 'ly-tile ly-' + k }, el('span', { class: 'ly-thumb' }), BASES[k].t);
+      b.addEventListener('click', () => setBase(k)); layerSync.push(() => b.setAttribute('aria-pressed', String(bmKey === k))); return b; });
+    const rows = CHIPS.map(([k]) => { const L0 = LBL[k] || ['', k, ''];
+      const b = el('button', { type: 'button', class: 'ly-tg', title: L0[2] || L0[1] }, el('span', { class: 'ly-ic', 'aria-hidden': 'true' }, L0[0]), el('span', {}, L0[1]));
+      b.addEventListener('click', () => setLayer(k, !on[k]));
+      layerSync.push(() => b.setAttribute('aria-pressed', String(!!on[k])));
+      return b; });
+    const lg = el('div', { class: 'ly-leg' }, TURB.slice(1, 4).map((t, i) => el('span', {}, el('i', { style: 'background:' + TCOL[i + 1] }), t)),
+      el('span', {}, el('i', { class: 'tri' }), 'Icing'));
+    const pop = el('div', { class: 'ly-pop', hidden: '', role: 'dialog', 'aria-label': '레이어' },
+      el('div', { class: 'ly-h' }, 'Map'), el('div', { class: 'ly-tiles' }, tiles),
+      el('div', { class: 'ly-h' }, 'Weather'), el('div', { class: 'ly-rows' }, rows), lg);
+    const open = v => { pop.hidden = !v; lyBtn.setAttribute('aria-expanded', String(v)); lyBtn.classList.toggle('on', v); };
+    lyBtn.addEventListener('click', () => open(pop.hidden));
+    document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && !lyBtn.contains(e.target)) open(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') open(false); });
+    const LyCtl = L.Control.extend({ options: { position: 'topright' }, onAdd: () => { const d = L.DomUtil.create('div', 'me-ctl ly-ctl'); d.append(lyBtn, pop); L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d); return d; } });
+    map.addControl(new LyCtl());
+    layerSync.forEach(f => f());
+  }
   setBase(bmKey);
 
   // ===== 내 위치 (폰 GPS) — 화면에만 표시, 서버로 보내거나 저장하지 않음 =====
