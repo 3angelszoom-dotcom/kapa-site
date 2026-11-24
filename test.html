@@ -1692,7 +1692,7 @@
   function openRouteFull(fromTo) {
     if (document.getElementById('route-ov')) return;
     const ov = el('div', { id: 'route-ov', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Route Weather' });
-    const fr = el('iframe', { src: 'route.html' + (fromTo ? '#' + encodeURIComponent(fromTo) : ''), title: 'Route Weather', allow: 'geolocation' });   // 📍 내 위치를 쓰려면 위치 권한을 넘겨줘야 함
+    const fr = el('iframe', { src: 'route.html' + (IS_TEST ? '?beta=1' : '') + (fromTo ? '#' + encodeURIComponent(fromTo) : ''), title: 'Route Weather', allow: 'geolocation' });   // 📍 내 위치를 쓰려면 위치 권한을 넘겨줘야 함
     const x = el('button', { class: 'route-x', type: 'button', 'aria-label': '닫기' }, '✕');
     // 닫으면 열기 전 화면·스크롤 위치로 그대로 (아이폰은 뒤 화면 스크롤을 막을 때 맨 위로 튀는 일이 있어서 위치를 기억했다가 되돌림)
     const y = window.scrollY, hash = location.hash;
@@ -2363,7 +2363,7 @@
         p.board === LOADS && p.meta ? el('h2', { class: 'ld-h2' }, (p.meta.air || '') + (p.meta.flt || ''), el('span', { class: 'ld-day' }, loadDate(p.meta))) : el('h2', {}, p.title),
         p.board === LOADS && p.meta ? el('div', { class: 'ld-route ld-route-big' }, (p.meta.from || '') + ' → ' + (p.meta.to || ''),
           // Route Weather 페이지(route.html)와 똑같은 지도를 전체 화면으로 (출발·도착 채워서)
-          el('a', { class: 'ld-rtw', href: 'route.html#' + (p.meta.from || '') + '_' + (p.meta.to || ''),
+          el('a', { class: 'ld-rtw', href: 'route.html' + (IS_TEST ? '?beta=1' : '') + '#' + (p.meta.from || '') + '_' + (p.meta.to || ''),
             onclick: e => { e.preventDefault(); openRouteFull((p.meta.from || '') + '_' + (p.meta.to || '')); } }, '🗺 Route weather')) : null,
         el('div', { class: 'meta' }, p.author, vf(p.verified), ` · ${fmt(p.createdAt)}`, p.editedAt ? ' · 수정됨' : '', p.mine ? ' · 내 글' : ''),
         p.body ? el('div', { class: 'body' }, p.body) : null,

@@ -91,6 +91,44 @@
   .login input { background: #fff; color: var(--ink); border-color: var(--line); margin: 10px 0; text-transform: none; }
   .login button { width: 100%; padding: 12px; border: 0; border-radius: 10px; background: var(--navy); color: #fff; font: 800 15px/1 var(--f); cursor: pointer; }
   .login .msg { color: #B91C1C; }
+  /* ===== Route Plan (beta: 테스트 앱에서 열 때) ===== */
+  html.beta, html.beta body { height: auto; min-height: 100%; }
+  html.beta .panel { max-height: none; overflow: visible; padding-top: 12px; }
+  .opt { grid-column: 1 / -1; display: flex; gap: 6px; }
+  .opt label { display: flex; align-items: center; gap: 5px; flex: 1 1 0; min-width: 0; font: 800 10.5px/1 var(--f); color: #8FA3C7; letter-spacing: .05em; }
+  .opt input { padding: 7px 6px; font-size: 14px; text-align: center; }
+  .card { border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 10px 12px; margin: 0 0 10px; }
+  .card h3 { margin: 0 0 8px; font: 800 11.5px/1.2 var(--f); letter-spacing: .06em; color: var(--muted); text-transform: uppercase; display: flex; justify-content: space-between; gap: 8px; }
+  .card h3 small { font-weight: 600; letter-spacing: 0; text-transform: none; }
+  .sum { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sum span { padding: 5px 9px; border-radius: 999px; background: #F1F5F9; font: 700 12px/1.25 var(--f); color: #334155; font-variant-numeric: tabular-nums; }
+  .sum .h-TURB { background: #FFEDD5; color: #9A3412; } .sum .h-ICE { background: #E0F2FE; color: #075985; } .sum .h-CONV { background: #FEE2E2; color: #991B1B; }
+  .sum .h-IFR { background: #F3E8FF; color: #6B21A8; } .sum .h-ASH, .sum .h-TC { background: #EDE9FE; color: #5B21B6; } .sum .h-ok { background: #DCFCE7; color: #166534; }
+  .sum .tail { color: #15803D; } .sum .head { color: #B91C1C; }
+  #xs svg { display: block; width: 100%; height: auto; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+  #xs svg text { font-family: var(--f); }
+  .xs-info { font: 600 12px/1.45 var(--f); color: #334155; min-height: 2.9em; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .xs-info b { color: var(--ink); }
+  .xs-leg { display: flex; flex-wrap: wrap; gap: 6px 10px; font: 700 10.5px/1 var(--f); color: var(--muted); margin-top: 4px; }
+  .xs-leg i { display: inline-block; width: 11px; height: 11px; border-radius: 2px; margin-right: 4px; vertical-align: -2px; }
+  .xs-note { font: 500 10.5px/1.4 var(--f); color: #94A3B8; margin: 6px 0 0; }
+  .apt { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  @media (min-width: 700px) { .apt { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+  .apt-h { display: flex; align-items: center; gap: 6px; font: 800 15px/1.2 var(--f); }
+  .apt-h small { font: 800 10px/1 var(--f); color: var(--muted); letter-spacing: .08em; }
+  .cat { font: 800 10.5px/1 var(--f); padding: 3px 6px; border-radius: 6px; background: #F1F5F9; color: #475569; }
+  .cat.VFR { background: #DCFCE7; color: #166534; } .cat.MVFR { background: #DBEAFE; color: #1E40AF; } .cat.IFR { background: #FEE2E2; color: #B91C1C; } .cat.LIFR { background: #FAE8FF; color: #86198F; }
+  .raw { font: 500 11.5px/1.45 ui-monospace, Menlo, monospace; color: #475569; margin: 5px 0 2px; word-break: break-word; }
+  .taf { display: grid; gap: 2px; margin-top: 6px; }
+  .taf-r { display: grid; grid-template-columns: 66px 42px minmax(0, 1fr); gap: 6px; align-items: center; padding: 4px 6px; border-radius: 8px; font: 600 12px/1.35 var(--f); color: #334155; }
+  .taf-r.now { background: #FEF9C3; box-shadow: inset 3px 0 0 #EAB308; }
+  .taf-r .tt { font: 700 11px/1.2 var(--f); color: #64748B; font-variant-numeric: tabular-nums; }
+  .taf-r .tt em { display: block; font-style: normal; font-size: 9.5px; letter-spacing: .05em; color: #94A3B8; }
+  .taf-r .tx { word-break: break-word; }
+  .taf-r .mk { font: 800 10px/1 var(--f); color: #A16207; margin-left: 4px; white-space: nowrap; }
+  .taf-src { margin-top: 4px; }
+  .taf-src summary { font: 700 11px/1.4 var(--f); color: var(--muted); cursor: pointer; }
+  .ic-pirep { width: 14px; height: 14px; }
   @media (max-width: 480px) {
     form { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
     .go { grid-column: 1 / -1; }
@@ -124,6 +162,9 @@
   const API_URL = 'https://script.google.com/macros/s/AKfycbxM8aE3mSczAAv6SxyngKNPxyeY7q0Mw4QF1-F-GGvnxpNXEpURJsOaolXf7S1DHuU/exec';
   const store = { get(k) { try { return localStorage.getItem(k) || ''; } catch (_) { return ''; } }, set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (_) {} } };
   let key = store.get('pc_key');
+  // 새 기능 미리 보기: 테스트 앱에서 열면 주소에 ?beta=1 (라이브 회원 화면은 그대로)
+  const BETA = /[?&]beta=1(&|$)/.test(location.search);
+  if (BETA) document.documentElement.classList.add('beta');
   const $ = id => document.getElementById(id);
   const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function el(tag, attrs, ...kids) {
@@ -134,7 +175,7 @@
   }
   // 구글 쪽 연결이 가끔 통째로 멈춤 → 터뷸런스 요청은 12초 넘게 답이 없으면 버리고 다시 보냄 (최대 3번). 입장은 한 번만, 25초
   function call(fn, ...args) {
-    const READ = fn === 'getRouteWx', LIMIT = READ ? 12000 : 25000;
+    const READ = fn === 'getRouteWx' || fn === 'getRoutePlan', LIMIT = fn === 'getRoutePlan' ? 20000 : READ ? 12000 : 25000;
     const once = () => {
       const ac = typeof AbortController === 'function' ? new AbortController() : null;
       const t = ac ? setTimeout(() => ac.abort(), LIMIT) : 0;
@@ -207,8 +248,8 @@
   const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, className: 'nseam', attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }).addTo(map);
   let baseErr = 0;
   base.on('tileerror', () => { if (++baseErr === 4) { map.removeLayer(base); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12, className: 'nseam', attribution: '&copy; OpenStreetMap contributors' }).addTo(map).bringToBack(); } });
-  const layers = { radar: L.layerGroup(), world: L.layerGroup(), pirep: L.layerGroup(), area: L.layerGroup(), route: L.layerGroup().addTo(map) };
-  const on = { radar: true, world: false, pirep: true, area: true };
+  const layers = { radar: L.layerGroup(), world: L.layerGroup(), pirep: L.layerGroup(), area: L.layerGroup(), turb: L.layerGroup(), ice: L.layerGroup(), conv: L.layerGroup(), ifr: L.layerGroup(), spc: L.layerGroup(), route: L.layerGroup().addTo(map) };
+  const on = BETA ? { radar: true, world: false, spc: true, ifr: false, conv: true, ice: true, turb: true, pirep: true } : { radar: true, world: false, pirep: true, area: true };
   // 미국 NEXRAD(약 1 km 해상도): 진하게, 레티나 화면에선 한 단계 더 촘촘한 타일로
   const NEX = () => 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?' + Math.floor(Date.now() / 60000);
   const nexrad = L.tileLayer(NEX(), { opacity: .8, maxZoom: 12, maxNativeZoom: 11, detectRetina: true, zIndex: 3, attribution: 'NEXRAD &copy; IEM' }).addTo(layers.radar);
@@ -218,7 +259,9 @@
     if (f) L.tileLayer(j.host + f.path + '/256/{z}/{x}/{y}/2/1_1.png', { opacity: .55, maxNativeZoom: 7, maxZoom: 12, zIndex: 2, attribution: 'RainViewer' }).addTo(layers.world);
   }).catch(() => {});
   Object.keys(on).forEach(k => { if (on[k]) layers[k].addTo(map); });
-  $('bar').append(...[['radar', '🌧 Radar'], ['world', '🌍 World'], ['pirep', '⚡ PIREP'], ['area', '🟧 Turbulence']].map(([k, t]) => {
+  const CHIPS = BETA ? [['radar', '🌧 Radar'], ['world', '🌍 World'], ['pirep', '⚡ PIREP'], ['turb', '🟧 Turb'], ['ice', '🧊 Ice'], ['conv', '⛈ TS'], ['ifr', '☁️ IFR'], ['spc', '🟩 SPC']]
+    : [['radar', '🌧 Radar'], ['world', '🌍 World'], ['pirep', '⚡ PIREP'], ['area', '🟧 Turbulence']];
+  $('bar').append(...CHIPS.map(([k, t]) => {
     const b = el('button', { type: 'button', class: 'tg' + (on[k] ? ' on' : ''), 'aria-pressed': String(on[k]) }, t);
     b.addEventListener('click', () => { on[k] = !on[k]; b.classList.toggle('on', on[k]); b.setAttribute('aria-pressed', String(on[k])); on[k] ? layers[k].addTo(map) : layers[k].remove(); });
     return b;
@@ -339,6 +382,7 @@
     try { sessionStorage.removeItem('rt_cur'); } catch (_) {}
     history.replaceState(null, '', location.pathname + location.search);
     layers.route.clearLayers(); layers.area.clearLayers(); layers.pirep.clearLayers();
+    if (BETA) RP.clear();
     msg(''); $('from').focus();
   });
   $('f').addEventListener('submit', e => {
@@ -436,6 +480,326 @@
     return { pts: path, nm };
   }
 
+  // ===== Route Plan (beta — 테스트 앱에서 열 때만): 루트 위 위험 구역·PIREP·SPC, 출발·도착 METAR/TAF, 경로 단면도(구름·결빙 고도·착빙 가능·CAPE·상층풍) =====
+  // 위험 구역·PIREP·TAF·SPC: KAPA 서버(getRoutePlan)가 aviationweather.gov·SPC에서 받아 옴
+  // 단면도: Open-Meteo 예보 모델(무료, 키 없음)을 폰에서 바로 받음. 루트를 따라 12~28곳, 각 지점을 지나는 예상 시각의 예보
+  const RP = (() => {
+    const HZ = { TURB: { t: 'Turb', col: '#F97316', sig: '#DC2626' }, ICE: { t: 'Icing', col: '#0EA5E9' }, CONV: { t: 'Convective', col: '#DC2626' },
+      IFR: { t: 'IFR', col: '#A855F7' }, MTN: { t: 'Mtn obsc', col: '#A16207' }, LLWS: { t: 'LLWS', col: '#DB2777' }, ASH: { t: 'Volcanic ash', col: '#7C3AED' }, TC: { t: 'Tropical cyclone', col: '#7C3AED' } };
+    const grp = h => h === 'TURB' ? 'turb' : h === 'ICE' ? 'ice' : (h === 'IFR' || h === 'MTN' || h === 'LLWS') ? 'ifr' : 'conv';
+    const SURF = { IFR: 1, MTN: 1, LLWS: 1 };
+    const SPC = { TSTM: ['#55BB55', '#C1E9C1'], MRGL: ['#005500', '#66A366'], SLGT: ['#DDAA00', '#FFE066'], ENH: ['#FF6600', '#FFA366'], MDT: ['#CC0000', '#E06666'], HIGH: ['#CC00CC', '#EE99EE'] };
+    const LV = [1000, 850, 700, 600, 500, 400, 300, 250, 200, 150];
+    const paFt = p => 145366.45 * (1 - Math.pow(p / 1013.25, 0.190284));   // 기압면 → 표준대기 기압고도 (FL과 같은 기준)
+    const LVF = LV.map(paFt);
+    const z2 = n => String(n).padStart(2, '0');
+    const zt = ms => { const d = new Date(ms); return z2(d.getUTCDate()) + z2(d.getUTCHours()) + z2(d.getUTCMinutes()) + 'Z'; };
+    const zh = s => { const d = new Date(s * 1000); return z2(d.getUTCDate()) + '/' + z2(d.getUTCHours()) + z2(d.getUTCMinutes()) + 'Z'; };
+    const fmtN = n => Math.round(n).toLocaleString('en-US');
+    const hm = h => { const m = Math.round(h * 60); return Math.floor(m / 60) + ':' + z2(m % 60); };
+    const ftOf = v => v > 0 && v < 700 ? v * 100 : v;   // FL240 → 24,000 ft
+    const altTxt = z => { const lo = ftOf(z.lo), hi = ftOf(z.hi); if (!lo && !hi) return ''; const f = v => v ? 'FL' + z2(Math.round(v / 100)).padStart(3, '0') : 'SFC'; return f(lo) + '–' + (hi ? f(hi) : '?'); };
+    const bearing = (a, b) => { const p1 = rad(a[0]), p2 = rad(b[0]), dl = rad(b[1] - a[1]); return (deg(Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl))) + 360) % 360; };
+    function inPoly(lat, lon, c) {
+      let ins = false;
+      for (let i = 0, j = c.length - 1; i < c.length; j = i++) {
+        const yi = c[i][0], xi = near(c[i][1], lon), yj = c[j][0], xj = near(c[j][1], lon);
+        if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) ins = !ins;
+      }
+      return ins;
+    }
+    // ---- 입력: 순항 FL · 출발 시각(Z) · TAS ----
+    const inp = {};
+    function addInputs() {
+      const mk = (id, lab, ph, val, max) => { const i = el('input', { id, inputmode: 'numeric', maxlength: String(max), placeholder: ph, 'aria-label': lab });
+        i.value = val; i.addEventListener('input', () => { i.value = i.value.replace(/\D/g, ''); }); inp[id] = i; return el('label', {}, lab, i); };
+      const row = el('div', { class: 'opt' }, mk('fl', 'FL', '350', store.get('rt_fl') || '350', 3), mk('etd', 'ETD', 'now', '', 4), mk('tas', 'TAS', '450', store.get('rt_tas') || '450', 3));
+      document.querySelector('#f .btns').before(row);
+    }
+    function opts() {
+      const fl = Math.min(450, Math.max(50, parseInt(inp.fl.value, 10) || 350));
+      const tas = Math.min(650, Math.max(120, parseInt(inp.tas.value, 10) || 450));
+      store.set('rt_fl', String(fl)); store.set('rt_tas', String(tas));
+      let etd = Date.now(), etdSet = false;
+      const m = inp.etd.value.match(/^(\d{1,2})(\d{2})$/);
+      if (m && +m[1] < 24 && +m[2] < 60) { const d = new Date(); d.setUTCHours(+m[1], +m[2], 0, 0); let t = d.getTime(); if (t < Date.now() - 3 * 3600e3) t += 86400e3; etd = t; etdSet = true; }
+      return { fl, tas, etd, etdSet };
+    }
+    // 이륙 후 순항 고도까지 상승(약 3.5 nm/1000 ft) · 강하(약 3 nm/1000 ft)를 단순하게
+    const prof = (o, tot) => { const c = Math.min(tot * .4, o.fl * .35), dsc = Math.min(tot * .45, o.fl * .3); return { c, dsc, alt: d => d < c ? o.fl * 100 * d / c : d > tot - dsc ? o.fl * 100 * (tot - d) / dsc : o.fl * 100 }; };
+    // ---- 루트를 따라 고르게 점 찍기 ----
+    function sample(gc, o) {
+      const P = gc.pts, cum = [0];
+      for (let i = 1; i < P.length; i++) cum.push(cum[i - 1] + nmBetween(P[i - 1], P[i]));
+      const tot = cum[cum.length - 1] || 1, n = Math.max(12, Math.min(28, Math.round(tot / 60)));
+      const S = [];
+      for (let k = 0; k <= n; k++) {
+        const d = tot * k / n; let i = 1; while (i < P.length - 1 && cum[i] < d) i++;
+        const f = cum[i] > cum[i - 1] ? Math.max(0, Math.min(1, (d - cum[i - 1]) / (cum[i] - cum[i - 1]))) : 0;
+        const lat = P[i - 1][0] + (P[i][0] - P[i - 1][0]) * f, lonR = P[i - 1][1] + (P[i][1] - P[i - 1][1]) * f;
+        S.push({ d, lat, lonR, lon: ((lonR + 540) % 360) - 180, t: o.etd + d / o.tas * 3600e3 });
+      }
+      S.forEach((s, k) => { const a = S[Math.max(0, k - 1)], b = S[Math.min(S.length - 1, k + 1)]; s.trk = bearing([a.lat, a.lonR], [b.lat, b.lonR]); });
+      return { S, tot, cum };
+    }
+    // 경로 위 가장 가까운 곳까지 거리(nm)와 출발점부터 거리
+    function along(st, ll) {
+      const P = st.gc.pts; let bi = 0, bd = Infinity;
+      const q = [ll[0], near(ll[1], P[0][1])];
+      P.forEach((p, i) => { const d = nmBetween([q[0], near(q[1], p[1])], p); if (d < bd) { bd = d; bi = i; } });
+      return { off: bd, d: st.cum[bi] };
+    }
+    // ---- Open-Meteo ----
+    const OMV = ['freezing_level_height', 'cape'].concat(...['cloud_cover', 'temperature', 'wind_speed', 'wind_direction'].map(v => LV.map(p => v + '_' + p + 'hPa')));
+    const omMem = {};
+    async function omGet(S) {
+      const fh = Math.ceil((S[S.length - 1].t - Date.now()) / 3600e3) + 2;
+      if (fh > 15 * 24) throw new Error('출발이 너무 먼 미래예요');
+      const past = Math.min(24, Math.max(1, Math.ceil((Date.now() - S[0].t) / 3600e3) + 1));
+      const u = 'https://api.open-meteo.com/v1/forecast?latitude=' + S.map(s => s.lat.toFixed(2)).join(',') + '&longitude=' + S.map(s => s.lon.toFixed(2)).join(',') +
+        '&hourly=' + OMV.join(',') + '&wind_speed_unit=kn&timeformat=unixtime&timezone=GMT&forecast_hours=' + Math.max(3, fh) + '&past_hours=' + past;
+      const hit = omMem[u]; if (hit && Date.now() - hit.at < 15 * 60e3) return hit.j;
+      const ac = typeof AbortController === 'function' ? new AbortController() : null, tm = ac ? setTimeout(() => ac.abort(), 20000) : 0;
+      try {
+        const r = await fetch(u, { signal: ac ? ac.signal : undefined });
+        if (!r.ok) throw new Error('예보 서버 ' + r.status);
+        let j = await r.json(); if (!Array.isArray(j)) j = [j];
+        omMem[u] = { at: Date.now(), j }; return j;
+      } catch (e) { throw new Error(e && e.name === 'AbortError' ? '예보 서버가 늦어요' : (e.message || '예보를 못 받았어요')); }
+      finally { clearTimeout(tm); }
+    }
+    function pick(S, J) {
+      S.forEach((s, k) => {
+        const o = J[k], H = o && o.hourly; if (!H || !H.time) return;
+        let bi = 0, bd = Infinity; H.time.forEach((t, i) => { const d = Math.abs(t * 1000 - s.t); if (d < bd) { bd = d; bi = i; } });
+        const g = v => { const a = H[v]; return a && a[bi] != null ? a[bi] : null; };
+        s.fz = g('freezing_level_height'); s.cape = g('cape');
+        s.L = LV.map(p => ({ cc: g('cloud_cover_' + p + 'hPa'), t: g('temperature_' + p + 'hPa'), ws: g('wind_speed_' + p + 'hPa'), wd: g('wind_direction_' + p + 'hPa') }));
+      });
+    }
+    // 고도(ft)의 바람·기온: 위아래 기압면 사이를 고도로 나눔. comp = 진행 방향 성분(+ 뒷바람)
+    function windAt(s, ft) {
+      if (!s.L) return null;
+      let j = 0; while (j < LV.length - 2 && LVF[j + 1] < ft) j++;
+      const a = s.L[j], b = s.L[j + 1]; if (!a || !b || a.ws == null || b.ws == null || a.wd == null || b.wd == null) return null;
+      const f = Math.max(0, Math.min(1, (ft - LVF[j]) / (LVF[j + 1] - LVF[j])));
+      const uv = w => [-w.ws * Math.sin(rad(w.wd)), -w.ws * Math.cos(rad(w.wd))];
+      const [ua, va] = uv(a), [ub, vb] = uv(b), u = ua + (ub - ua) * f, v = va + (vb - va) * f;
+      return { spd: Math.hypot(u, v), dir: (deg(Math.atan2(-u, -v)) + 360) % 360, comp: u * Math.sin(rad(s.trk)) + v * Math.cos(rad(s.trk)), t: a.t != null && b.t != null ? a.t + (b.t - a.t) * f : null };
+    }
+    // ---- 상태 ----
+    let st = null, seq = 0, box = null, cur = null;
+    const ui = {};
+    function build() {
+      const card = (h, sub, ...kids) => el('div', { class: 'card' }, el('h3', {}, h, sub), ...kids);
+      ui.when = el('small', {}); ui.sum = el('div', { class: 'sum' });
+      ui.xs = el('div', { id: 'xs' }); ui.info = el('div', { class: 'xs-info' });
+      const lg = (c, t, pat) => el('span', {}, el('i', { style: pat ? 'background:repeating-linear-gradient(45deg,' + c + ' 0 2px,transparent 2px 5px);border:1px solid ' + c : 'background:' + c }), t);
+      ui.apt = el('div', { class: 'apt' });
+      box = el('div', { id: 'rp', hidden: '' },
+        card('Route', ui.when, ui.sum),
+        card('Vertical profile', el('small', {}, 'tap to inspect'), ui.xs, ui.info,
+          el('div', { class: 'xs-leg' }, lg('rgba(100,116,139,.45)', 'Cloud'), lg('#0EA5E9', 'Icing possible', 1), el('span', {}, el('i', { style: 'height:0;border-top:2px dashed #2563EB;border-radius:0' }), '0°C'),
+            lg('rgba(249,115,22,.35)', 'SIGMET/AIRMET'), el('span', {}, el('i', { style: 'height:0;border-top:2px solid #0B1220;border-radius:0' }), 'Your flight')),
+          el('p', { class: 'xs-note' }, 'Model forecast (Open-Meteo, CC BY 4.0) at the time you pass each point. Icing = cloud with −20…0 °C. Hazards: NOAA AWC · SPC. 참고용 — 공식 브리핑을 대신하지 않아요.')),
+        card('Airports', el('small', {}, 'METAR · TAF'), ui.apt));
+      document.querySelector('.panel').prepend(box);
+      cur = L.circleMarker([0, 0], { radius: 7, color: '#0B1220', weight: 2, fillColor: '#FACC15', fillOpacity: 1, interactive: false });
+      window.addEventListener('resize', () => { clearTimeout(build.t); build.t = setTimeout(() => st && drawXS(), 150); });
+    }
+    function clear() {
+      seq++; st = null; if (box) box.hidden = true;
+      ['turb', 'ice', 'conv', 'ifr', 'spc', 'pirep'].forEach(k => layers[k].clearLayers()); if (cur) cur.remove();
+    }
+    // SPC 1일차는 다음 12Z까지 → 출발이 그 뒤면 2일차
+    const spcDay = etd => { const d = new Date(); d.setUTCHours(12, 0, 0, 0); let n = d.getTime(); if (n <= Date.now()) n += 86400e3; return etd < n ? 1 : 2; };
+    function run(ctx) {
+      const my = ++seq, o = opts(), smp = sample(ctx.gc, o);
+      st = Object.assign({}, ctx, smp, { o, P: prof(o, smp.tot), wx: null, om: false, omErr: '', sel: -1 });
+      box.hidden = false; cur.remove();
+      ['turb', 'ice', 'conv', 'ifr', 'spc', 'pirep'].forEach(k => layers[k].clearLayers());
+      ui.apt.replaceChildren(el('p', { class: 'muted' }, '불러오는 중…'));
+      drawSum(); drawXS(); ui.info.textContent = '단면도를 누르면 그 지점의 바람·기온·결빙 고도·위험 구역이 보여요.';
+      call('getRoutePlan', key, ctx.box, { a: ctx.a, b: ctx.b, day: spcDay(o.etd) }).then(wx => {
+        if (my !== seq) return; st.wx = wx; drawMap(); drawXS(); drawSum(); drawApt();
+        if (wx.fail && wx.fail.length) msg(ctx.label + ' · 일부 자료를 못 받았어요 (' + wx.fail.join(', ') + ')', true);
+      }).catch(e => {
+        if (my !== seq || e.message === '__auth') return;
+        msg(ctx.label + ' · 위험 구역·TAF를 못 받았어요 (' + String(e.message || '오류').slice(0, 60) + ')', true);
+        ui.apt.replaceChildren(el('p', { class: 'muted' }, '못 받았어요. 오른쪽 아래 새로고침으로 다시 받아 보세요.'));
+      });
+      omGet(smp.S).then(J => { if (my !== seq) return; pick(st.S, J); st.om = true; drawXS(); drawSum(); if (st.wx) drawApt(); })
+        .catch(e => { if (my !== seq) return; st.omErr = e.message; drawXS(); });
+    }
+    // ---- 지도 위 ----
+    function drawMap() {
+      const wx = st.wx, mid = st.gc.pts[Math.floor(st.gc.pts.length / 2)][1];
+      ['turb', 'ice', 'conv', 'ifr', 'spc', 'pirep'].forEach(k => layers[k].clearLayers());
+      (wx.spc && wx.spc.f || []).forEach(z => { const c = SPC[z.l] || SPC.TSTM;
+        L.polygon(z.c.map(p => [p[0], near(p[1], mid)]), { color: c[0], weight: 1, fillColor: c[1], fillOpacity: .28, interactive: true })
+          .bindPopup('<b>SPC Day ' + wx.spc.d + ' · ' + esc(z.l) + '</b><br>Convective outlook').addTo(layers.spc); });
+      wx.areas.forEach(z => {
+        const H = HZ[z.h] || HZ.CONV, sig = z.k === 'SIGMET', col = z.h === 'TURB' && sig ? HZ.TURB.sig : H.col;
+        L.polygon(z.c.map(p => [p[0], near(p[1], mid)]), { color: col, weight: sig ? 2 : 1.5, fillColor: col, fillOpacity: sig ? .16 : .09, dashArray: z.k === 'SIGMET' ? null : z.k === 'OUTLOOK' ? '2 6' : '5 4' })
+          .bindPopup('<b>' + esc(z.k) + ' · ' + esc(H.t) + (z.sev ? ' · ' + esc(z.sev) : '') + '</b>' + (altTxt(z) ? '<br>' + altTxt(z) : '') + (z.to ? '<br>Until ' + zh(z.to) : '') + (z.fir ? '<br>' + esc(z.fir) : '') + '<br><small>' + esc(z.raw) + '</small>')
+          .addTo(layers[grp(z.h)]);
+      });
+      const ago = t => { const m = Math.max(0, Math.round((Date.now() / 1000 - t) / 60)); return m < 60 ? m + ' min ago' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm ago'; };
+      const ICN = L.divIcon({ className: 'ic-pirep', iconSize: [14, 14], iconAnchor: [7, 7], html: '<svg viewBox="0 0 14 14" width="14" height="14"><path d="M7 1.5 13 12.5H1z" fill="#0EA5E9" stroke="#fff" stroke-width="1.3"/></svg>' });
+      wx.pireps.forEach(p => {
+        const ll = [p[0], near(p[1], mid)], pop = '<b>' + [p[3] >= 0 ? TURB[p[3]] + ' turb' : '', p[4] >= 1 ? TURB[p[4]] + ' icing' : ''].filter(Boolean).join(' · ') + '</b><br>FL' + String(p[2]).padStart(3, '0') + ' · ' + esc(p[5] || '?') + ' · ' + ago(p[6]) + '<br><small>' + esc(p[7]) + '</small>';
+        if (p[3] >= 0) L.circleMarker(ll, { radius: p[3] >= 3 ? 7 : 5, color: '#fff', weight: 1, fillColor: TCOL[p[3]], fillOpacity: .95 }).bindPopup(pop).addTo(layers.pirep);
+        if (p[4] >= 1) L.marker(ll, { icon: ICN }).bindPopup(pop).addTo(layers.pirep);
+      });
+    }
+    // ---- 단면도에 쓸 값들 ----
+    function hazRuns() {   // 루트가 지나는 위험 구역: [{z, a, b}] (샘플 번호 구간)
+      if (!st.wx) return [];
+      const out = [];
+      st.wx.areas.forEach(z => {
+        const ins = st.S.map(s => inPoly(s.lat, s.lonR, z.c));
+        for (let k = 0; k < ins.length; k++) if (ins[k]) { let e = k; while (e + 1 < ins.length && ins[e + 1]) e++; out.push({ z, a: k, b: e }); k = e; }
+      });
+      return out;
+    }
+    function timing() {   // 바람을 넣은 ETE (모델 자료가 있을 때)
+      const S = st.S; let h = 0, w = 0, n = 0;
+      for (let k = 1; k < S.length; k++) {
+        const dd = S[k].d - S[k - 1].d, mid = (S[k].d + S[k - 1].d) / 2;
+        const ws = [windAt(S[k - 1], st.P.alt(mid)), windAt(S[k], st.P.alt(mid))].filter(Boolean);
+        const c = ws.length ? ws.reduce((x, y) => x + y.comp, 0) / ws.length : 0;
+        h += dd / Math.max(120, st.o.tas + c);
+        if (ws.length && st.P.alt(mid) >= st.o.fl * 100 - 1) { w += c * dd; n += dd; }
+      }
+      return { ete: h, avg: n ? w / n : null };
+    }
+    function drawSum() {
+      const o = st.o, chips = [];
+      const t = st.om ? timing() : { ete: st.tot / o.tas, avg: null };
+      st.eta = o.etd + t.ete * 3600e3;
+      ui.when.textContent = 'ETD ' + zt(o.etd) + (o.etdSet ? '' : ' (now)') + ' · ETA ' + zt(st.eta);
+      chips.push(el('span', {}, fmtN(st.tot) + ' nm'));
+      chips.push(el('span', {}, 'ETE ' + hm(t.ete) + (st.om ? '' : ' (no wind)')));
+      if (t.avg != null) chips.push(el('span', {}, 'FL' + o.fl + ' wind ', el('b', { class: t.avg >= 0 ? 'tail' : 'head' }, (t.avg >= 0 ? '+' : '−') + Math.abs(Math.round(t.avg)) + ' kt'), t.avg >= 0 ? ' tail' : ' head'));
+      if (st.om) {
+        const fz = st.S.map(s => s.fz).filter(v => v != null).map(v => v * 3.28084);
+        if (fz.length) chips.push(el('span', {}, '0°C ' + fmtN(Math.round(Math.min(...fz) / 100) * 100) + '–' + fmtN(Math.round(Math.max(...fz) / 100) * 100) + ' ft'));
+        const cp = Math.max(0, ...st.S.map(s => s.cape || 0));
+        chips.push(el('span', { class: cp >= 1000 ? 'h-CONV' : '' }, 'Max CAPE ' + fmtN(cp)));
+      }
+      if (st.wx) {
+        const cnt = {}; hazRuns().forEach(r => { const k = r.z.h + (r.z.k === 'SIGMET' ? ' SIGMET' : ''); cnt[k] = cnt[k] || { h: r.z.h, n: 0 }; cnt[k].n++; });
+        const ks = Object.keys(cnt);
+        if (!ks.length) chips.push(el('span', { class: 'h-ok' }, '✓ No SIGMET/AIRMET on route'));
+        ks.forEach(k => chips.push(el('span', { class: 'h-' + cnt[k].h }, (HZ[cnt[k].h] || {}).t + (/SIGMET/.test(k) ? ' SIGMET' : '') + ' ×' + cnt[k].n)));
+        const pr = st.wx.pireps.filter(p => (p[3] >= 2 || p[4] >= 2) && along(st, [p[0], p[1]]).off <= 60).length;
+        if (pr) chips.push(el('span', { class: 'h-TURB' }, 'MOD+ PIREP ×' + pr));
+      }
+      ui.sum.replaceChildren(...chips);
+    }
+    // ---- 단면도 (SVG) ----
+    function drawXS() {
+      const W = Math.max(300, Math.round(ui.xs.clientWidth || box.clientWidth || 340)), H = 250, ml = 40, mr = 8, mt = 22, mb = 36;
+      const pw = W - ml - mr, ph = H - mt - mb, S = st.S, tot = st.tot, o = st.o;
+      const ymax = Math.max(40000, Math.ceil((o.fl * 100 + 4000) / 5000) * 5000);
+      const X = d => ml + pw * d / tot, Y = ft => mt + ph * (1 - Math.max(0, Math.min(ymax, ft)) / ymax);
+      const cx = k => [k ? X((S[k - 1].d + S[k].d) / 2) : ml, k < S.length - 1 ? X((S[k].d + S[k + 1].d) / 2) : ml + pw];
+      const band = j => [j ? (LVF[j - 1] + LVF[j]) / 2 : 0, j < LV.length - 1 ? (LVF[j] + LVF[j + 1]) / 2 : LVF[j] + (LVF[j] - LVF[j - 1]) / 2];
+      const r1 = n => Math.round(n * 10) / 10;
+      const g = [];
+      g.push('<defs><pattern id="icp" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="5" fill="#0EA5E9" fill-opacity=".7"/></pattern></defs>');
+      g.push('<rect x="' + ml + '" y="' + mt + '" width="' + pw + '" height="' + ph + '" fill="#F8FAFC"/>');
+      for (let f = 10000; f < ymax; f += 10000) g.push('<line x1="' + ml + '" x2="' + (ml + pw) + '" y1="' + r1(Y(f)) + '" y2="' + r1(Y(f)) + '" stroke="#E2E8F0"/><text x="' + (ml - 4) + '" y="' + r1(Y(f) + 3) + '" font-size="9" fill="#94A3B8" text-anchor="end" font-weight="700">FL' + f / 100 + '</text>');
+      if (st.om) S.forEach((s, k) => {   // 구름 · 착빙 가능
+        if (!s.L) return; const [x0, x1] = cx(k);
+        s.L.forEach((l, j) => { if (l.cc == null || l.cc < 15) return; const [f0, f1] = band(j), y0 = Y(f1), y1 = Y(f0);
+          g.push('<rect x="' + r1(x0) + '" y="' + r1(y0) + '" width="' + r1(x1 - x0 + .5) + '" height="' + r1(y1 - y0 + .5) + '" fill="#64748B" fill-opacity="' + (l.cc / 100 * .5).toFixed(2) + '"/>');
+          if (l.cc >= 50 && l.t != null && l.t <= 0 && l.t >= -20) g.push('<rect x="' + r1(x0) + '" y="' + r1(y0) + '" width="' + r1(x1 - x0 + .5) + '" height="' + r1(y1 - y0 + .5) + '" fill="url(#icp)"/>'); });
+      });
+      hazRuns().forEach(r => {   // 위험 구역 (고도 범위가 있으면 그 높이만)
+        const z = r.z, Hh = HZ[z.h] || HZ.CONV, col = z.h === 'TURB' && z.k === 'SIGMET' ? HZ.TURB.sig : Hh.col;
+        const x0 = cx(r.a)[0], x1 = cx(r.b)[1];
+        if (SURF[z.h]) { g.push('<rect x="' + r1(x0) + '" y="' + r1(Y(0) - 5) + '" width="' + r1(x1 - x0) + '" height="5" fill="' + col + '" fill-opacity=".75"><title>' + esc(z.k + ' ' + Hh.t) + '</title></rect>'); return; }
+        const lo = ftOf(z.lo) || 0, hi = ftOf(z.hi) || ymax, y0 = Y(hi), y1 = Y(lo);
+        g.push('<rect x="' + r1(x0) + '" y="' + r1(y0) + '" width="' + r1(x1 - x0) + '" height="' + r1(Math.max(2, y1 - y0)) + '" fill="' + col + '" fill-opacity=".14" stroke="' + col + '" stroke-width="1.2"' + (z.k === 'SIGMET' ? '' : ' stroke-dasharray="4 3"') + '><title>' + esc(z.k + ' ' + Hh.t + ' ' + altTxt(z)) + '</title></rect>');
+        if (x1 - x0 > 34) g.push('<text x="' + r1(x0 + 3) + '" y="' + r1(y0 + 10) + '" font-size="8.5" font-weight="800" fill="' + col + '">' + esc(z.h) + '</text>');
+      });
+      if (st.om) {   // 0°C 선
+        const pts = S.filter(s => s.fz != null).map(s => r1(X(s.d)) + ',' + r1(Y(s.fz * 3.28084)));
+        if (pts.length > 1) { g.push('<polyline points="' + pts.join(' ') + '" fill="none" stroke="#2563EB" stroke-width="1.6" stroke-dasharray="5 3"/>');
+          const p0 = pts[0].split(','); g.push('<text x="' + (+p0[0] + 3) + '" y="' + (+p0[1] - 4) + '" font-size="9" font-weight="800" fill="#2563EB">0°C</text>'); }
+      }
+      // 내 비행 (상승·순항·강하)
+      g.push('<polyline points="' + [[0, 0], [st.P.c, o.fl * 100], [tot - st.P.dsc, o.fl * 100], [tot, 0]].map(p => r1(X(p[0])) + ',' + r1(Y(p[1]))).join(' ') + '" fill="none" stroke="#0B1220" stroke-width="2" stroke-linejoin="round"/>');
+      if (st.wx) st.wx.pireps.forEach(p => {   // 루트 60 nm 안 PIREP
+        if (!(p[2] > 0)) return; const a = along(st, [p[0], p[1]]); if (a.off > 60) return;
+        const x = r1(X(a.d)), y = r1(Y(p[2] * 100)), tt = '<title>PIREP FL' + p[2] + ' ' + [p[3] >= 0 ? TURB[p[3]] + ' turb' : '', p[4] >= 1 ? TURB[p[4]] + ' ice' : ''].filter(Boolean).join(', ') + '</title>';
+        if (p[3] >= 1) g.push('<circle cx="' + x + '" cy="' + y + '" r="' + (p[3] >= 3 ? 4.5 : 3.5) + '" fill="' + TCOL[p[3]] + '" stroke="#fff" stroke-width="1">' + tt + '</circle>');
+        if (p[4] >= 1) g.push('<path d="M' + x + ' ' + (y - 5) + 'l4.5 8h-9z" fill="#0EA5E9" stroke="#fff" stroke-width="1">' + tt + '</path>');
+      });
+      // 위: 순항 고도 바람 (+뒷바람 초록, −맞바람 빨강)
+      g.push('<text x="' + (ml - 4) + '" y="' + (mt - 8) + '" font-size="8.5" fill="#94A3B8" text-anchor="end" font-weight="800">WIND</text>');
+      if (st.om) { let lastX = -99; S.forEach(s => { const x = X(s.d); if (x - lastX < 30 || x < ml + 14 || x > ml + pw - 6) return; const w = windAt(s, o.fl * 100); if (!w) return; lastX = x;
+        g.push('<text x="' + r1(x) + '" y="' + (mt - 8) + '" font-size="9.5" font-weight="800" text-anchor="middle" fill="' + (w.comp >= 0 ? '#15803D' : '#B91C1C') + '">' + (w.comp >= 0 ? '+' : '−') + Math.abs(Math.round(w.comp)) + '</text>'); }); }
+      // 아래: CAPE 띠
+      const cy = mt + ph + 4;
+      g.push('<text x="' + (ml - 4) + '" y="' + (cy + 7) + '" font-size="8.5" fill="#94A3B8" text-anchor="end" font-weight="800">CAPE</text>');
+      if (st.om) S.forEach((s, k) => { const v = s.cape || 0, c = v >= 2500 ? '#DC2626' : v >= 1000 ? '#FB923C' : v >= 250 ? '#FDE68A' : '#EEF2F6'; const [x0, x1] = cx(k);
+        g.push('<rect x="' + r1(x0) + '" y="' + cy + '" width="' + r1(x1 - x0 + .5) + '" height="8" fill="' + c + '"/>'); });
+      // 맨 아래: 공항·픽스 이름
+      const ny = H - 6, names = [[0, st.from.code, 'start'], [tot, st.to.code, 'end']];
+      if (st.filed) { let lastX = X(0) + 30; st.filed.pts.slice(1, -1).forEach(p => { const a = along(st, p.ll), x = X(a.d); if (x - lastX < 44 || x > X(tot) - 44) return; lastX = x; names.push([a.d, p.name, 'middle']); }); }
+      names.forEach(([d, t, an]) => g.push('<line x1="' + r1(X(d)) + '" x2="' + r1(X(d)) + '" y1="' + (cy + 9) + '" y2="' + (cy + 13) + '" stroke="#94A3B8"/><text x="' + r1(X(d)) + '" y="' + ny + '" font-size="9.5" font-weight="' + (an === 'middle' ? 600 : 800) + '" fill="' + (an === 'middle' ? '#64748B' : '#0B1220') + '" text-anchor="' + an + '">' + esc(t) + '</text>'));
+      if (!st.om) g.push('<text x="' + (ml + pw / 2) + '" y="' + (mt + ph / 2) + '" font-size="11" font-weight="700" fill="#94A3B8" text-anchor="middle">' + esc(st.omErr ? '단면 예보를 못 받았어요 (' + st.omErr + ')' : '단면 예보 받는 중…') + '</text>');
+      g.push('<line id="xs-cur" x1="0" x2="0" y1="' + mt + '" y2="' + (mt + ph) + '" stroke="#0B1220" stroke-width="1" stroke-dasharray="2 2" visibility="hidden"/>');
+      ui.xs.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="Route vertical profile">' + g.join('') + '</svg>';
+      const svg = ui.xs.firstChild;
+      const pickAt = e => { const r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width; let k = 0, bd = Infinity; S.forEach((s, i) => { const d = Math.abs(X(s.d) - x); if (d < bd) { bd = d; k = i; } }); inspect(k); };
+      svg.addEventListener('pointerdown', pickAt); svg.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || e.buttons) pickAt(e); });
+      if (st.sel >= 0) inspect(st.sel);
+      function inspect(k) {
+        st.sel = k; const s = S[k], ln = svg.querySelector('#xs-cur'), x = r1(X(s.d));
+        ln.setAttribute('x1', x); ln.setAttribute('x2', x); ln.setAttribute('visibility', 'visible');
+        cur.setLatLng([s.lat, near(s.lonR, st.gc.pts[0][1])]).addTo(map);
+        const alt = st.P.alt(s.d), w = windAt(s, alt > 500 ? alt : o.fl * 100);
+        const a1 = [el('b', {}, fmtN(s.d) + ' nm · ' + zt(s.t)), ' · ' + (alt >= o.fl * 100 - 1 ? 'FL' + o.fl : fmtN(Math.round(alt / 100) * 100) + ' ft')];
+        if (w) a1.push(' · ' + z2(Math.round(w.dir / 10) % 36 || 36) + '0/' + Math.round(w.spd) + ' kt (' + (w.comp >= 0 ? '+' : '−') + Math.abs(Math.round(w.comp)) + ')' + (w.t != null ? ' · OAT ' + Math.round(w.t) + '°C' : ''));
+        const a2 = [];
+        if (s.fz != null) a2.push('0°C ' + fmtN(Math.round(s.fz * 3.28084 / 100) * 100) + ' ft');
+        if (s.cape != null) a2.push('CAPE ' + fmtN(s.cape));
+        if (s.L) { const cl = s.L.map((l, j) => l.cc >= 50 ? j : -1).filter(j => j >= 0); if (cl.length) a2.push('Cloud ' + (cl[0] === 0 ? 'SFC' : 'FL' + z2(Math.round(LVF[cl[0]] / 1000)) + '0') + '–FL' + z2(Math.round(LVF[cl[cl.length - 1]] / 1000)) + '0'); }
+        hazRuns().filter(r => r.a <= k && k <= r.b).forEach(r => a2.push((HZ[r.z.h] || {}).t + ' ' + r.z.k + (altTxt(r.z) ? ' ' + altTxt(r.z) : '')));
+        ui.info.replaceChildren(...a1, el('br'), a2.join(' · ') || '—');
+      }
+    }
+    // ---- 출발·도착 METAR / TAF (ETD·ETA 시간대를 노란색으로) ----
+    function drawApt() {
+      const wx = st.wx; if (!wx) return;
+      const one = (ap, when, tag) => {
+        if (!ap) return null;
+        const m = ap.metar || {}, T = ap.taf, t = when / 1000;
+        const kids = [el('div', { class: 'apt-h' }, el('small', {}, tag), ap.icao, m.cat ? el('span', { class: 'cat ' + m.cat }, m.cat) : null, el('small', { style: 'margin-left:auto;letter-spacing:0' }, (tag === 'DEP' ? 'ETD ' : 'ETA ') + zt(when))),
+          el('p', { class: 'raw' }, m.raw || 'No METAR')];
+        if (!T || !T.f || !T.f.length) kids.push(el('p', { class: 'muted', style: 'font-size:12px' }, 'No TAF'));
+        else {
+          const rows = T.f.map(f => {
+            const hit = f.t0 <= t && t < f.t1, ch = f.ch === 'PROB' ? 'PROB' + (f.p || '') : f.ch || 'BASE';
+            const span = (f.ch === 'TEMPO' || f.ch === 'PROB' || f.ch === 'BECMG') ? '–' + z2(new Date(f.t1 * 1000).getUTCHours()) + 'Z' : '';
+            return el('div', { class: 'taf-r' + (hit ? ' now' : '') }, el('span', { class: 'tt' }, el('em', {}, ch), zh(f.t0).replace(/00Z$/, 'Z') + span),
+              f.cat ? el('span', { class: 'cat ' + f.cat }, f.cat) : el('span', {}),
+              el('span', { class: 'tx' }, [f.wind, f.vis, f.wx, f.sky, f.ws].filter(Boolean).join(' ') || '—', hit ? el('span', { class: 'mk' }, '◀ ' + (tag === 'DEP' ? 'ETD' : 'ETA')) : null));
+          });
+          if (t < T.from || t >= T.to) rows.push(el('p', { class: 'muted', style: 'font-size:11.5px;margin-top:2px' }, (tag === 'DEP' ? 'ETD' : 'ETA') + ' is outside this TAF (valid ' + zh(T.from) + '–' + zh(T.to) + ')'));
+          kids.push(el('div', { class: 'taf' }, rows), el('details', { class: 'taf-src' }, el('summary', {}, 'Raw TAF'), el('p', { class: 'raw' }, T.raw)));
+        }
+        return el('div', {}, kids);
+      };
+      ui.apt.replaceChildren(...[one(wx.a, st.o.etd, 'DEP'), one(wx.b, st.eta || st.o.etd, 'ARR')].filter(Boolean));
+    }
+    return { addInputs, build, run, clear };
+  })();
+  if (BETA) { RP.addInputs(); RP.build(); }
+
   async function show(f, a, b, rt) {
     if (!key) return showLogin();
     rt = (rt || '').trim();
@@ -474,6 +838,7 @@
     const lats = gc.pts.map(p => p[0]), lons = gc.pts.map(p => p[1]);
     const norm = x => ((x + 540) % 360) - 180;
     const box = [Math.max(-90, Math.min(...lats) - 5), norm(Math.min(...lons) - 8), Math.min(90, Math.max(...lats) + 5), norm(Math.max(...lons) + 8)];
+    if (BETA) return RP.run({ gc, from, to, filed, label, box, a, b });
     let wx;
     try { wx = await call('getRouteWx', key, box); } catch (e) {
       if (e.message === '__auth') return;
