@@ -27,7 +27,10 @@
   #rte { grid-column: 1 / -1; width: 100%; min-height: 44px; resize: vertical; padding: 9px; border-radius: 10px; border: 1px solid #2B3F66; background: #13284F; color: #fff; font: 600 13px/1.4 ui-monospace, Menlo, monospace; text-transform: uppercase; }
   #rte::placeholder { color: #6F82A6; text-transform: none; font: 500 12.5px/1.4 var(--f); }
   .skip { margin: 4px 0 0; font: 600 12px/1.4 var(--f); color: #FCD34D; }
-  .go { grid-column: 1 / -1; padding: 10px 14px; border: 0; border-radius: 10px; background: #fff; color: var(--navy); font: 800 14px/1 var(--f); cursor: pointer; }
+  .btns { grid-column: 1 / -1; display: flex; gap: 6px; }
+  .btns .go { flex: 1 1 auto; }
+  .clr { flex: 0 0 auto; padding: 7px 16px; border: 1px solid #3A5384; border-radius: 10px; background: transparent; color: #C9D6EE; font: 700 13px/1 var(--f); cursor: pointer; }
+  .go { grid-column: 1 / -1; padding: 7px 14px; border: 0; border-radius: 10px; background: #fff; color: var(--navy); font: 800 13px/1 var(--f); cursor: pointer; }
   .msg { margin: 8px 0 0; font: 600 13px/1.4 var(--f); color: #D6E2F5; min-height: 1.4em; }
   .msg.err { color: #FCA5A5; }
   .bar { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 8px 12px; background: #fff; border-bottom: 1px solid var(--line); }
@@ -102,7 +105,7 @@
     <span class="arrow" aria-hidden="true">→</span>
     <input id="to" placeholder="To" maxlength="4" autocapitalize="characters" aria-label="도착 공항">
     <textarea id="rte" rows="2" placeholder="Paste route from release (optional) — e.g. KLAX SUMMR2 SUMMR DCT AVE J88 ... BDEGA4 KSFO" spellcheck="false" autocapitalize="characters" aria-label="릴리스 루트"></textarea>
-    <button class="go" type="submit">Show</button>
+    <div class="btns"><button class="go" type="submit">Show</button><button class="clr" type="button" id="clr">Clear</button></div>
   </form>
   <p class="msg" id="msg"></p>
   <p class="skip" id="skip" hidden></p>
@@ -327,6 +330,14 @@
 
   const msg = (t, err) => { $('msg').textContent = t; $('msg').classList.toggle('err', !!err); };
   ['from', 'to'].forEach(id => $(id).addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }));
+  // Clear: 칸 모두 비우고 지도 위 루트·터뷸런스·안내도 지움
+  $('clr').addEventListener('click', () => {
+    $('from').value = ''; $('to').value = ''; $('rte').value = '';
+    try { sessionStorage.removeItem('rt_cur'); } catch (_) {}
+    history.replaceState(null, '', location.pathname + location.search);
+    layers.route.clearLayers(); layers.area.clearLayers(); layers.pirep.clearLayers();
+    msg(''); $('from').focus();
+  });
   $('f').addEventListener('submit', e => {
     e.preventDefault();
     const f = '', a = $('from').value, b = $('to').value, rt = $('rte').value.trim();
