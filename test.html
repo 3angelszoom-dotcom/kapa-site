@@ -1851,6 +1851,20 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden && tzTimer) tzDraw(); });   // 앱으로 돌아오면 바로 맞춤
   { const sc = () => document.body.classList.toggle('scrolled', window.scrollY > 8); window.addEventListener('scroll', sc, { passive: true }); sc(); }
   // ===== 홈 화면 앱으로 연 사람만: 오른쪽 아래 새로고침 버튼 (앱에는 브라우저 새로고침이 없어서) =====
+  // 누를 때 짧은 진동: 안드로이드는 vibrate, 아이폰(iOS 18+)은 숨긴 스위치를 눌러 '톡' 햅틱
+  function haptic() {
+    try { if (navigator.vibrate && navigator.vibrate(15)) return; } catch (_) {}
+    try {
+      let l = document.getElementById('hap-l');
+      if (!l) {
+        l = document.createElement('label'); l.id = 'hap-l';
+        l.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
+        const i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); i.tabIndex = -1;
+        l.append(i); document.body.append(l);
+      }
+      l.click();
+    } catch (_) {}
+  }
   (function refreshButton() {
     if (GAS) return;
     if (/[?&]r=\d+/.test(location.search)) { try { history.replaceState(history.state, '', location.pathname + location.hash); } catch (_) {} }   // 새로고침 표시(?r=) 지우기
@@ -1858,7 +1872,7 @@
     const b = el('button', { class: 'rf-btn', type: 'button', 'aria-label': '새로고침', title: '새로고침',
       html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>' });
     // 저장된 예전 화면이 아니라 항상 새 화면을 받도록 주소 끝에 시간을 붙여서 다시 열기
-    b.addEventListener('click', () => { b.classList.add('spin'); location.replace(location.pathname + '?r=' + Date.now() + location.hash); });
+    b.addEventListener('click', () => { haptic(); b.classList.add('spin'); location.replace(location.pathname + '?r=' + Date.now() + location.hash); });
     document.body.append(b);
   })();
   // ===== 새 버전 알림: 앱을 열거나 다시 화면에 띄울 때 사이트에 새 버전이 올라와 있으면 맨 위에 "업데이트" 띠 =====
