@@ -20,14 +20,14 @@
   .brand small { font-weight: 600; color: #8EC5FF; margin-left: 6px; font-size: 12px; }
   .who { font-size: 12px; color: #B8C4D9; }
   .who button { background: none; border: 0; color: #8EC5FF; font: inherit; cursor: pointer; padding: 0 0 0 6px; }
-  form { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; gap: 6px; align-items: center; margin-top: 10px; }
+  form { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 6px; align-items: center; margin-top: 10px; }
   input { width: 100%; min-width: 0; padding: 10px 9px; border-radius: 10px; border: 1px solid #2B3F66; background: #13284F; color: #fff; font: 600 15px/1.2 var(--f); text-transform: uppercase; }
   input::placeholder { color: #6F82A6; text-transform: none; font-weight: 500; }
   .arrow { color: #6F82A6; font-size: 13px; }
   #rte { grid-column: 1 / -1; width: 100%; min-height: 44px; resize: vertical; padding: 9px; border-radius: 10px; border: 1px solid #2B3F66; background: #13284F; color: #fff; font: 600 13px/1.4 ui-monospace, Menlo, monospace; text-transform: uppercase; }
   #rte::placeholder { color: #6F82A6; text-transform: none; font: 500 12.5px/1.4 var(--f); }
   .skip { margin: 4px 0 0; font: 600 12px/1.4 var(--f); color: #FCD34D; }
-  .go { padding: 10px 14px; border: 0; border-radius: 10px; background: #fff; color: var(--navy); font: 800 14px/1 var(--f); cursor: pointer; }
+  .go { grid-column: 1 / -1; padding: 10px 14px; border: 0; border-radius: 10px; background: #fff; color: var(--navy); font: 800 14px/1 var(--f); cursor: pointer; }
   .msg { margin: 8px 0 0; font: 600 13px/1.4 var(--f); color: #D6E2F5; min-height: 1.4em; }
   .msg.err { color: #FCA5A5; }
   .bar { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 8px 12px; background: #fff; border-bottom: 1px solid var(--line); }
@@ -76,8 +76,8 @@
     <input id="from" placeholder="From" maxlength="4" autocapitalize="characters" aria-label="출발 공항">
     <span class="arrow" aria-hidden="true">→</span>
     <input id="to" placeholder="To" maxlength="4" autocapitalize="characters" aria-label="도착 공항">
-    <button class="go" type="submit">Show</button>
     <textarea id="rte" rows="2" placeholder="Paste route from release (optional) — e.g. KLAX SUMMR2 SUMMR DCT AVE J88 ... BDEGA4 KSFO" spellcheck="false" autocapitalize="characters" aria-label="릴리스 루트"></textarea>
+    <button class="go" type="submit">Show</button>
   </form>
   <p class="msg" id="msg"></p>
   <p class="skip" id="skip" hidden></p>
