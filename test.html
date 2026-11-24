@@ -949,6 +949,7 @@
   .dl-row::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: #22C55E; }
   .dl-row.s-gs::before, .dl-row.s-clsd::before { background: #EF4444; } .dl-row.s-gdp::before { background: #F97316; } .dl-row.s-dly::before { background: #EAB308; }
   .dl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .dl-cw { display: inline-flex; align-items: baseline; gap: 8px; }
   .dl-code { font: 800 17px/1.3 var(--body); color: #0B1220; letter-spacing: .02em; }
   .dl-items { display: grid; gap: 6px; margin-top: 6px; }
   .dl-item { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
@@ -3374,7 +3375,7 @@
     const row = d => {
       const f = d.faa.slice().sort((a, b) => ORDER[a.t] - ORDER[b.t]);
       return el('div', { class: 'dl-row s-' + f[0].t.toLowerCase() },
-        el('div', { class: 'dl-head' }, el('b', { class: 'dl-code' }, d.code), mine.indexOf(d.code) >= 0 ? el('span', { class: 'dl-mine' }, 'MY AIRPORT') : null),
+        el('div', { class: 'dl-head' }, el('span', { class: 'dl-cw' }, el('b', { class: 'dl-code' }, d.code), r.faaAt ? el('span', { class: 'wx-time' }, zulu(r.faaAt, true)) : null), mine.indexOf(d.code) >= 0 ? el('span', { class: 'dl-mine' }, 'MY AIRPORT') : null),
         el('div', { class: 'dl-items' }, f.map(x => el('div', { class: 'dl-item' },
           el('span', { class: 'dl-pill ' + x.t.toLowerCase() }, LBL[x.t] || x.t),
           el('span', { class: 'dl-d' }, x.d || x.text)))));
