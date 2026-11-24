@@ -48,8 +48,13 @@
   .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 3px; vertical-align: -1px; }
   #map { flex: 1 1 auto; min-height: 52vh; background: #DDE3EA; z-index: 0; position: relative; }
   /* 내 위치 */
-  .me-ctl .me-loc { display: block; width: 34px; height: 34px; border: 0; background: #fff; font-size: 17px; line-height: 34px; text-align: center; cursor: pointer; padding: 0; }
-  .me-ctl .me-loc[aria-pressed="true"] { background: #DBEAFE; }
+  /* 내 위치 버튼: +/− 아래 둥근 반투명 버튼 + 흰 화살표 (켜지면 파란 화살표) */
+  .me-ctl { margin-top: 10px !important; }
+  .me-ctl .me-loc { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+    background: rgba(22,33,43,.45); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.2); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .me-ctl .me-loc[aria-pressed="true"] { color: #60A5FA; }
+  .me-ctl .me-loc[aria-pressed="true"] path { fill: currentColor; }
+  .me-ctl .me-loc:focus-visible { outline: 2px solid #93C5FD; outline-offset: 2px; }
   .me-dot { position: relative; }
   .me-dot-c { position: absolute; left: 4px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: #2563EB; border: 2px solid #fff; box-shadow: 0 0 0 2px rgba(37,99,235,.35), 0 1px 4px rgba(0,0,0,.35); box-sizing: border-box; }
   .me-dot-h { position: absolute; left: 0; top: 0; width: 22px; height: 22px; }
@@ -242,7 +247,8 @@
   // 지도 왼쪽 📍 버튼: 켜면 파란 점(정확도 원·진행 방향)과 지상속도·고도·방향이 아래에 보임. 다시 누르면 꺼짐
   const me = { watch: null, dot: null, acc: null, first: true };
   const meInfo = el('div', { class: 'me-info', hidden: '' });
-  const meBtn = el('button', { type: 'button', class: 'me-loc', title: '내 위치', 'aria-label': '내 위치 보기', 'aria-pressed': 'false' }, '📍');
+  const meBtn = el('button', { type: 'button', class: 'me-loc', title: '내 위치', 'aria-label': '내 위치 보기', 'aria-pressed': 'false' });
+  meBtn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20.5 3.5 3.8 10.4c-.6.3-.6 1.2.1 1.4l6.6 2 2 6.6c.2.7 1.1.7 1.4.1L20.5 3.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
   const meIcon = h => L.divIcon({ className: 'me-dot', iconSize: [22, 22], iconAnchor: [11, 11],
     html: '<span class="me-dot-c"></span>' + (h == null || isNaN(h) ? '' : '<span class="me-dot-h" style="transform:rotate(' + Math.round(h) + 'deg)"></span>') });
   function meStop(note) {
@@ -274,7 +280,7 @@
     }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 30000 });
   }
   meBtn.addEventListener('click', () => { if (me.watch != null) meStop(); else meStart(); });
-  const MeCtl = L.Control.extend({ options: { position: 'topleft' }, onAdd: () => { const d = L.DomUtil.create('div', 'leaflet-bar me-ctl'); d.append(meBtn); L.DomEvent.disableClickPropagation(d); return d; } });
+  const MeCtl = L.Control.extend({ options: { position: 'topleft' }, onAdd: () => { const d = L.DomUtil.create('div', 'me-ctl'); d.append(meBtn); L.DomEvent.disableClickPropagation(d); return d; } });
   map.addControl(new MeCtl());
   $('map').append(meInfo);
 
