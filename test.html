@@ -1405,13 +1405,15 @@
       document.body.append(speedBox);
     }
     const s = v => v == null ? '–' : (v / 1000).toFixed(1) + 's';
-    const head = '<div style="display:flex;justify-content:space-between;color:#94A3B8;margin-bottom:4px"><b style="color:#fff">⏱ 요청 속도</b><span>전체 · 준비 · 실행 · 나머지</span></div>';
+    const head = '<div style="display:flex;justify-content:space-between;color:#94A3B8;margin-bottom:4px"><b style="color:#fff">⏱ 요청 속도</b><span>전체 · 준비 · 실행 · 나머지 <button id="speed-off" type="button" style="margin-left:8px;border:0;border-radius:999px;background:#334155;color:#fff;font:700 12px/1 inherit;padding:5px 9px;cursor:pointer">끄기 ✕</button></span></div>';
     speedBox.innerHTML = head + speedRows.map(r => {
       const rest = r.ms != null ? Math.max(0, r.total - r.ms - (r.g || 0)) : null;
       const col = r.err ? '#FCA5A5' : r.total > 8000 ? '#FCA5A5' : r.total > 4000 ? '#FCD34D' : '#86EFAC';
       return '<div style="display:flex;gap:8px;white-space:nowrap"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">' + r.at.toTimeString().slice(0, 8) + ' ' + esc(r.fn) + '</span>' +
         '<b style="color:' + col + '">' + s(r.total) + '</b><span>' + s(r.g) + '</span><span>' + s(r.ms) + '</span><span>' + (r.err ? esc(r.err.slice(0, 18)) : s(rest)) + '</span></div>';
     }).join('');
+    const off = speedBox.querySelector('#speed-off');
+    if (off) off.onclick = () => { store.set('pc_speed', ''); speedBox.remove(); speedBox = null; location.reload(); };
   }
   // 같은 읽기 요청이 동시에 여러 번 나가면 하나만 보내고 결과를 같이 씀 (요청 수를 줄여서 멈춤도 줄임)
   const inflight = new Map();
