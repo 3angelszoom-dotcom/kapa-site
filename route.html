@@ -74,7 +74,9 @@
   .d { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .note { font-size: 9.5px; color: #94A3B8; margin: 6px 0 0; line-height: 1.4; }
   .note a { color: inherit; }
-  .leaflet-control-attribution { display: none !important; }   /* 지도 위 출처 글씨는 숨기고, 지도 아래에 작게 */
+  .leaflet-control-attribution { display: none !important; }
+  /* 아이폰 Safari에서 지도 조각(타일) 사이에 생기는 가는 흰 줄 없애기: 조각을 0.5px씩 겹쳐서 그림 */
+  .seamfix img.leaflet-tile { width: 256.5px !important; height: 256.5px !important; }   /* 바탕·위성 지도만 (레이더는 레티나용 작은 조각이라 제외) */   /* 지도 위 출처 글씨는 숨기고, 지도 아래에 작게 */
   .muted { color: var(--muted); font-size: 13px; margin: 0; }
   .ap { font: 800 12px/1 var(--f); }
   .leaflet-control-attribution { font-size: 9px !important; line-height: 1.3 !important; background: rgba(255,255,255,.6) !important; color: #64748B !important; max-width: 70%; }
@@ -193,9 +195,9 @@
     c.innerHTML = a.join(' · '); };
   map.on('layeradd layerremove', () => setTimeout(credUpd, 0));   // "Leaflet" 글자는 빼고, 지도·레이더 출처만 작게
   // 바탕 지도: Esri 연회색 (키 없이 사용) → 안 되면 OpenStreetMap으로
-  const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }).addTo(map);
+  const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, className: 'seamfix', attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }).addTo(map);
   let baseErr = 0;
-  base.on('tileerror', () => { if (++baseErr === 4) { map.removeLayer(base); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12, attribution: '&copy; OpenStreetMap contributors' }).addTo(map).bringToBack(); } });
+  base.on('tileerror', () => { if (++baseErr === 4) { map.removeLayer(base); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12, className: 'seamfix', attribution: '&copy; OpenStreetMap contributors' }).addTo(map).bringToBack(); } });
   const layers = { radar: L.layerGroup(), world: L.layerGroup(), pirep: L.layerGroup(), area: L.layerGroup(), route: L.layerGroup().addTo(map) };
   const on = { radar: true, world: false, pirep: true, area: true };
   // 미국 NEXRAD(약 1 km 해상도): 진하게, 레티나 화면에선 한 단계 더 촘촘한 타일로
@@ -217,7 +219,7 @@
   const BASES = {
     gray: { t: '기본' },
     sat: { t: '위성', min: 0,
-      mk: () => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, zIndex: 1, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' }) },
+      mk: () => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, zIndex: 1, className: 'seamfix', attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' }) },
   };
   let bmKey = BASES[store.get('rt_base')] ? store.get('rt_base') : 'gray', bmLayer = null;
   const bmHint = el('span', { class: 'bm-hint' });
