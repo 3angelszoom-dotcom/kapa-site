@@ -963,7 +963,13 @@
   .dl-d { font-size: 13.5px; line-height: 1.45; color: #475569; overflow-wrap: anywhere; }
 .dl-src { font-size: 12px; font-weight: 600; color: #94A3B8; margin-left: 4px; letter-spacing: .04em; }
   /* Zulu 시각: 지금 시각(제목 옆), METAR 발표 시각(줄 끝), FAA 발표 시각(Delays 옆) — 모두 DDHHMMZ */
-  .wx-z { font-variant-numeric: tabular-nums; }
+  /* 지금 시각: 초록 알약 + 깜빡이는 점 → 발표 시각(회색)과 구분 */
+  .recent-h .wx-z { display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; font-variant-numeric: tabular-nums;
+    color: #047857; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 999px; padding: 3px 8px; letter-spacing: .02em; }
+  .recent-h .wx-z::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #10B981; animation: wxz-blink 2s ease-in-out infinite; }
+  .recent-h .wx-z:empty { display: none; }
+  @keyframes wxz-blink { 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) { .recent-h .wx-z::before { animation: none; } }
   .wx-time { font-size: 11px; color: #94A3B8; font-variant-numeric: tabular-nums; letter-spacing: 0; white-space: nowrap; }
   .br-faa { font-size: 12.5px; font-weight: 700; padding: 4px 8px; border-radius: 8px; margin-top: 2px; overflow-wrap: anywhere; }
   .br-faa.gs, .br-faa.clsd { background: #FEE2E2; color: #B91C1C; } .br-faa.gdp { background: #FFEDD5; color: #C2410C; } .br-faa.dly { background: #FEF9C3; color: #854D0E; }
@@ -1110,7 +1116,7 @@
     </section>
 
     <section class="section container br-sec" id="delay" hidden>
-      <h2 class="recent-h"><span aria-hidden="true">🚦</span> Delays <small class="dl-src">FAA · U.S.<span id="dl-at"></span></small></h2>
+      <h2 class="recent-h"><span aria-hidden="true">🚦</span> Delays <small class="dl-src">FAA · U.S.</small></h2>
       <div class="dl-list" id="dl-list"></div>
     </section>
 
@@ -3393,7 +3399,6 @@
   (function tickZ() { const z = document.getElementById('wx-z'); if (z) z.textContent = zulu(Date.now(), true); setTimeout(tickZ, 20000); })();
   function drawWx(r) {
     drawDelays(r);
-    const at = document.getElementById('dl-at'); if (at) at.textContent = r.faaAt ? ' · ' + zulu(r.faaAt, true) : '';
     const box = document.getElementById('br-wx');
     const eb = el('button', { class: 'br-edit', type: 'button', onclick: () => editWx(box, r) }, r.wx.length ? '✏️ 공항 바꾸기' : '＋ 내 공항 추가');
     document.getElementById('wx-edit').replaceChildren(eb);
