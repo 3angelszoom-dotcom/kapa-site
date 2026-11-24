@@ -54,6 +54,10 @@
     background: rgba(22,33,43,.45); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.2); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
   .me-ctl .me-loc[aria-pressed="true"] { color: #60A5FA; }
   .me-ctl .me-loc[aria-pressed="true"] path { fill: currentColor; }
+  .rf-ctl { margin: 0 12px 12px 0 !important; }
+  .me-ctl .rf.spin svg { animation: rf-spin .9s ease-in-out; }
+  @keyframes rf-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .me-ctl .rf.spin svg { animation: none; } }
   .me-ctl .me-loc:focus-visible { outline: 2px solid #93C5FD; outline-offset: 2px; }
   .me-dot { position: relative; }
   .me-dot-c { position: absolute; left: 4px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: #2563EB; border: 2px solid #fff; box-shadow: 0 0 0 2px rgba(37,99,235,.35), 0 1px 4px rgba(0,0,0,.35); box-sizing: border-box; }
@@ -195,7 +199,8 @@
   const layers = { radar: L.layerGroup(), world: L.layerGroup(), pirep: L.layerGroup(), area: L.layerGroup(), route: L.layerGroup().addTo(map) };
   const on = { radar: true, world: false, pirep: true, area: true };
   // 미국 NEXRAD(약 1 km 해상도): 진하게, 레티나 화면에선 한 단계 더 촘촘한 타일로
-  L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?' + Math.floor(Date.now() / 300000), { opacity: .8, maxZoom: 12, maxNativeZoom: 11, detectRetina: true, zIndex: 3, attribution: 'NEXRAD &copy; IEM' }).addTo(layers.radar);
+  const NEX = () => 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?' + Math.floor(Date.now() / 60000);
+  const nexrad = L.tileLayer(NEX(), { opacity: .8, maxZoom: 12, maxNativeZoom: 11, detectRetina: true, zIndex: 3, attribution: 'NEXRAD &copy; IEM' }).addTo(layers.radar);
   // 해외 레이더(RainViewer, 저해상도): 따로 켜는 버튼, NEXRAD 아래에 깔림
   fetch('https://api.rainviewer.com/public/weather-maps.json').then(r => r.json()).then(j => {
     const f = j && j.radar && j.radar.past && j.radar.past[j.radar.past.length - 1];
@@ -289,6 +294,16 @@
   meBtn.addEventListener('click', () => { if (me.watch != null) meStop(); else meStart(); });
   const MeCtl = L.Control.extend({ options: { position: 'topleft' }, onAdd: () => { const d = L.DomUtil.create('div', 'me-ctl'); d.append(meBtn); L.DomEvent.disableClickPropagation(d); return d; } });
   map.addControl(new MeCtl());
+  // 새로고침: 오른쪽 아래 반투명 버튼 — 레이더 새 이미지 + 보던 루트가 있으면 터뷸런스·PIREP 다시 받기
+  const rfBtn = el('button', { type: 'button', class: 'me-loc rf', title: '새로고침', 'aria-label': '새로고침' });
+  rfBtn.innerHTML = '<svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  rfBtn.addEventListener('click', () => {
+    rfBtn.classList.add('spin'); setTimeout(() => rfBtn.classList.remove('spin'), 900);
+    nexrad.setUrl(NEX());
+    if ($('from').value && $('to').value) { if ($('f').requestSubmit) $('f').requestSubmit(); else $('f').dispatchEvent(new Event('submit', { cancelable: true })); }
+  });
+  const RfCtl = L.Control.extend({ options: { position: 'bottomright' }, onAdd: () => { const d = L.DomUtil.create('div', 'me-ctl rf-ctl'); d.append(rfBtn); L.DomEvent.disableClickPropagation(d); return d; } });
+  map.addControl(new RfCtl());
   $('map').append(meInfo);
 
   const msg = (t, err) => { $('msg').textContent = t; $('msg').classList.toggle('err', !!err); };
