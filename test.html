@@ -1003,6 +1003,12 @@
   .recent-h .wx-z:empty { display: none; }
   @keyframes wxz-blink { 50% { opacity: .25; } }
   @media (prefers-reduced-motion: reduce) { .recent-h .wx-z::before { animation: none; } }
+  /* 날씨 새로 받는 중: 제목 옆 작은 빙글 표시 (실패하면 작은 빨간 !) */
+  .recent-h .wx-st { display: none; width: 14px; height: 14px; margin-left: 6px; vertical-align: middle; box-sizing: border-box; }
+  .recent-h .wx-st.on { display: inline-block; border: 2px solid #CBD5E1; border-top-color: #10B981; border-radius: 50%; animation: wxst-spin .8s linear infinite; }
+  .recent-h .wx-st.err { display: inline-block; width: auto; height: auto; font-size: 13px; font-weight: 800; color: #DC2626; }
+  .recent-h .wx-st.err::before { content: '!'; }
+  @keyframes wxst-spin { to { transform: rotate(360deg); } }
   .wx-time { font-size: 11px; color: #94A3B8; font-variant-numeric: tabular-nums; letter-spacing: 0; white-space: nowrap; }
   .br-faa { font-size: 12.5px; font-weight: 700; padding: 4px 8px; border-radius: 8px; margin-top: 2px; overflow-wrap: anywhere; }
   .br-faa.gs, .br-faa.clsd { background: #FEE2E2; color: #B91C1C; } .br-faa.gdp { background: #FFEDD5; color: #C2410C; } .br-faa.dly { background: #FEF9C3; color: #854D0E; }
@@ -1144,7 +1150,7 @@
     </section>
 
     <section class="section container br-sec" id="brief" hidden>
-      <div class="wx-h"><h2 class="recent-h"><span aria-hidden="true">☀️</span> Weather <small class="dl-src wx-z" id="wx-z"></small></h2><span id="wx-edit"></span></div>
+      <div class="wx-h"><h2 class="recent-h"><span aria-hidden="true">☀️</span> Weather <small class="dl-src wx-z" id="wx-z"></small><small class="wx-st" id="wx-st" role="status"></small></h2><span id="wx-edit"></span></div>
       <div class="br-wx" id="br-wx"></div>
     </section>
 
@@ -1541,6 +1547,7 @@
   function setMemberKey(k) {
     memberKey = k || '';
     store.set('pc_key', keepMe ? memberKey : '');
+    if (!memberKey) store.set('pc_wxc', '');   // 로그아웃하면 저장해 둔 날씨도 지움
     syncUrl(currentRoute, true);
     setTimeout(updateMe, 0);
   }
@@ -3467,14 +3474,25 @@
   async function loadWx(force) {
     const box = document.getElementById('br-wx');
     if (!box || !memberKey) return;
-    const codes = wxCodes(), k = codes.join(',');
-    if (!force && wxCache && wxCache.key === k && Date.now() - wxCache.at < 600000) return drawWx(wxCache.data);
-    if (!box.children.length) box.replaceChildren(el('p', { class: 'muted br-wx-load' }, '날씨 불러오는 중…'));
+    const codes = wxCodes(), k = codes.join(',') + '|' + String(memberKey).slice(-6);
+    if (!wxCache) { try { const c = JSON.parse(store.get('pc_wxc') || 'null'); if (c && c.key === k && c.data) wxCache = c; } catch (_) {} }
+    const have = wxCache && wxCache.key === k;
+    if (!force && have && Date.now() - wxCache.at < 600000) return drawWx(wxCache.data);
+    // 지난번 날씨·딜레이를 먼저 그대로 보여 주고, 뒤에서 새로 받아 오면 바꿔 끼움 (제목 옆에 "업데이트 중" 작게)
+    if (have) drawWx(wxCache.data);
+    else if (!box.querySelector('.wx-card')) box.replaceChildren(el('p', { class: 'muted br-wx-load' }, '날씨 불러오는 중…'));
+    const st = document.getElementById('wx-st');
+    if (st) { st.className = 'wx-st on'; st.title = '날씨 새로 받는 중'; st.setAttribute('aria-label', st.title); }
     try {
       const r = await call('getBriefing', memberKey, codes);
       wxCache = { at: Date.now(), key: k, data: r };
+      store.set('pc_wxc', JSON.stringify(wxCache));
       drawWx(r);
-    } catch (e) { if (e.message !== '__auth') box.replaceChildren(el('p', { class: 'muted' }, '날씨를 불러오지 못했어요.')); }
+      if (st) { st.className = 'wx-st'; st.title = ''; st.removeAttribute('aria-label'); }
+    } catch (e) {
+      if (st) { const bad = e.message !== '__auth'; st.className = 'wx-st' + (bad ? ' err' : ''); st.title = bad ? '새로 받지 못했어요. 지난번 정보예요.' : ''; bad ? st.setAttribute('aria-label', st.title) : st.removeAttribute('aria-label'); }
+      if (e.message !== '__auth' && !box.querySelector('.wx-card')) box.replaceChildren(el('p', { class: 'muted' }, '날씨를 불러오지 못했어요.'));
+    }
   }
   const CAT_KO = { VFR: 'VFR', MVFR: 'MVFR', IFR: 'IFR', LIFR: 'LIFR' };
   // 딜레이 칸: 고른 공항 중 미국 공항만 FAA 현황 (없으면 "No FAA delays")
