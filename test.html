@@ -1683,7 +1683,7 @@
   function openRouteFull() {
     if (document.getElementById('route-ov')) return;
     const ov = el('div', { id: 'route-ov', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Route Weather' });
-    const fr = el('iframe', { src: 'route.html', title: 'Route Weather' });
+    const fr = el('iframe', { src: 'route.html', title: 'Route Weather', allow: 'geolocation' });   // 📍 내 위치를 쓰려면 위치 권한을 넘겨줘야 함
     const x = el('button', { class: 'route-x', type: 'button', 'aria-label': '닫기' }, '✕');
     // 닫으면 열기 전 화면·스크롤 위치로 그대로 (아이폰은 뒤 화면 스크롤을 막을 때 맨 위로 튀는 일이 있어서 위치를 기억했다가 되돌림)
     const y = window.scrollY, hash = location.hash;
