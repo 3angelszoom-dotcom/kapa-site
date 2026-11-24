@@ -244,14 +244,18 @@
   const apBig = L.layerGroup().addTo(map), apMid = L.layerGroup(), apMore = L.layerGroup();
   const apMark = (code, ll, g) => L.circleMarker(ll, { radius: 3, color: '#334155', weight: 1, fillColor: '#fff', fillOpacity: 1, interactive: false })
     .bindTooltip(code, { permanent: true, direction: 'right', offset: [4, 0], className: 'ap-lbl', interactive: false }).addTo(g);
-  loadAirports().then(list => {
+  // 공항 목록(airports.txt)을 못 받으면 점이 하나도 안 보임 → 3초·10초·30초 뒤 다시 시도, 새로고침 버튼으로도 다시
+  let apDone = false, apTry = 0;
+  const apLoad = () => loadAirports().then(list => {
+    if (apDone) return; apDone = true;
     const at = {}; list.forEach(([c, la, lo]) => { if (!at[c]) at[c] = [la, lo]; });
     AP_BIG.forEach(c => at[c] && apMark(c, at[c], apBig));
     AP_MID.forEach(c => at[c] && apMark(c, at[c], apMid));
     AP_MORE.filter(c => AP_BIG.indexOf(c) < 0 && AP_MID.indexOf(c) < 0).forEach(c => at[c] && apMark(c, at[c], apMore));
     const showMore = () => { const z = map.getZoom(); z >= 5 ? apMid.addTo(map) : apMid.remove(); z >= 6 ? apMore.addTo(map) : apMore.remove(); };
     map.on('zoomend', showMore); showMore();
-  }).catch(() => {});
+  }).catch(() => { if (apTry < 3) setTimeout(apLoad, [3000, 10000, 30000][apTry++]); });
+  apLoad();
   $('bar').after(el('div', { class: 'bm', role: 'group', 'aria-label': '지도 종류' }, el('span', { class: 'bm-l' }, 'Map'), bmBtns, bmHint));
   setBase(bmKey);
 
@@ -300,6 +304,7 @@
   rfBtn.addEventListener('click', () => {
     rfBtn.classList.add('spin'); setTimeout(() => rfBtn.classList.remove('spin'), 900);
     nexrad.setUrl(NEX());
+    if (!apDone) { apTry = 0; apLoad(); }
     if ($('from').value && $('to').value) { if ($('f').requestSubmit) $('f').requestSubmit(); else $('f').dispatchEvent(new Event('submit', { cancelable: true })); }
   });
   const RfCtl = L.Control.extend({ options: { position: 'bottomright' }, onAdd: () => { const d = L.DomUtil.create('div', 'me-ctl rf-ctl'); d.append(rfBtn); L.DomEvent.disableClickPropagation(d); return d; } });
