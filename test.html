@@ -3381,7 +3381,7 @@
     const row = d => {
       const f = d.faa.slice().sort((a, b) => ORDER[a.t] - ORDER[b.t]);
       return el('div', { class: 'dl-row s-' + f[0].t.toLowerCase() },
-        el('div', { class: 'dl-head' }, el('span', { class: 'dl-cw' }, el('b', { class: 'dl-code' }, d.code), r.faaAt ? el('span', { class: 'wx-time' }, zulu(r.faaAt, true)) : null), mine.indexOf(d.code) >= 0 ? el('span', { class: 'dl-mine' }, 'MY AIRPORT') : null),
+        el('div', { class: 'dl-head' }, el('span', { class: 'dl-cw' }, el('b', { class: 'dl-code' }, d.code), r.faaAt ? el('span', { class: 'wx-time', title: 'FAA 현황이 마지막으로 업데이트된 시각' }, 'Updated ' + zulu(r.faaAt, true)) : null), mine.indexOf(d.code) >= 0 ? el('span', { class: 'dl-mine' }, 'MY AIRPORT') : null),
         el('div', { class: 'dl-items' }, f.map(x => el('div', { class: 'dl-item' },
           el('span', { class: 'dl-pill ' + x.t.toLowerCase() }, LBL[x.t] || x.t),
           el('span', { class: 'dl-d' }, x.d || x.text)))));
