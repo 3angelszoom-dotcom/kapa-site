@@ -652,10 +652,20 @@
   /* 승인된 회원: 카톡방 참여 버튼 (카카오 노란색) */
   .me-kakao { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border-radius: 14px; background: #FEE500; color: #191919 !important; font: 700 15px/1.2 var(--body); text-decoration: none; }
   .me-kakao small { font-weight: 500; opacity: .7; }
-  .me-kakao { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; padding: 0; background: none; border-radius: 0; width: fit-content; margin-left: auto; flex: none; font: 500 10px/1.1 var(--body); white-space: nowrap; color: var(--text) !important; }
+  .me-kakao { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; padding: 0; background: none; border-radius: 0; width: fit-content; margin-left: 0; flex: none; font: 500 10px/1.1 var(--body); white-space: nowrap; color: var(--text) !important; }
   .me-who { min-width: 0; }
   .me-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .me-card .me-name .me-edit { margin-left: 0; padding: 5px 10px; font-size: 12px; }
+  .me-apps { margin-left: auto; display: flex; align-items: flex-start; gap: 14px; flex: none; }
+  .me-apps .me-route { border: 0; cursor: pointer; font: 500 10px/1.1 var(--body); color: var(--text); letter-spacing: 0; min-height: 0; }
+  .me-route-img { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; background: #0B1F45; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  /* 전체 화면 Route Weather */
+  /* 화면 전체를 덮음. 맨 위 상태바 자리만 남색으로 비워 두고 바로 Route Weather, ✕는 오른쪽 위에 떠 있음 */
+  #route-ov { position: fixed; inset: 0; z-index: 10000; background: #0B1F45; padding-top: env(safe-area-inset-top, 0px); }
+  #route-ov iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
+  .route-x { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 3px); right: max(12px, env(safe-area-inset-right, 0px)); width: 30px; height: 30px; border-radius: 50%;
+    border: 0; background: rgba(255,255,255,.18); color: #fff; font: 700 15px/1 var(--body); cursor: pointer; }
+  .route-x:focus-visible { outline: 2px solid #93C5FD; outline-offset: 2px; }
   .me-kakao-img { width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
   .me-kakao:active .me-kakao-img { transform: scale(.94); }
   .me-kakao-ico { font-size: 11px; line-height: 1; }
@@ -1628,12 +1638,28 @@
         el('div', { class: 'me-name' }, el('b', {}, personal ? m.name + '님' : m.type === 'admin' ? '관리자' : '회원'),
           personal ? el('button', { class: 'me-edit', type: 'button', onclick: () => { close(); openMyInfo(); } }, '정보 변경') : null),
         personal ? null : el('p', {}, m.type === 'admin' ? '관리자 비밀번호로 입장 중' : '회원 비밀번호로 입장 중 · 글쓰기·체크인은 개인 입장 코드가 필요해요')),
-        personal && m.kakaoRoom && m.kakaoRoom.url ? el('a', { class: 'me-kakao', href: m.kakaoRoom.url, target: '_blank', rel: 'noopener', 'aria-label': '카톡방 참여 (' + (m.kakaoRoom.room === 'small' ? '카파 GC 작은방' : '카파 큰방') + ')' },
-          el('img', { class: 'me-kakao-img', src: KAKAO_ICON, alt: '' }), el('span', {}, '카톡방 참여')) : null),
+        personal ? el('div', { class: 'me-apps' },
+          personal && m.kakaoRoom && m.kakaoRoom.url ? el('a', { class: 'me-kakao', href: m.kakaoRoom.url, target: '_blank', rel: 'noopener', 'aria-label': '카톡방 참여 (' + (m.kakaoRoom.room === 'small' ? '카파 GC 작은방' : '카파 큰방') + ')' },
+          el('img', { class: 'me-kakao-img', src: KAKAO_ICON, alt: '' }), el('span', {}, '카톡방 참여')) : null,
+          el('button', { class: 'me-kakao me-route', type: 'button', 'aria-label': 'Route Weather 열기', onclick: () => { close(); openRouteFull(); } },
+            el('span', { class: 'me-route-img', 'aria-hidden': 'true' }, '🗺️'), el('span', {}, 'Route'))) : null),
       personal && m.isAdmin ? el('button', { class: 'ghost', type: 'button', onclick: () => { close(); location.hash = 'admin'; } }, '🛠 관리자 페이지') : null,
       personal ? pushCard(true) : null,
       !personal ? el('button', { class: 'primary', type: 'button', onclick: () => { close(); setMemberKey(''); after(); openMe(); } }, '개인 입장 코드로 입장') : null,
       el('button', { class: 'me-out', type: 'button', onclick: () => { close(); setMemberKey(''); after(); } }, '로그아웃')));
+  }
+  // Route Weather(route.html)를 앱 안에서 전체 화면으로 (오른쪽 위 ✕로 닫기). 같은 사이트라 입장 정보도 그대로 씀
+  // (좌석 조회 안의 구간 날씨 openRoute와 다른 것)
+  function openRouteFull() {
+    if (document.getElementById('route-ov')) return;
+    const ov = el('div', { id: 'route-ov', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Route Weather' });
+    const fr = el('iframe', { src: 'route.html', title: 'Route Weather' });
+    const x = el('button', { class: 'route-x', type: 'button', 'aria-label': '닫기' }, '✕');
+    const shut = () => { ov.remove(); document.documentElement.style.overflow = ''; document.removeEventListener('keydown', esc); };
+    const esc = e => { if (e.key === 'Escape') shut(); };
+    x.addEventListener('click', shut); document.addEventListener('keydown', esc);
+    ov.append(fr, x); document.body.append(ov);
+    document.documentElement.style.overflow = 'hidden';
   }
   // 내 정보 변경: 이직 표시 → 새 직장 칸이 열리고, 저장하면 축하 글이 "새로 올라온 글"에 자동으로 올라감
   function openMyInfo() {

@@ -33,6 +33,7 @@
   .bar { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 8px 12px; background: #fff; border-bottom: 1px solid var(--line); }
   .tg { flex: 1 1 auto; white-space: nowrap; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 7px; font: 700 12px/1 var(--f); color: var(--muted); cursor: pointer; }
   .tg.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .embedded #who { visibility: hidden; }
   .bm { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 2px 12px 8px; background: #fff; border-bottom: 1px solid var(--line); }
   .bar:has(+ .bm) { border-bottom: 0; }
   .bm-l { font: 800 11px/1 var(--f); letter-spacing: .06em; color: var(--muted); text-transform: uppercase; margin-right: 2px; }
@@ -405,6 +406,8 @@
     store.set('pc_rt_last', '');   // 예전에 저장된 루트 지우기 — 새로 열면 빈 칸
     if (a && b) show('', a, b, rt);
   }
+  // 앱 안 전체 화면으로 열렸을 때: 오른쪽 위 '입장됨 · 나가기' 자리는 앱의 ✕ 버튼이 씀
+  try { if (window.top !== window) document.documentElement.classList.add('embedded'); } catch (_) { document.documentElement.classList.add('embedded'); }
   if (key) start(); else showLogin();
 })();
 </script>
