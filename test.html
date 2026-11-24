@@ -2239,7 +2239,7 @@
         c.body ? el('div', { class: 'body' }, c.body) : null,
         c.files && c.files.length ? renderAttachments({ files: c.files, links: [] }) : null,
         el('div', { class: 'c-acts' },
-          !isReply && onReplyCmt && c.id !== 'tmp' ? el('button', { class: 'c-reply', type: 'button', onclick: () => onReplyCmt(c) }, '답글') : null,
+          onReplyCmt && c.id !== 'tmp' ? el('button', { class: 'c-reply', type: 'button', onclick: () => onReplyCmt(c) }, '답글') : null,   // 답글에도 답글 가능 (화면에는 같은 줄기 아래로 모임)
           c.id === 'tmp' || !c.mine ? null : deleteControl('삭제', 'deleteComment', c.id, () => showPost(p.id), c.mine)));
     return el('div', { id: 'c-list' },
       el('h4', {}, `댓글 ${p.comments.length}`),
@@ -2319,8 +2319,10 @@
       cBtn.disabled = true; cMsg.textContent = '';
       try {
         if (!fixedName) store.set('pc_name', cName.value.trim());
-        const author = fixedName ? (anon ? '익명' : m.name) : cName.value, body = cBody.value;
+        const author = fixedName ? (anon ? '익명' : m.name) : cName.value; let body = cBody.value;
         const parentId = replyTo ? replyTo.id : '';
+        // 답글에 단 답글은 같은 줄기 아래로 모이니까, 누구에게 단 건지 '@이름'을 앞에 붙임
+        if (replyTo && replyTo.parentId && !body.trim().startsWith('@' + replyTo.author)) body = '@' + replyTo.author + ' ' + body;
         await call('addComment', { postId: id, author, body, password: cPw.value, key: memberKey, device: dev(), parentId });
         // 방금 단 댓글을 바로 보여주고, 서버 내용으로 다시 맞춤
         const mine = feed && feed.full && feed.full[id];
