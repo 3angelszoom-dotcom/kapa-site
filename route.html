@@ -234,6 +234,7 @@
     e.preventDefault();
     const f = '', a = $('from').value, b = $('to').value, rt = $('rte').value.trim();
     history.replaceState(null, '', '#' + [a, b].filter(Boolean).join('_'));
+    try { sessionStorage.setItem('rt_cur', JSON.stringify({ a, b, rt })); } catch (_) {}   // 새로고침하면 다시 보여주려고 (이 탭에서만)
     show(f, a, b, rt);
   });
 
@@ -392,9 +393,17 @@
     const parts = decodeURIComponent(location.hash.slice(1)).split('_').filter(Boolean);
     let f = '', a = '', b = '';
     parts.forEach(x => { x = x.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (/\d/.test(x)) return; if (!a) a = x; else b = x; });
-    $('from').value = a; $('to').value = b;
+    // 새로고침이면 방금 보던 루트(붙여 넣은 릴리스 루트 포함)를 그대로 다시 보여줌. 새로 열면 빈 칸
+    let rt = '';
+    try {
+      const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+      const cur = JSON.parse(sessionStorage.getItem('rt_cur') || 'null');
+      if (nav && nav.type === 'reload' && cur && cur.a && cur.b) { a = cur.a; b = cur.b; rt = cur.rt || ''; }
+      else sessionStorage.removeItem('rt_cur');
+    } catch (_) {}
+    $('from').value = a; $('to').value = b; $('rte').value = rt;
     store.set('pc_rt_last', '');   // 예전에 저장된 루트 지우기 — 새로 열면 빈 칸
-    if (a && b) show('', a, b, '');
+    if (a && b) show('', a, b, rt);
   }
   if (key) start(); else showLogin();
 })();
