@@ -923,7 +923,7 @@
   .wx-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .wx-h .br-edit { margin: 0; font-size: 13px; }
   .wx-card { border: 1px solid var(--line); border-radius: 16px; background: #fff; overflow: hidden; }
-  .wx-row { display: grid; grid-template-columns: 34px auto 30px minmax(0, 1fr); align-items: center; gap: 6px; width: 100%; padding: 10px 12px; border: 0; border-top: 1px solid #EEF1F5; background: none; text-align: left; font: 500 13px/1.35 var(--body); color: #334155; cursor: pointer; }
+  .wx-row { display: grid; grid-template-columns: 34px auto 30px minmax(0, 1fr) auto; align-items: center; gap: 6px; width: 100%; padding: 10px 12px; border: 0; border-top: 1px solid #EEF1F5; background: none; text-align: left; font: 500 13px/1.35 var(--body); color: #334155; cursor: pointer; }
   .wx-row:first-child { border-top: 0; }
   .wx-code { font: 800 15px/1 var(--body); color: #0B1220; letter-spacing: .02em; }
   .wx-temp { font-weight: 700; color: #0B1220; text-align: right; }
@@ -960,7 +960,10 @@
   .dl-allok { padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: #fff; font: 600 14px/1.4 var(--body); color: #15803D; }
   .dl-pill.gs, .dl-pill.clsd { background: #FEE2E2; color: #B91C1C; } .dl-pill.gdp { background: #FFEDD5; color: #C2410C; } .dl-pill.dly { background: #FEF9C3; color: #854D0E; }
   .dl-d { font-size: 13.5px; line-height: 1.45; color: #475569; overflow-wrap: anywhere; }
-  .dl-src { font-size: 12px; font-weight: 600; color: #94A3B8; margin-left: 4px; letter-spacing: .04em; }
+.dl-src { font-size: 12px; font-weight: 600; color: #94A3B8; margin-left: 4px; letter-spacing: .04em; }
+  /* Zulu 시각: 지금 시각(제목 옆), METAR 발표 시각(줄 끝), FAA 발표 시각(Delays 옆) — 모두 DDHHMMZ */
+  .wx-z { font-variant-numeric: tabular-nums; }
+  .wx-time { font-size: 11px; color: #94A3B8; font-variant-numeric: tabular-nums; letter-spacing: 0; white-space: nowrap; }
   .br-faa { font-size: 12.5px; font-weight: 700; padding: 4px 8px; border-radius: 8px; margin-top: 2px; overflow-wrap: anywhere; }
   .br-faa.gs, .br-faa.clsd { background: #FEE2E2; color: #B91C1C; } .br-faa.gdp { background: #FFEDD5; color: #C2410C; } .br-faa.dly { background: #FEF9C3; color: #854D0E; }
   .br-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -1101,12 +1104,12 @@
     </section>
 
     <section class="section container br-sec" id="brief" hidden>
-      <div class="wx-h"><h2 class="recent-h"><span aria-hidden="true">☀️</span> Weather</h2><span id="wx-edit"></span></div>
+      <div class="wx-h"><h2 class="recent-h"><span aria-hidden="true">☀️</span> Weather <small class="dl-src wx-z" id="wx-z"></small></h2><span id="wx-edit"></span></div>
       <div class="br-wx" id="br-wx"></div>
     </section>
 
     <section class="section container br-sec" id="delay" hidden>
-      <h2 class="recent-h"><span aria-hidden="true">🚦</span> Delays <small class="dl-src">FAA · U.S.</small></h2>
+      <h2 class="recent-h"><span aria-hidden="true">🚦</span> Delays <small class="dl-src">FAA · U.S.<span id="dl-at"></span></small></h2>
       <div class="dl-list" id="dl-list"></div>
     </section>
 
@@ -3382,8 +3385,14 @@
         rows.length > N ? el('button', { class: 'dl-more', type: 'button', onclick: () => { dlOpen = !dlOpen; drawDelays(r); } },
           dlOpen ? 'Show less' : 'Show more (' + (rows.length - N) + ')') : null));
   }
+  // 시각을 METAR식 DDHHMMZ로 (예: 240036Z)
+  const zulu = (ms, withDay) => { const d = new Date(ms), p = n => String(n).padStart(2, '0');
+    return (withDay ? p(d.getUTCDate()) : '') + p(d.getUTCHours()) + p(d.getUTCMinutes()) + 'Z'; };
+  // Weather 제목 옆 지금 Zulu 시각 (20초마다)
+  (function tickZ() { const z = document.getElementById('wx-z'); if (z) z.textContent = zulu(Date.now(), true); setTimeout(tickZ, 20000); })();
   function drawWx(r) {
     drawDelays(r);
+    const at = document.getElementById('dl-at'); if (at) at.textContent = r.faaAt ? ' · ' + zulu(r.faaAt, true) : '';
     const box = document.getElementById('br-wx');
     const eb = el('button', { class: 'br-edit', type: 'button', onclick: () => editWx(box, r) }, r.wx.length ? '✏️ 공항 바꾸기' : '＋ 내 공항 추가');
     document.getElementById('wx-edit').replaceChildren(eb);
@@ -3404,6 +3413,7 @@
         el('span', { class: 'br-cat ' + w.cat.toLowerCase() }, w.cat),
         el('span', { class: 'wx-temp' }, w.temp),
         el('span', { class: 'wx-rest' }, bits.join('  ')),
+        el('span', { class: 'wx-time' }, w.obs ? zulu(w.obs, true) : ''),
         raw);
     })));
   }
