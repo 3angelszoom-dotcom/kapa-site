@@ -68,7 +68,9 @@
   .row b { color: var(--ink); }
   .sev { color: #fff; font: 800 10.5px/1 var(--f); letter-spacing: .05em; padding: 4px 7px; border-radius: 999px; }
   .d { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .note { font-size: 11px; color: #94A3B8; margin: 8px 0 0; line-height: 1.45; }
+  .note { font-size: 9.5px; color: #94A3B8; margin: 6px 0 0; line-height: 1.4; }
+  .note a { color: inherit; }
+  .leaflet-control-attribution { display: none !important; }   /* 지도 위 출처 글씨는 숨기고, 지도 아래에 작게 */
   .muted { color: var(--muted); font-size: 13px; margin: 0; }
   .ap { font: 800 12px/1 var(--f); }
   .leaflet-control-attribution { font-size: 9px !important; line-height: 1.3 !important; background: rgba(255,255,255,.6) !important; color: #64748B !important; max-width: 70%; }
@@ -100,7 +102,7 @@
 <div class="bar" id="bar"></div>
 <div id="map"></div>
 <div class="panel">
-  <p class="note">Solid line: route pasted from the release, drawn with FAA NASR data (U.S. fixes, airways, SIDs/STARs; lat/lon waypoints anywhere). Dashed line: great-circle between airports. Radar: NEXRAD (U.S., IEM, ~1 km) · World: RainViewer (lower resolution, off by default). Turbulence: PIREPs (last 3 h), SIGMET/G-AIRMET from aviationweather.gov. For reference only — not for operational use.</p>
+  <p class="note" id="credits"></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -180,7 +182,12 @@
     .catch(() => { airportsP = null; throw new Error('공항 목록을 불러오지 못했어요.'); }));
 
   const map = L.map('map', { zoomControl: true }).setView([38, -100], 3);
-  map.attributionControl.setPrefix(false);   // "Leaflet" 글자는 빼고, 지도·레이더 출처만 작게
+  map.attributionControl.setPrefix(false);
+  // 지도·레이더 출처: 지도 위를 가리지 않게 지도 바로 아래 작은 글씨로 (켜진 레이어에 맞춰 바뀜)
+  const credUpd = () => { const c = $('credits'); if (!c) return;
+    const a = []; map.eachLayer(l => { const t = l.getAttribution && l.getAttribution(); if (t && a.indexOf(t) < 0) a.push(t); });
+    c.innerHTML = a.join(' · '); };
+  map.on('layeradd layerremove', () => setTimeout(credUpd, 0));   // "Leaflet" 글자는 빼고, 지도·레이더 출처만 작게
   // 바탕 지도: Esri 연회색 (키 없이 사용) → 안 되면 OpenStreetMap으로
   const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }).addTo(map);
   let baseErr = 0;
