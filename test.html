@@ -1330,7 +1330,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small style="opacity:.45;margin-left:10px">v1101-100</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small id="ver-tag" style="opacity:.45;margin-left:10px">v1101-100</small></span></div>
 </footer>
 
 <script>
@@ -1390,6 +1390,10 @@
   // 요청마다 [전체 시간 / 서버 준비 g / 함수 실행 ms / 나머지 = 인터넷·구글 입구·주소 넘김]을 화면 아래에 보여줌
   const SPEED = IS_TEST && (() => { const q = new URLSearchParams(location.search).get('speed');
     if (q === '1') store.set('pc_speed', '1'); else if (q === '0') store.set('pc_speed', ''); return store.get('pc_speed') === '1'; })();
+  // 홈 화면 앱은 사파리와 저장 공간이 따로라서 ?speed=1이 안 먹음 → 맨 아래 버전 글자를 5번 연달아 누르면 켜고/끔 (테스트 페이지만)
+  if (IS_TEST) { let n = 0, t = 0; const v = document.getElementById('ver-tag');
+    if (v) v.addEventListener('click', () => { const now = Date.now(); n = now - t < 800 ? n + 1 : 1; t = now;
+      if (n >= 5) { n = 0; store.set('pc_speed', store.get('pc_speed') === '1' ? '' : '1'); location.reload(); } }); }
   const speedRows = [];
   let speedBox = null;
   function speedLog(fn, total, j, err) {
