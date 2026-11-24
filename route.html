@@ -75,8 +75,8 @@
   .note { font-size: 9.5px; color: #94A3B8; margin: 6px 0 0; line-height: 1.4; }
   .note a { color: inherit; }
   .leaflet-control-attribution { display: none !important; }
-  /* 아이폰 Safari에서 지도 조각(타일) 사이에 생기는 가는 흰 줄 없애기: 조각을 0.5px씩 겹쳐서 그림 */
-  .seamfix img.leaflet-tile { width: 256.5px !important; height: 256.5px !important; }   /* 바탕·위성 지도만 (레이더는 레티나용 작은 조각이라 제외) */   /* 지도 위 출처 글씨는 숨기고, 지도 아래에 작게 */
+  /* 아이폰 Safari 지도 조각 사이 가는 줄: 지도 높이가 소수점 픽셀이면 생김 → 스크립트로 높이를 정수 픽셀로 맞춤. 위성일 땐 바탕을 어둡게 */
+  #map.sat { background: #1B2A3A; }
   .muted { color: var(--muted); font-size: 13px; margin: 0; }
   .ap { font: 800 12px/1 var(--f); }
   .leaflet-control-attribution { font-size: 9px !important; line-height: 1.3 !important; background: rgba(255,255,255,.6) !important; color: #64748B !important; max-width: 70%; }
@@ -189,15 +189,19 @@
 
   const map = L.map('map', { zoomControl: true }).setView([38, -100], 3);
   map.attributionControl.setPrefix(false);
+  // 지도 높이를 정수 픽셀로 고정 (소수점이면 아이폰에서 조각 사이에 가는 줄이 생김)
+  const snapMap = () => { const m = $('map'); m.style.height = m.style.minHeight = m.style.flex = ''; const h = Math.round(m.getBoundingClientRect().height); m.style.flex = '0 0 auto'; m.style.height = m.style.minHeight = h + 'px'; map.invalidateSize(false); };
+  window.addEventListener('resize', () => { clearTimeout(snapMap.t); snapMap.t = setTimeout(snapMap, 150); });
+  setTimeout(snapMap, 0);
   // 지도·레이더 출처: 지도 위를 가리지 않게 지도 바로 아래 작은 글씨로 (켜진 레이어에 맞춰 바뀜)
   const credUpd = () => { const c = $('credits'); if (!c) return;
     const a = []; map.eachLayer(l => { const t = l.getAttribution && l.getAttribution(); if (t && a.indexOf(t) < 0) a.push(t); });
     c.innerHTML = a.join(' · '); };
   map.on('layeradd layerremove', () => setTimeout(credUpd, 0));   // "Leaflet" 글자는 빼고, 지도·레이더 출처만 작게
   // 바탕 지도: Esri 연회색 (키 없이 사용) → 안 되면 OpenStreetMap으로
-  const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, className: 'seamfix', attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }).addTo(map);
+  const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }).addTo(map);
   let baseErr = 0;
-  base.on('tileerror', () => { if (++baseErr === 4) { map.removeLayer(base); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12, className: 'seamfix', attribution: '&copy; OpenStreetMap contributors' }).addTo(map).bringToBack(); } });
+  base.on('tileerror', () => { if (++baseErr === 4) { map.removeLayer(base); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 12, attribution: '&copy; OpenStreetMap contributors' }).addTo(map).bringToBack(); } });
   const layers = { radar: L.layerGroup(), world: L.layerGroup(), pirep: L.layerGroup(), area: L.layerGroup(), route: L.layerGroup().addTo(map) };
   const on = { radar: true, world: false, pirep: true, area: true };
   // 미국 NEXRAD(약 1 km 해상도): 진하게, 레티나 화면에선 한 단계 더 촘촘한 타일로
@@ -219,7 +223,7 @@
   const BASES = {
     gray: { t: '기본' },
     sat: { t: '위성', min: 0,
-      mk: () => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, zIndex: 1, className: 'seamfix', attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' }) },
+      mk: () => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, zIndex: 1, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' }) },
   };
   let bmKey = BASES[store.get('rt_base')] ? store.get('rt_base') : 'gray', bmLayer = null;
   const bmHint = el('span', { class: 'bm-hint' });
@@ -233,6 +237,9 @@
     bmKey = k; store.set('rt_base', k);
     if (bmLayer) { bmLayer.remove(); bmLayer = null; }
     if (BASES[k].mk) bmLayer = BASES[k].mk().addTo(map);
+    // 위성일 때는 밑의 연회색 지도를 빼고 바탕도 어둡게 → 조각 사이 틈이 있어도 밝은 줄로 안 보임
+    $('map').classList.toggle('sat', k === 'sat');
+    if (k === 'sat') { if (map.hasLayer(base)) base.remove(); } else if (!map.hasLayer(base)) base.addTo(map).bringToBack();
     bmBtns.forEach((b, i) => b.setAttribute('aria-pressed', String(Object.keys(BASES)[i] === k)));
     bmHintUpd();
   }
