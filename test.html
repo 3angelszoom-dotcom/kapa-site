@@ -355,6 +355,13 @@
   .comments h4 { margin: 40px 0 6px; font: 700 12.5px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; }
   .comment { border-top: 1px solid var(--line); padding: 16px 0; }
   .comment .body { margin: 6px 0; }
+  /* 답글: 원래 댓글 아래 들여서, 조금 옅게 */
+  .comment.reply { margin-left: 22px; }
+  .reply-mark { color: #94A3B8; }
+  .c-acts { display: flex; align-items: center; gap: 12px; }
+  .c-acts:empty { display: none; }
+  .c-reply { border: 0; background: none; padding: 4px 0; font: 600 13.5px/1.2 var(--body); color: #1F5FD6; cursor: pointer; }
+  .reply-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-radius: 10px; background: #EEF4FF; color: #1E3A8A; font-size: 14px; }
   .form { display: grid; gap: 12px; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
@@ -2158,16 +2165,25 @@
     } catch (e) { if (my === viewId && !cached) showError(e); }
   }
 
+  let onReplyCmt = null;   // 답글 버튼을 누르면 부르는 함수 (댓글 쓰기 칸이 있을 때만 drawPost가 넣어 줌)
   function commentList(p) {
-    return el('div', { id: 'c-list' },
-      el('h4', {}, `댓글 ${p.comments.length}`),
-      p.comments.map(c => el('div', { class: 'comment' },
-        el('div', { class: 'meta' }, c.author, vf(c.verified), ` · ${fmt(c.createdAt)}`, c.mine ? ' · 내 댓글' : ''),
+    // 답글은 원래 댓글 바로 아래에 들여서 (한 단계만). 원래 댓글이 지워졌으면 그냥 댓글처럼 보여줌
+    const ids = new Set(p.comments.map(c => c.id));
+    const kids = {};
+    p.comments.forEach(c => { if (c.parentId && ids.has(c.parentId)) (kids[c.parentId] = kids[c.parentId] || []).push(c); });
+    const tops = p.comments.filter(c => !(c.parentId && ids.has(c.parentId)));
+    const one = (c, isReply) => el('div', { class: 'comment' + (isReply ? ' reply' : '') },
+        el('div', { class: 'meta' }, isReply ? el('span', { class: 'reply-mark', 'aria-hidden': 'true' }, '↳ ') : null, c.author, vf(c.verified), ` · ${fmt(c.createdAt)}`, c.mine ? ' · 내 댓글' : ''),
         c.loads ? el('div', { class: 'ld-ans' }, [['avail', 'Available'], ['sb', 'Standby'], ['js', 'Jumpseat']].filter(([k]) => c.loads[k] !== undefined)
           .map(([k, t]) => el('span', { class: 'ld-ans-i ' + k }, el('small', {}, t), el('b', {}, String(c.loads[k]))))) : null,
         c.body ? el('div', { class: 'body' }, c.body) : null,
         c.files && c.files.length ? renderAttachments({ files: c.files, links: [] }) : null,
-        c.id === 'tmp' || !c.mine ? null : deleteControl('삭제', 'deleteComment', c.id, () => showPost(p.id), c.mine))));
+        el('div', { class: 'c-acts' },
+          !isReply && onReplyCmt && c.id !== 'tmp' ? el('button', { class: 'c-reply', type: 'button', onclick: () => onReplyCmt(c) }, '답글') : null,
+          c.id === 'tmp' || !c.mine ? null : deleteControl('삭제', 'deleteComment', c.id, () => showPost(p.id), c.mine)));
+    return el('div', { id: 'c-list' },
+      el('h4', {}, `댓글 ${p.comments.length}`),
+      tops.flatMap(c => [one(c, false)].concat((kids[c.id] || []).map(k => one(k, true)))));
   }
   function replaceComments(p) {
     const old = document.getElementById('c-list');
@@ -2192,6 +2208,21 @@
     const cBody = el('textarea', { id: 'c-body', placeholder: '댓글을 입력하세요', maxlength: '2000', 'aria-label': '댓글' }); cBody.style.minHeight = '80px';
     const cMsg = el('p', { class: 'msg' });
     const cBtn = el('button', { class: 'primary' }, '댓글 등록');
+    // 답글 대상 표시: "↳ 송동영님에게 답글 · 취소"
+    let replyTo = null;
+    const replyBar = el('div', { class: 'reply-bar', hidden: '' });
+    const setReply = c => {
+      replyTo = c || null;
+      replyBar.hidden = !replyTo;
+      cBtn.textContent = replyTo ? '답글 등록' : '댓글 등록';
+      cBody.placeholder = replyTo ? replyTo.author + '님에게 답글을 입력하세요' : '댓글을 입력하세요';
+      if (replyTo) {
+        replyBar.replaceChildren(el('span', {}, '↳ ', el('b', {}, replyTo.author), '님에게 답글'),
+          el('button', { class: 'c-reply', type: 'button', onclick: () => setReply(null) }, '취소'));
+        cBody.focus(); cBody.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    };
+    onReplyCmt = p.board !== LOADS && m.canWrite ? setReply : null;
     // 좌석 조회: 스크린샷만 고르면 바로 답변으로 올라감 (글은 안 써도 됨)
     const numIn = (id, label) => { const i = el('input', { id, type: 'number', inputmode: 'numeric', min: '0', max: '999', placeholder: '-', 'aria-label': label }); return { i, box: el('label', { class: 'ld-num' }, el('small', {}, label), i) }; };
     const nAvail = numIn('ld-n-avail', 'Available'), nSb = numIn('ld-n-sb', 'Standby'), nJs = numIn('ld-n-js', 'Jumpseat');
@@ -2229,10 +2260,11 @@
       try {
         if (!fixedName) store.set('pc_name', cName.value.trim());
         const author = fixedName ? (anon ? '익명' : m.name) : cName.value, body = cBody.value;
-        await call('addComment', { postId: id, author, body, password: cPw.value, key: memberKey, device: dev() });
+        const parentId = replyTo ? replyTo.id : '';
+        await call('addComment', { postId: id, author, body, password: cPw.value, key: memberKey, device: dev(), parentId });
         // 방금 단 댓글을 바로 보여주고, 서버 내용으로 다시 맞춤
         const mine = feed && feed.full && feed.full[id];
-        if (mine) mine.comments = mine.comments.concat([{ id: 'tmp', author: author.trim(), body: body.trim(), createdAt: new Date().toISOString() }]);
+        if (mine) mine.comments = mine.comments.concat([{ id: 'tmp', author: author.trim(), body: body.trim(), createdAt: new Date().toISOString(), parentId }]);
         markStale();
         showPost(id);
       } catch (e) { if (e.message !== '__auth') { cMsg.textContent = e.message; cBtn.disabled = false; } }
@@ -2262,7 +2294,7 @@
           !m.canWrite ? needCode('댓글 달기')
             : el('div', { class: 'form' }, asWho(p.board, '댓글이'),
                 fixedName ? (anon ? el('div', { class: 'row' }, cPw) : null) : el('div', { class: 'row' }, cName, cPw),
-                cBody, cBtn, cMsg))));
+                replyBar, cBody, cBtn, cMsg))));
   }
 
 
