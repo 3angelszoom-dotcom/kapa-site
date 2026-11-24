@@ -1419,10 +1419,13 @@
     // 내 도메인: Apps Script 데이터 창구로 POST (text/plain이라 추가 확인 요청 없이 바로 감, 구글 로그인과 무관)
     // 연결이 끊긴 채로 계속 기다리지 않게: 25초 넘게 답이 없으면 끊고 알려 줌.
     // 읽기 요청(get·list·check)은 연결 문제일 때 한 번 더 자동으로 시도 (쓰기 요청은 두 번 올라갈 수 있어서 자동 재시도 안 함)
-    const READ = /^(get|list|check)/.test(fn);
+    // 읽기 요청: 평소 2~4초면 끝나는데, 구글 입구에서 가끔 요청이 통째로 멈춤(서버 실행은 1초 안팎) →
+    // 8초(날씨·경로는 12초) 넘게 답이 없으면 버리고 바로 다시 보냄, 최대 3번. 쓰기 요청은 두 번 올라갈 수 있어서 25초 한 번만
+    const READ = /^(get[A-Z]|listPosts$|checkMember$|ping$|admin(Dashboard|GetAdminMembers|GetAnonViewers|GetPost|GetSettings|ListApplicants|ListPosts|Login|Members|Presence)$)/.test(fn);
+    const LIMIT = !READ ? 25000 : /^get(Route|RouteWx|Briefing)$/.test(fn) ? 12000 : 8000;
     const once = () => {
       const ac = typeof AbortController === 'function' ? new AbortController() : null;
-      const timer = ac ? setTimeout(() => ac.abort(), 25000) : 0;
+      const timer = ac ? setTimeout(() => ac.abort(), LIMIT) : 0;
       return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, page: IS_TEST ? 'test' : '' }), redirect: 'follow', signal: ac ? ac.signal : undefined })
         .then(r => { clearTimeout(timer); if (!r.ok) throw new Error('서버에 연결하지 못했어요 (' + r.status + '). 잠시 후 다시 시도해 주세요.'); return r.json(); },
               e => { clearTimeout(timer); const t = e && e.name === 'AbortError';
@@ -1430,7 +1433,8 @@
                 err.net = true; throw err; });
     };
     const t0 = performance.now();
-    return (READ ? once().catch(e => { if (!e.net) throw e; return new Promise(r => setTimeout(r, 1500)).then(once); }) : once())
+    const retry = (n) => once().catch(e => { if (!e.net || n >= 2) throw e; if (SPEED) speedLog(fn + ' ↻', performance.now() - t0, null, e); return new Promise(r => setTimeout(r, 400)).then(() => retry(n + 1)); });
+    return (READ ? retry(0) : once())
       .then(j => { if (SPEED) speedLog(fn, performance.now() - t0, j); if (!j || !j.ok) throw new Error((j && j.error) || '서버 오류'); return j.data; },
             e => { if (SPEED) speedLog(fn, performance.now() - t0, null, e); throw e; });
   }
