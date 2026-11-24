@@ -39,6 +39,10 @@
   .bm-b { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 6px 10px; font: 700 12px/1 var(--f); color: var(--muted); cursor: pointer; }
   .bm-b[aria-pressed="true"] { background: #0B1F45; border-color: #0B1F45; color: #fff; }
   .bm-hint { font: 600 11px/1.3 var(--f); color: var(--muted); }
+  /* 공항 글자: 지도 위 작은 회색 글씨 (흰 테두리로 레이더 위에서도 읽히게) */
+  .leaflet-tooltip.ap-lbl { background: none; border: 0; box-shadow: none; padding: 0; font: 800 10.5px/1 var(--f); color: #1E293B; letter-spacing: .02em;
+    text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff; }
+  .leaflet-tooltip.ap-lbl::before { display: none; }
   .legend { display: flex; flex-basis: 100%; justify-content: flex-end; gap: 8px; font: 700 11px/1 var(--f); color: var(--muted); }
   .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 3px; vertical-align: -1px; }
   #map { flex: 1 1 auto; min-height: 52vh; background: #DDE3EA; z-index: 0; }
@@ -173,18 +177,13 @@
     return b;
   }), el('span', { class: 'legend' }, TURB.slice(1, 4).map((t, i) => el('span', {}, el('i', { style: 'background:' + TCOL[i + 1] }), t))));
 
-  // 지도 종류: 기본(연회색) · VFR(섹셔널) · IFR High · 위성 — FAA 차트·위성은 연회색 위에 덮고, 레이더·PIREP는 그 위에
-  const FAA_T = 'https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/';
+  // 지도 종류: 기본(연회색) · 위성 — 위성은 연회색 위에 덮고, 레이더·PIREP는 그 위에
   const BASES = {
     gray: { t: '기본' },
-    vfr: { t: 'VFR', min: 8, hint: 'VFR 차트는 조금 더 확대하면 보여요',
-      mk: () => L.tileLayer(FAA_T + 'VFR_Sectional/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, maxNativeZoom: 12, zIndex: 1, attribution: 'Charts &copy; FAA AIS' }) },
-    ifr: { t: 'IFR High', min: 5, hint: 'IFR High 차트는 조금 더 확대하면 보여요',
-      mk: () => L.tileLayer(FAA_T + 'IFR_High/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, maxNativeZoom: 9, zIndex: 1, attribution: 'Charts &copy; FAA AIS' }) },
     sat: { t: '위성', min: 0,
       mk: () => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, zIndex: 1, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' }) },
   };
-  let bmKey = BASES[store.get('rt_base')] ? store.get('rt_base') : 'vfr', bmLayer = null;   // 처음엔 VFR
+  let bmKey = BASES[store.get('rt_base')] ? store.get('rt_base') : 'gray', bmLayer = null;
   const bmHint = el('span', { class: 'bm-hint' });
   const bmHintUpd = () => { const b = BASES[bmKey]; bmHint.textContent = b.min && map.getZoom() < b.min ? b.hint : ''; };
   const bmBtns = Object.keys(BASES).map(k => {
@@ -200,6 +199,23 @@
     bmHintUpd();
   }
   map.on('zoomend', bmHintUpd);
+
+  // 주요 공항 표시: 점 + "SFO" 글자. 큰 공항은 처음부터, 나머지는 확대하면 (공항 위치는 airports.txt에서)
+  // 축소 화면에서 글자가 겹치지 않게 3단계: 처음(서로 떨어진 큰 공항) → 5단계부터 가까이 붙은 큰 공항 → 6단계부터 나머지
+  const AP_BIG = 'SFO LAX SEA PDX SLC DEN PHX LAS DFW IAH MSP ORD DTW STL MCI ATL CLT MIA MCO BNA JFK BOS IAD HNL ANC YVR YYC YYZ YUL MEX CUN'.split(' ');
+  const AP_MID = 'SAN AUS TPA EWR LGA PHL DCA BWI'.split(' ');
+  const AP_MORE = 'OAK SJC SMF BUR ONT SNA LGB RNO BOI GEG ABQ ELP TUS SAT HOU DAL OKC TUL OMA DSM MKE MDW IND CMH CLE PIT CVG SDF MEM MSY BHM JAX RSW FLL PBI RDU RIC ORF BDL PVD BUF ALB SYR ROC GRR MSN FAR SAV CHS GSP ICT LIT OGG KOA LIH FAI PSP SBA MRY FAT BZN JAC MSO HDN EGE ASE COS GJT SLC'.split(' ');
+  const apBig = L.layerGroup().addTo(map), apMid = L.layerGroup(), apMore = L.layerGroup();
+  const apMark = (code, ll, g) => L.circleMarker(ll, { radius: 3, color: '#334155', weight: 1, fillColor: '#fff', fillOpacity: 1, interactive: false })
+    .bindTooltip(code, { permanent: true, direction: 'right', offset: [4, 0], className: 'ap-lbl', interactive: false }).addTo(g);
+  loadAirports().then(list => {
+    const at = {}; list.forEach(([c, la, lo]) => { if (!at[c]) at[c] = [la, lo]; });
+    AP_BIG.forEach(c => at[c] && apMark(c, at[c], apBig));
+    AP_MID.forEach(c => at[c] && apMark(c, at[c], apMid));
+    AP_MORE.filter(c => AP_BIG.indexOf(c) < 0 && AP_MID.indexOf(c) < 0).forEach(c => at[c] && apMark(c, at[c], apMore));
+    const showMore = () => { const z = map.getZoom(); z >= 5 ? apMid.addTo(map) : apMid.remove(); z >= 6 ? apMore.addTo(map) : apMore.remove(); };
+    map.on('zoomend', showMore); showMore();
+  }).catch(() => {});
   $('bar').after(el('div', { class: 'bm', role: 'group', 'aria-label': '지도 종류' }, el('span', { class: 'bm-l' }, 'Map'), bmBtns, bmHint));
   setBase(bmKey);
 
