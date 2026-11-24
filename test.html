@@ -656,6 +656,20 @@
   .me-who { min-width: 0; }
   .me-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .me-card .me-name .me-edit { margin-left: 0; padding: 5px 10px; font-size: 12px; }
+  /* 이름 아래 아이콘 줄 (홈 화면 앱 아이콘처럼) */
+  .me-icons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 4px 0 2px; }
+  .me-ic { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 0; border: 0; background: none; cursor: pointer;
+    text-decoration: none; color: var(--text) !important; font: 500 11.5px/1.15 var(--body); min-height: 0; }
+  .me-ic-img { width: 46px; height: 46px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .me-ic-img.route { background: #0B1F45; }
+  .me-ic-img.bell { background: #FFF6DB; }
+  .me-ic-img.admin { background: #EEF1F5; }
+  .me-ic-t { white-space: nowrap; }
+  .me-ic[aria-expanded="true"] .me-ic-img { outline: 2px solid #0B1F45; outline-offset: 2px; }
+  .me-ic-dot { position: absolute; top: 4px; left: calc(50% + 14px); width: 11px; height: 11px; border-radius: 50%; background: #CBD2DB; border: 2px solid #fff; }
+  .me-ic-dot.on { background: #10B981; }
+  .me-ic:focus-visible { outline: 2px solid #93C5FD; outline-offset: 2px; border-radius: 12px; }
+  .me-pushbox { margin-top: 6px; }
   .me-apps { margin-left: auto; display: flex; align-items: flex-start; gap: 14px; flex: none; }
   .me-apps .me-route { border: 0; cursor: pointer; font: 500 10px/1.1 var(--body); color: var(--text); letter-spacing: 0; min-height: 0; }
   .me-route-img { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; background: #0B1F45; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
@@ -1638,15 +1652,31 @@
         el('div', { class: 'me-name' }, el('b', {}, personal ? m.name + '님' : m.type === 'admin' ? '관리자' : '회원'),
           personal ? el('button', { class: 'me-edit', type: 'button', onclick: () => { close(); openMyInfo(); } }, '정보 변경') : null),
         personal ? null : el('p', {}, m.type === 'admin' ? '관리자 비밀번호로 입장 중' : '회원 비밀번호로 입장 중 · 글쓰기·체크인은 개인 입장 코드가 필요해요')),
-        personal ? el('div', { class: 'me-apps' },
-          personal && m.kakaoRoom && m.kakaoRoom.url ? el('a', { class: 'me-kakao', href: m.kakaoRoom.url, target: '_blank', rel: 'noopener', 'aria-label': '카톡방 참여 (' + (m.kakaoRoom.room === 'small' ? '카파 GC 작은방' : '카파 큰방') + ')' },
-          el('img', { class: 'me-kakao-img', src: KAKAO_ICON, alt: '' }), el('span', {}, '카톡방 참여')) : null,
-          el('button', { class: 'me-kakao me-route', type: 'button', 'aria-label': 'Route Weather 열기', onclick: () => { close(); openRouteFull(); } },
-            el('span', { class: 'me-route-img', 'aria-hidden': 'true' }, '🗺️'), el('span', {}, 'Route'))) : null),
-      personal && m.isAdmin ? el('button', { class: 'ghost', type: 'button', onclick: () => { close(); location.hash = 'admin'; } }, '🛠 관리자 페이지') : null,
-      personal ? pushCard(true) : null,
+        ),
+      // 이름 아래 아이콘 줄: 카톡방 · Route · 알림 설정 · 관리자(관리자만). 알림 설정은 누르면 아래에 펼쳐짐
+      personal ? meIcons(m, close) : null,
       !personal ? el('button', { class: 'primary', type: 'button', onclick: () => { close(); setMemberKey(''); after(); openMe(); } }, '개인 입장 코드로 입장') : null,
       el('button', { class: 'me-out', type: 'button', onclick: () => { close(); setMemberKey(''); after(); } }, '로그아웃')));
+  }
+  function meIcons(m, close) {
+    const pushOn = (() => { try { return !!PUSH && !GAS && Notification.permission === 'granted' && !!store.get('pc_push_tok'); } catch (_) { return false; } })();
+    const pc = pushCard(true);
+    const pushBox = el('div', { class: 'me-pushbox', hidden: '' }, pc);
+    const ic = (tag, attrs, img, label, extra) => el(tag, Object.assign({ class: 'me-ic' }, attrs), img, el('span', { class: 'me-ic-t' }, label), extra || null);
+    const tile = (cls, emoji) => el('span', { class: 'me-ic-img ' + cls, 'aria-hidden': 'true' }, emoji);
+    const room = m.kakaoRoom && m.kakaoRoom.url ? m.kakaoRoom : null;
+    let pushBtn = null;
+    const items = [
+      room ? ic('a', { href: room.url, target: '_blank', rel: 'noopener', 'aria-label': '카톡방 참여 (' + (room.room === 'small' ? '카파 GC 작은방' : '카파 큰방') + ')' },
+        el('img', { class: 'me-ic-img', src: KAKAO_ICON, alt: '' }), '카톡방') : null,
+      ic('button', { type: 'button', 'aria-label': 'Route Weather 열기', onclick: () => { close(); openRouteFull(); } }, tile('route', '🗺️'), 'Route'),
+      pc ? (pushBtn = ic('button', { type: 'button', 'aria-expanded': 'false', onclick: () => {
+          pushBox.hidden = !pushBox.hidden; pushBtn.setAttribute('aria-expanded', String(!pushBox.hidden));
+          if (!pushBox.hidden) pushBox.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } },
+        tile('bell', '🔔'), '알림 설정', el('i', { class: 'me-ic-dot' + (pushOn ? ' on' : ''), 'aria-label': pushOn ? '켜짐' : '꺼짐' }))) : null,
+      m.isAdmin ? ic('button', { type: 'button', onclick: () => { close(); location.hash = 'admin'; } }, tile('admin', '🛠️'), '관리자') : null,
+    ].filter(Boolean);
+    return el('div', {}, el('div', { class: 'me-icons' }, items), pushBox);
   }
   // Route Weather(route.html)를 앱 안에서 전체 화면으로 (오른쪽 위 ✕로 닫기). 같은 사이트라 입장 정보도 그대로 씀
   // (좌석 조회 안의 구간 날씨 openRoute와 다른 것)
@@ -1655,7 +1685,11 @@
     const ov = el('div', { id: 'route-ov', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Route Weather' });
     const fr = el('iframe', { src: 'route.html', title: 'Route Weather' });
     const x = el('button', { class: 'route-x', type: 'button', 'aria-label': '닫기' }, '✕');
-    const shut = () => { ov.remove(); document.documentElement.style.overflow = ''; document.removeEventListener('keydown', esc); };
+    // 닫으면 열기 전 화면·스크롤 위치로 그대로 (아이폰은 뒤 화면 스크롤을 막을 때 맨 위로 튀는 일이 있어서 위치를 기억했다가 되돌림)
+    const y = window.scrollY, hash = location.hash;
+    const shut = () => { ov.remove(); document.documentElement.style.overflow = ''; document.removeEventListener('keydown', esc);
+      if (location.hash !== hash) history.replaceState(null, '', hash || location.pathname + location.search);
+      window.scrollTo(0, y); requestAnimationFrame(() => window.scrollTo(0, y)); };
     const esc = e => { if (e.key === 'Escape') shut(); };
     x.addEventListener('click', shut); document.addEventListener('keydown', esc);
     ov.append(fr, x); document.body.append(ov);
