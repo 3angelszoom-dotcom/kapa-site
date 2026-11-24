@@ -238,8 +238,10 @@
 
   // 주요 공항 표시: 점 + "SFO" 글자. 큰 공항은 처음부터, 나머지는 확대하면 (공항 위치는 airports.txt에서)
   // 축소 화면에서 글자가 겹치지 않게 3단계: 처음(서로 떨어진 큰 공항) → 5단계부터 가까이 붙은 큰 공항 → 6단계부터 나머지
-  const AP_BIG = 'SFO LAX SEA PDX SLC DEN PHX LAS DFW IAH MSP ORD DTW STL MCI ATL CLT MIA MCO BNA JFK BOS IAD HNL ANC YVR YYC YYZ YUL MEX CUN'.split(' ');
-  const AP_MID = 'SAN AUS TPA EWR LGA PHL DCA BWI'.split(' ');
+  const AP_BIG = ('SFO LAX SEA PDX SLC DEN PHX LAS DFW IAH MSP ORD DTW STL MCI ATL CLT MIA MCO BNA JFK BOS IAD HNL ANC YVR YYC YYZ YUL MEX CUN ' +
+    'ICN NRT HKG TPE PVG PEK MNL SIN BKK DEL GUM SYD AKL DXB DOH IST LHR CDG FRA').split(' ');   // 해외: 아시아·태평양·유럽 대표 공항
+  const AP_MID = ('SAN AUS TPA EWR LGA PHL DCA BWI ' +
+    'GMP HND KIX PUS CJU NGO FUK CTS OKA PKX SHA CAN SZX TSA KUL CGK DPS SGN HAN BOM SPN MEL AMS MUC ZRH MAD FCO').split(' ');
   const AP_MORE = 'OAK SJC SMF BUR ONT SNA LGB RNO BOI GEG ABQ ELP TUS SAT HOU DAL OKC TUL OMA DSM MKE MDW IND CMH CLE PIT CVG SDF MEM MSY BHM JAX RSW FLL PBI RDU RIC ORF BDL PVD BUF ALB SYR ROC GRR MSN FAR SAV CHS GSP ICT LIT OGG KOA LIH FAI PSP SBA MRY FAT BZN JAC MSO HDN EGE ASE COS GJT SLC'.split(' ');
   const apBig = L.layerGroup().addTo(map), apMid = L.layerGroup(), apMore = L.layerGroup();
   const apMark = (code, ll, g) => L.circleMarker(ll, { radius: 3, color: '#334155', weight: 1, fillColor: '#fff', fillOpacity: 1, interactive: false })
