@@ -317,8 +317,8 @@
   map.addControl(new MeCtl());
   // 새로고침: 오른쪽 아래 반투명 버튼 — 레이더 새 이미지 + 보던 루트가 있으면 터뷸런스·PIREP 다시 받기
   // 누를 때 짧은 진동: 안드로이드는 vibrate, 아이폰(iOS 18+)은 숨긴 스위치를 눌러 '톡' 햅틱
-  function haptic() {
-    try { if (navigator.vibrate && navigator.vibrate(15)) return; } catch (_) {}
+  function haptic(ms) {
+    try { if (navigator.vibrate && navigator.vibrate(ms || 15)) return; } catch (_) {}
     try {
       let l = document.getElementById('hap-l');
       if (!l) {
@@ -333,7 +333,7 @@
   const rfBtn = el('button', { type: 'button', class: 'me-loc rf', title: '새로고침', 'aria-label': '새로고침' });
   rfBtn.innerHTML = '<svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   rfBtn.addEventListener('click', () => {
-    haptic();
+    haptic(2000);
     rfBtn.classList.add('spin'); setTimeout(() => rfBtn.classList.remove('spin'), 900);
     nexrad.setUrl(NEX());
     if (!apDone) { apTry = 0; apLoad(); }
