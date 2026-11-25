@@ -516,6 +516,104 @@
       this.stop = () => { cancelAnimationFrame(raf); alive = false; window.removeEventListener('keydown', kd); };
     } };
 
+  // ===== 스카이 패트롤: 비행기를 끌어 움직이면 자동으로 쏨. 드론 떼·폭풍 구름을 걷어내고 5웨이브마다 큰 폭풍 =====
+  G.shoot = { id: 'shoot', name: '스카이 패트롤', short: 'PATROL', icon: '🛩️', bg: '#0F766E', desc: '자동으로 쏘며 몰려오는 드론과 폭풍 구름을 걷어내요',
+    start(box) {
+      const W = 320, H = 480, sz = room(box, 40), sc = Math.min((sz.w - 8) / W, (sz.h - 40) / H, 2.2);
+      const cv = el('canvas', { width: W * 2, height: H * 2, style: `width:${W * sc}px;height:${H * sc}px` }), g = cv.getContext('2d'); g.scale(2, 2);
+      box.append(cv, el('p', { class: 'hint' }, '손가락으로 비행기를 끌어요 · 자동 발사 · 🅿 세 갈래 · 🛡 실드'));
+      const P = { x: W / 2, y: H - 60, tx: W / 2, ty: H - 60, lives: 3, inv: 0, power: 0, shield: 0 };
+      let shots = [], foes = [], eb = [], items = [], fx = [], stars = [], wave = 0, score = 0, fireT = 0, waveT = 60, alive = true, raf = 0, last = 0, tick = 0, banner = null;
+      for (let i = 0; i < 40; i++) stars.push({ x: rnd(W), y: rnd(H), v: .3 + Math.random() * 1.2 });
+      const pos = e => { const r = cv.getBoundingClientRect(); P.tx = Math.max(14, Math.min(W - 14, (e.clientX - r.left) / sc)); P.ty = Math.max(H * .5, Math.min(H - 20, (e.clientY - r.top) / sc - 40)); };
+      cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); pos(e); });
+      cv.addEventListener('pointermove', e => { if (e.buttons || e.pointerType !== 'mouse') pos(e); });
+      const keys = {}; const kd = e => { keys[e.key] = true; }, ku = e => { keys[e.key] = false; };
+      window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
+      function nextWave() {
+        wave++; banner = { t: 0, s: wave % 5 === 0 ? 'STORM CELL!' : 'WAVE ' + wave };
+        if (wave % 5 === 0) { foes.push({ t: 'boss', x: W / 2, y: -70, vx: 1 + wave * .05, hp: 40 + wave * 8, max: 40 + wave * 8, r: 36, f: 60 }); return; }
+        const n = Math.min(18, 5 + wave * 2), lanes = 4 + rnd(3);
+        for (let i = 0; i < n; i++) { const bx = 30 + (i % lanes) * ((W - 60) / Math.max(1, lanes - 1));
+          foes.push({ t: 'drone', bx, x: bx, y: -20 - Math.floor(i / lanes) * 34 - rnd(20), ph: Math.random() * 6, amp: 18 + rnd(30), vy: .55 + wave * .05, hp: wave > 3 ? 2 : 1, r: 11, f: 80 + rnd(160) }); }
+        for (let i = 0; i < Math.floor(wave / 2); i++) foes.push({ t: 'cloud', x: 40 + rnd(W - 80), y: -60 - i * 70, vy: .32, hp: 5 + wave, max: 5 + wave, r: 22, ph: Math.random() * 6 });
+      }
+      const boom = (x, y, c, n) => { for (let i = 0; i < n; i++) { const a = Math.random() * 6.3, v = 1 + Math.random() * 2.5; fx.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, l: 20 + rnd(16), c }); } };
+      function hurt() {
+        if (P.inv > 0) return;
+        if (P.shield) { P.shield = 0; P.inv = 50; buzz(30); boom(P.x, P.y, '#67E8F9', 14); return; }
+        P.lives--; P.inv = 120; buzz(120); boom(P.x, P.y, '#F97316', 26);
+        if (P.lives <= 0) { alive = false; setTimeout(() => finish(false), 500); }
+      }
+      function step(dt) {
+        tick += dt;
+        if (keys.ArrowLeft) P.tx = Math.max(14, P.x - 30); if (keys.ArrowRight) P.tx = Math.min(W - 14, P.x + 30);
+        if (keys.ArrowUp) P.ty = Math.max(H * .5, P.y - 30); if (keys.ArrowDown) P.ty = Math.min(H - 20, P.y + 30);
+        P.x += (P.tx - P.x) * Math.min(1, .3 * dt); P.y += (P.ty - P.y) * Math.min(1, .3 * dt);
+        if (P.inv > 0) P.inv -= dt; if (P.power > 0) P.power -= dt;
+        fireT -= dt; if (fireT <= 0 && alive) { fireT = 8; shots.push({ x: P.x, y: P.y - 16, vx: 0 }); if (P.power > 0) shots.push({ x: P.x - 6, y: P.y - 10, vx: -1.6 }, { x: P.x + 6, y: P.y - 10, vx: 1.6 }); }
+        shots.forEach(s => { s.y -= 8 * dt; s.x += s.vx * dt; }); shots = shots.filter(s => s.y > -10 && s.x > -10 && s.x < W + 10 && !s.d);
+        foes.forEach(f => {
+          if (f.t === 'drone') { f.y += f.vy * dt; f.x = f.bx + Math.sin(tick * .03 + f.ph) * f.amp; }
+          else if (f.t === 'cloud') { f.y += f.vy * dt; f.x += Math.sin(tick * .01 + f.ph) * .3 * dt; }
+          else { if (f.y < 80) f.y += .8 * dt; f.x += f.vx * dt; if (f.x < 50 || f.x > W - 50) f.vx *= -1; }
+          f.f -= dt;
+          if (f.f <= 0 && f.y > 0 && f.y < H * .65) {
+            if (f.t === 'boss') { f.f = Math.max(28, 60 - wave * 2); for (let i = -2; i <= 2; i++) { const a = Math.atan2(P.y - f.y, P.x - f.x) + i * .22; eb.push({ x: f.x, y: f.y + 20, vx: Math.cos(a) * 2.4, vy: Math.sin(a) * 2.4 }); } }
+            else if (f.t === 'drone') { f.f = Math.max(60, 200 - wave * 8) + rnd(120); const a = Math.atan2(P.y - f.y, P.x - f.x), v = 2 + wave * .08; eb.push({ x: f.x, y: f.y + 8, vx: Math.cos(a) * v, vy: Math.sin(a) * v }); }
+            else f.f = 999;
+          }
+          if (Math.hypot(f.x - P.x, f.y - P.y) < f.r + 9) { hurt(); if (f.t === 'drone') f.hp = 0; }
+        });
+        // 맞히기
+        shots.forEach(s => { for (const f of foes) { if (f.hp > 0 && Math.hypot(s.x - f.x, s.y - f.y) < f.r) { s.d = 1; f.hp--; f.hit = 4; break; } } });
+        foes.forEach(f => { if (f.hp <= 0 && !f.dead) { f.dead = 1; const pts = f.t === 'boss' ? 500 * wave / 5 : f.t === 'cloud' ? 40 : 10 + wave * 2; score += pts; setScore(score);
+          boom(f.x, f.y, f.t === 'drone' ? '#FACC15' : '#94A3B8', f.t === 'boss' ? 60 : 16); buzz(f.t === 'boss' ? [40, 40, 40] : 6);
+          if (Math.random() < (f.t === 'drone' ? .06 : .35) || f.t === 'boss') items.push({ x: f.x, y: f.y, k: Math.random() < .55 ? 'P' : 'S' }); } });
+        foes = foes.filter(f => !f.dead && f.y < H + 60);
+        eb.forEach(b => { b.x += b.vx * dt; b.y += b.vy * dt; if (Math.hypot(b.x - P.x, b.y - P.y) < 8) { b.d = 1; hurt(); } }); eb = eb.filter(b => !b.d && b.y < H + 10 && b.y > -10 && b.x > -10 && b.x < W + 10);
+        items.forEach(it => { it.y += 1.3 * dt; if (Math.hypot(it.x - P.x, it.y - P.y) < 18) { it.d = 1; if (it.k === 'P') P.power = 600; else P.shield = 1; buzz(15); score += 25; setScore(score); } }); items = items.filter(it => !it.d && it.y < H + 10);
+        fx.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.l -= dt; }); fx = fx.filter(p => p.l > 0);
+        stars.forEach(s0 => { s0.y += s0.v * dt; if (s0.y > H) { s0.y = 0; s0.x = rnd(W); } });
+        if (!foes.length) { waveT -= dt; if (waveT <= 0) { waveT = 70; nextWave(); } }
+      }
+      function plane(x, y) {
+        g.save(); g.translate(x, y); g.fillStyle = '#E2E8F0';
+        g.beginPath(); g.moveTo(0, -18); g.lineTo(4, -6); g.lineTo(17, 4); g.lineTo(17, 8); g.lineTo(4, 4); g.lineTo(3, 12); g.lineTo(8, 16); g.lineTo(-8, 16); g.lineTo(-3, 12); g.lineTo(-4, 4); g.lineTo(-17, 8); g.lineTo(-17, 4); g.lineTo(-4, -6); g.closePath(); g.fill();
+        g.fillStyle = '#0EA5E9'; g.fillRect(-2, -12, 4, 6); g.fillStyle = tick % 6 < 3 ? '#F97316' : '#FACC15'; g.fillRect(-2, 16, 4, 4);
+        g.restore();
+      }
+      function draw() {
+        const grd = g.createLinearGradient(0, 0, 0, H); grd.addColorStop(0, '#071330'); grd.addColorStop(1, '#0E3A5C'); g.fillStyle = grd; g.fillRect(0, 0, W, H);
+        g.fillStyle = 'rgba(255,255,255,.5)'; stars.forEach(s0 => g.fillRect(s0.x, s0.y, s0.v > 1 ? 2 : 1, s0.v > 1 ? 2 : 1));
+        foes.forEach(f => {
+          const hit = f.hit > 0; if (hit) f.hit--;
+          if (f.t === 'drone') {   // 쿼드콥터 드론
+            g.save(); g.translate(f.x, f.y); g.strokeStyle = hit ? '#fff' : '#94A3B8'; g.lineWidth = 2; g.beginPath(); g.moveTo(-8, -8); g.lineTo(8, 8); g.moveTo(8, -8); g.lineTo(-8, 8); g.stroke();
+            g.fillStyle = 'rgba(203,213,225,.55)'; [[-8, -8], [8, -8], [-8, 8], [8, 8]].forEach(([a, b]) => { g.beginPath(); g.ellipse(a, b, 5, tick % 4 < 2 ? 2 : 4, 0, 0, 7); g.fill(); });
+            g.fillStyle = hit ? '#fff' : (f.hp > 1 ? '#F43F5E' : '#FACC15'); g.fillRect(-4, -4, 8, 8); g.fillStyle = '#0B1220'; g.fillRect(-1.5, -1.5, 3, 3); g.restore();
+          } else {   // 폭풍 구름 · 큰 폭풍
+            const r = f.r; g.fillStyle = hit ? '#64748B' : '#334155';
+            g.beginPath(); g.arc(f.x, f.y, r * .8, 0, 7); g.arc(f.x - r * .6, f.y + r * .2, r * .6, 0, 7); g.arc(f.x + r * .6, f.y + r * .2, r * .6, 0, 7); g.fill();
+            if (tick % 40 < 6) { g.strokeStyle = '#FACC15'; g.lineWidth = 2; g.beginPath(); g.moveTo(f.x, f.y + r * .4); g.lineTo(f.x - 5, f.y + r * .8); g.lineTo(f.x + 3, f.y + r * .8); g.lineTo(f.x - 3, f.y + r * 1.2); g.stroke(); }
+            g.fillStyle = 'rgba(0,0,0,.4)'; g.fillRect(f.x - r, f.y - r, r * 2, 3); g.fillStyle = '#22C55E'; g.fillRect(f.x - r, f.y - r, r * 2 * Math.max(0, f.hp) / f.max, 3);
+          }
+        });
+        g.fillStyle = '#FDE047'; shots.forEach(s0 => g.fillRect(s0.x - 1.5, s0.y - 6, 3, 8));
+        g.fillStyle = '#FB7185'; eb.forEach(b => { g.beginPath(); g.arc(b.x, b.y, 3.2, 0, 7); g.fill(); });
+        items.forEach(it => { g.fillStyle = it.k === 'P' ? '#A855F7' : '#06B6D4'; g.beginPath(); g.arc(it.x, it.y, 9, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = 'bold 11px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(it.k === 'P' ? 'P' : 'S', it.x, it.y + 1); });
+        fx.forEach(p => { g.globalAlpha = Math.min(1, p.l / 20); g.fillStyle = p.c; g.fillRect(p.x, p.y, 2, 2); }); g.globalAlpha = 1;
+        if (alive && !(P.inv > 0 && Math.floor(P.inv / 5) % 2)) plane(P.x, P.y);
+        if (P.shield) { g.strokeStyle = 'rgba(103,232,249,.8)'; g.lineWidth = 2; g.beginPath(); g.arc(P.x, P.y, 22, 0, 7); g.stroke(); }
+        g.font = '9px "Press Start 2P", monospace'; g.textAlign = 'left'; g.textBaseline = 'top'; g.fillStyle = '#F87171'; g.fillText('♥'.repeat(Math.max(0, P.lives)), 8, 8);
+        g.fillStyle = '#8FA3C7'; g.textAlign = 'right'; g.fillText('WAVE ' + wave, W - 8, 8); if (P.power > 0) { g.fillStyle = '#C084FC'; g.fillText('3-WAY', W - 8, 22); }
+        if (banner) { banner.t++; g.globalAlpha = Math.max(0, 1 - banner.t / 90); g.fillStyle = '#FACC15'; g.font = '14px "Press Start 2P", monospace'; g.textAlign = 'center'; g.fillText(banner.s, W / 2, H / 2 - 40); g.globalAlpha = 1; if (banner.t > 90) banner = null; }
+      }
+      function loop(t) { const dt = Math.min(3, (t - (last || t)) / 16.67); last = t; if (alive) step(dt); draw(); raf = requestAnimationFrame(loop); }
+      raf = requestAnimationFrame(loop);
+      this.stop = () => { cancelAnimationFrame(raf); alive = false; window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); };
+    } };
+
   // ===== 90s-games(MIT, Prateek)에서 가져와 폰 조작·순위를 붙인 게임들 (g/ 폴더). 끝나면 점수를 이 화면으로 보내 옴 =====
   const EXT = [
     ['brick', '벽돌 깨기', 'BRICK', '🧱', '#0D9488', '손가락으로 받침대를 움직여 공으로 벽돌을 깨요', {}],
