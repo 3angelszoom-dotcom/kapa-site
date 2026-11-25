@@ -148,7 +148,9 @@
     return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, page: 'test' }), redirect: 'follow', signal: ac ? ac.signal : undefined })
       .then(r => r.json()).then(j => { clearTimeout(t); if (!j || !j.ok) throw new Error((j && j.error) || '서버 오류'); return j.data; }, e => { clearTimeout(t); throw e; });
   }
-  const fmtS = (g, v) => g.time ? (v / 1000).toFixed(1) + 's' : Number(v).toLocaleString('en-US');
+  // 점수 표시: 시간 게임은 초, 횟수 게임은 단위, 나머지는 숫자. low = 낮을수록 좋음
+  const fmtS = (g, v) => g.time ? (v / 1000).toFixed(1) + 's' : Number(v).toLocaleString('en-US') + (g.unit || '');
+  const lowIs = g => !!(g.time || g.low);
   // 순위표 그리기 (상위 10명 + 10위 밖이면 내 순위)
   function boardEl(g, b) {
     if (!b) return el('p', { class: 'lb-note' }, '순위를 불러오지 못했어요.');
@@ -180,22 +182,22 @@
   let cur = null, scoreN = 0;
   const G = {};   // 게임들
   const bestOf = g => Number(ls.get('kg_best_' + g.id)) || 0;
-  const fmtBest = (g, v) => g.time ? (v ? (v / 1000).toFixed(1) + 's' : '—') : String(v);
-  function setScore(n) { scoreN = n; $('score').textContent = cur && cur.time ? (n / 1000).toFixed(1) : n; }
+  const fmtBest = (g, v) => lowIs(g) && !v ? '—' : fmtS(g, v);
+  function setScore(n) { scoreN = n; $('score').textContent = cur && cur.time ? (n / 1000).toFixed(1) : n; }   // 위 SCORE 칸
   function showBest() { $('best').textContent = cur ? fmtBest(cur, bestOf(cur)) : '0'; }
   function finish(win) {
     const g = cur; if (!g) return;
-    const b = bestOf(g), better = g.time ? (win && (!b || scoreN < b)) : scoreN > b;
+    const b = bestOf(g), better = lowIs(g) ? (win && (!b || scoreN < b)) : scoreN > b;
     if (better) ls.set('kg_best_' + g.id, String(scoreN));
     showBest();
-    $('ov-h').textContent = win ? (g.time ? 'CLEAR!' : 'NICE!') : 'GAME OVER';
-    $('ov-p').innerHTML = '<span class="sum">' + (g.time ? 'TIME <b>' + (win ? (scoreN / 1000).toFixed(1) + 's' : '—') + '</b>' : 'SCORE <b>' + scoreN + '</b>') + '<br>' + (better ? '★ NEW BEST ★' : 'BEST <b>' + fmtBest(g, bestOf(g)) + '</b>') + '</span>';
+    $('ov-h').textContent = win ? (lowIs(g) ? 'CLEAR!' : 'NICE!') : 'GAME OVER';
+    $('ov-p').innerHTML = '<span class="sum">' + (g.time ? 'TIME <b>' + (win ? fmtS(g, scoreN) : '—') + '</b>' : 'SCORE <b>' + fmtS(g, scoreN) + '</b>') + '<br>' + (better ? '★ NEW BEST ★' : 'BEST <b>' + fmtBest(g, bestOf(g)) + '</b>') + '</span>';
     $('again').textContent = '다시 하기'; $('again').dataset.mode = ''; $('tomenu').hidden = false;
     $('over').hidden = false; buzz(win ? [30, 40, 30] : 120);
     // 회원 순위에 올리기 (지뢰찾기는 깼을 때만)
     const lb = el('div', {}, el('p', { class: 'lb-note' }, key ? '순위 올리는 중…' : 'KAPA 앱에서 입장하면 회원들과 순위를 겨룰 수 있어요.'));
     $('ov-p').append(lb);
-    const ok = g.time ? win : scoreN > 0;
+    const ok = lowIs(g) ? win : scoreN > 0;
     if (key && ok) call('submitScore', key, g.id, scoreN).then(r => { lb.replaceChildren(boardEl(g, r.board)); if (r.better && r.saved) lb.prepend(el('p', { class: 'lb-new' }, '🏆 내 최고 기록 갱신!')); ranks[g.id] = r.board; })
       .catch(e => lb.replaceChildren(el('p', { class: 'lb-note' }, '순위에 못 올렸어요 (' + String(e.message || e).slice(0, 40) + ')')));
     else if (key) call('getLeaderboard', key, g.id).then(b => lb.replaceChildren(boardEl(g, b))).catch(() => lb.replaceChildren(boardEl(g, null)));
@@ -488,6 +490,28 @@
       add(); add(); draw();
       this.stop = () => window.removeEventListener('keydown', kd);
     } };
+
+
+  // ===== 90s-games(MIT, Prateek)에서 가져와 폰 조작·순위를 붙인 게임들 (g/ 폴더). 끝나면 점수를 이 화면으로 보내 옴 =====
+  const EXT = [
+    ['brick', '벽돌 깨기', 'BRICK', '🧱', '#0D9488', '손가락으로 받침대를 움직여 공으로 벽돌을 깨요', {}],
+    ['bullet', '탄막 피하기', 'BULLET', '💫', '#DB2777', '쏟아지는 탄을 피하며 오래 버텨요', {}],
+    ['whack', '두더지 잡기', 'WHACK', '🔨', '#65A30D', '30초 동안 튀어나오는 두더지를 톡톡', {}],
+    ['hanoi', '하노이 탑', 'HANOI', '🗼', '#0891B2', '원반 5개를 가장 적은 횟수로 옮겨요', { low: true, unit: ' moves' }],
+    ['memory', '카드 짝 맞추기', 'MEMORY', '🃏', '#9333EA', '카드를 뒤집어 짝을 빨리 찾아요', { time: true }],
+    ['racer', '레트로 레이서', 'RACER', '🏎️', '#DC2626', '장애물을 피해 멀리 달려요', {}],
+  ];
+  EXT.forEach(([id, name, short, icon, bg, desc, o]) => {
+    G[id] = Object.assign({ id, name, short, icon, bg, desc, ext: true,
+      start(box) {
+        const fr = el('iframe', { src: 'g/' + id + '.html', title: name, style: 'flex:1 1 auto;width:100%;min-height:0;border:0;border-radius:14px;background:#000' });
+        box.append(fr, el('p', { class: 'hint', style: 'margin:6px 0 0;font-size:10.5px' }, 'Game: 90s-games by Prateek (MIT)'));
+        const onMsg = e => { if (e.origin !== location.origin || !e.data || !e.data.kgScore || e.data.kgScore.id !== id || e.source !== fr.contentWindow) return;
+          setScore(Number(e.data.kgScore.score) || 0); finish(lowIs(G[id])); };
+        window.addEventListener('message', onMsg);
+        this.stop = () => window.removeEventListener('message', onMsg);
+      } }, o);
+  });
 
   // ===== 목록 =====
   Object.values(G).forEach(g => $('menu').append(el('div', { class: 'cwrap', 'data-id': g.id },
