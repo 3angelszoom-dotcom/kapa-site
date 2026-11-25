@@ -1405,7 +1405,7 @@
       icon: '<circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path><path d="M21.5 20a6.5 6.5 0 0 0-4-6"></path>' },
     longsit:   { ico: '🛫', code: 'APT', nav: 'Airport Info', tag: '공항별 라운지 · 맛집 · 교통 · 쉴 곳', desc: '라운지, 맛집, 쉴 곳, 교통까지 공항별 정보를 모아요.',
       icon: '<path d="M17 8h1a4 4 0 0 1 0 8h-1"></path><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"></path><path d="M6 2v3"></path><path d="M10 2v3"></path><path d="M14 2v3"></path>' },
-    anon:      { ico: '🤫', code: 'ANO', nav: '1:1 상담', tag: '익명 · 고민 · 조언', desc: '이름 없이 고민을 털어놓고 조언을 구해요. 누가 썼는지 아무도 볼 수 없어요. 웹사이트 관리자도 볼 수 없어요.',
+    anon:      { ico: '🤫', code: 'ANO', nav: '1:1 상담', tag: '익명 · 고민 · 조언', desc: '이름 없이 고민을 털어놓고 조언을 구해요.',
       icon: '<path d="M12 3a7 7 0 0 0-7 7v4l-2 3h18l-2-3v-4a7 7 0 0 0-7-7z"></path><path d="M9 20a3 3 0 0 0 6 0"></path>' },
     loads:     { ico: '✈️', code: 'LDS', nav: '좌석 조회', tag: '논레브 좌석 · 로드 조회', desc: '좌석(로드) 조회를 부탁하면, 조회할 수 있는 회원이 화면 스크린샷으로 답해 줘요. 승객 이름 같은 개인정보는 가리고 올려 주세요.',
       icon: '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path>' },
@@ -2153,7 +2153,7 @@
       tip,
       notice ? el('div', { class: 'w-notice' + (/\n/.test(notice) ? '' : ' fit1'), 'data-min': '10' }, el('b', {}, '📢 공지'), notice) : null,
       state.board === ANON ? el('div', { class: 'w-notice' }, el('b', {}, '익명'), me().anonViewer
-        ? '🔐 상담 담당으로 지정돼 있어서 모든 상담 글을 볼 수 있어요. 누가 썼는지는 아무도 볼 수 없어요. 웹사이트 관리자도 볼 수 없어요.'
+        ? '🔐 상담 담당으로 지정돼 있어서 모든 상담 글을 볼 수 있어요.'
         : '여기 쓴 글은 상담 담당 회원과 나만 볼 수 있어요.') : null,
       whoBar,
       el('div', { class: 'w-toolbar' },
@@ -2292,7 +2292,7 @@
   // 누구 이름으로 올라가는지: 익명 상담소 → 익명, 개인 코드 → 실명(고정), 공용 비밀번호 → 직접 입력
   function asWho(board, what) {
     const m = me();
-    if (board === ANON) return el('p', { class: 'as-who' }, el('b', {}, '익명'), `으로 ${what} 올라가요. 누가 썼는지 아무도 볼 수 없어요. 웹사이트 관리자도 볼 수 없어요.`);
+    if (board === ANON) return el('p', { class: 'as-who' }, el('b', {}, '익명'), `으로 ${what} 올라가요.`);
     if (m.type === 'personal') return el('p', { class: 'as-who' }, el('b', {}, m.name), vf(true), ` 이름(실명)으로 ${what} 올라가요.`);
     return null;
   }
