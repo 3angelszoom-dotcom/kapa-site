@@ -2742,8 +2742,8 @@
       { id: 'posts', label: '글 관리', render: posts },
       { id: 'pw', label: '비밀번호', render: passwords },
       { id: 'notice', label: '공지·카톡방', render: notice },
+      { id: 'existing', label: '기존 회원', render: existingTab },   // 가입은 이제 이 경로(#existing)로 들어옴 → 탭을 항상 보이게
       { id: 'apply', label: '가입 신청', render: applicants },
-      { id: 'existing', label: '기존 회원 등록', render: existingTab, hidden: true },   // 링크(#admin-existing)로만 열림
       { id: 'live', label: '접속자', render: live },
     ];
     const firstTab = () => currentRoute === 'admin-existing' ? 'existing' : 'dash';   // #admin-existing 링크로 왔으면 기존 회원 등록부터
