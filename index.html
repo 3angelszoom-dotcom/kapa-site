@@ -4348,11 +4348,13 @@
       if (existing) info.existing = true;
       F.forEach(([k]) => (info[k] = val(k)));
       try {
-        await rawCall('submitApplication', info);
-        msg.textContent = existing ? '등록했어요. 운영진이 확인하면 ' + email + ' 주소로 카파 사이트 개인 입장 코드를 보내 드려요.'
+        const r = await rawCall('submitApplication', info);
+        if (r && r.updated) msg.textContent = '이미 신청이 접수돼 있어요. 보내 주신 내용으로 고쳐 두었어요. 운영진이 확인하면 ' + email + ' 주소로 개인 입장 코드를 보내 드려요.';
+        else msg.textContent = existing ? '등록했어요. 운영진이 확인하면 ' + email + ' 주소로 카파 사이트 개인 입장 코드를 보내 드려요.'
           : '제출했어요. 관리자가 확인 후 ' + email + ' 주소로 개인 입장 코드를 보내드려요.';
       } catch (e) {
-        msg.textContent = '제출하지 못했어요: ' + (e && e.message || e);
+        const em = String(e && e.message || e);
+        msg.textContent = /^이미 등록된/.test(em) ? em : '제출하지 못했어요: ' + em;
       }
       btn.disabled = false; btn.textContent = '제출하기';
     });
