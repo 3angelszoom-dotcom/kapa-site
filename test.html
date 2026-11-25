@@ -1192,7 +1192,7 @@
       </div>
       <h3 class="gd-h gd-site">사이트 이용 방법</h3>
       <div class="rules">
-        <div class="rule"><h3>회원 비밀번호로 입장</h3><p>카톡방 공지의 회원 비밀번호를 한 번 입력하면 그 기기에서는 계속 들어와져요. 글을 쓸 때 비밀번호를 넣으면 나중에 직접 삭제할 수 있어요.</p></div>
+        <div class="rule"><h3>개인 입장 코드로 입장</h3><p>승인 메일로 받은 개인 입장 코드를 한 번 입력하면 그 기기에서는 계속 들어와져요. 글과 댓글은 내 이름(실명)으로 올라가요.</p></div>
         <div class="rule"><h3>정보는 구체적으로</h3><p>항공사, 공항 코드, 날짜를 제목에 넣어주세요. 검색으로 다시 찾기 쉬워져요.</p></div>
         <div class="rule"><h3>사진·PDF 첨부</h3><p>파일당 200MB, 글당 3개까지 올릴 수 있어요. 더 큰 파일은 Google Drive에 올리고 "링크가 있는 모든 사용자"로 공유한 뒤 링크를 붙여주세요.</p></div>
         <div class="rule"><h3>서로 존중해요</h3><p>회사 내부 자료, 개인 연락처, 비방 글은 관리자가 삭제할 수 있어요.</p></div>
@@ -1371,7 +1371,7 @@
       <div class="container">
         <div class="eyebrow">Admin</div>
         <h1>관리자 페이지</h1>
-        <p>회원 비밀번호, 공지, 글과 댓글, 저장 공간을 한 곳에서 관리해요.</p>
+        <p>회원, 공지, 글과 댓글, 저장 공간을 한 곳에서 관리해요.</p>
       </div>
     </section>
     <div class="container" style="padding-block: 48px 0"><div id="admin-root"></div></div>
@@ -2043,7 +2043,7 @@
     return rawCall(fn, ...args).catch(e => {
       if (String(e && e.message || e).includes('AUTH_REQUIRED')) {
         setMemberKey(''); clearFeed();
-        showLogin('입장 정보가 바뀌었어요. 개인 입장 코드(또는 회원 비밀번호)를 다시 입력해 주세요.');
+        showLogin('입장 정보가 바뀌었어요. 개인 입장 코드를 다시 입력해 주세요.');
         throw new Error('__auth');
       }
       throw e;
@@ -2065,7 +2065,7 @@
     // 아이폰·맥의 암호 저장(iCloud 키체인)이 알아보도록 진짜 로그인 양식 모양으로 만듦:
     // 처음 입장할 때 "암호 저장"을 누르면 다음부터 코드 칸에 자동으로 채워져요 (사이트 저장소가 지워져도 남음)
     const user = el('input', { class: 'sr-user', type: 'text', name: 'username', autocomplete: 'username', value: 'KAPA 게시판', tabindex: '-1', 'aria-hidden': 'true' });
-    const pw = el('input', { id: 'member-pw', type: 'password', name: 'password', placeholder: '개인 입장 코드 또는 회원 비밀번호', autocomplete: 'current-password', 'aria-label': '개인 입장 코드 또는 회원 비밀번호' });
+    const pw = el('input', { id: 'member-pw', type: 'password', name: 'password', placeholder: '개인 입장 코드', autocomplete: 'current-password', 'aria-label': '개인 입장 코드 또는 회원 비밀번호' });
     const keep = el('input', { type: 'checkbox', id: 'member-keep' }); keep.checked = keepMe;
     const msg = el('p', { class: 'msg' }, note || '');
     const btn = el('button', { class: 'primary', type: 'submit' }, '입장');
@@ -2099,7 +2099,7 @@
     return (el('div', { class: 'post login' },
       el('div', { class: 'lock', html: svg('<rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path>') }),
       el('h2', {}, title || '회원 전용 게시판'),
-      el('p', { class: 'muted' }, intro || '승인 메일로 받은 개인 입장 코드(예: ABCD-EFGH)를 넣으면 내 이름(실명)으로 글을 쓸 수 있어요. 카톡방 공지의 회원 비밀번호로도 들어갈 수 있어요.'),
+      el('p', { class: 'muted' }, intro || '승인 메일로 받은 개인 입장 코드(예: ABCD-EFGH)를 넣어 주세요. 코드가 없으면 아래에서 가입 신청을 하거나 관리자에게 문의해 주세요.'),
       isIOS ? el('p', { class: 'muted' }, '아이폰: 입장 후 Safari가 "암호를 저장할까요?"라고 물으면 저장을 눌러 두세요. 다음에 코드 칸을 누르면 키보드 위에 코드가 떠서 한 번에 채워져요.') : null,
       form));
   }
@@ -2856,11 +2856,7 @@
               ? el('table', { class: 'a-table' },
                   el('thead', {}, el('tr', {}, el('th', {}, '이름'), el('th', {}, '글'))),
                   el('tbody', {}, d.authors.map(a => el('tr', {}, el('td', {}, a.name), el('td', {}, a.posts)))))
-              : el('p', { class: 'a-muted' }, '아직 글이 없어요.'))),
-        el('section', { class: 'a-card' },
-          el('div', { class: 'a-row-between' }, el('h3', {}, '현재 회원 비밀번호'),
-            el('button', { class: 'a-link', onclick: () => { tab = 'pw'; shell(); } }, '바꾸기 →')),
-          secret(d.memberPassword)));
+              : el('p', { class: 'a-muted' }, '아직 글이 없어요.'))));
     }
 
     // ---- 글 관리 ----
@@ -2998,27 +2994,10 @@
         catch (e) { if (e.message !== '__auth') { swMsg.className = 'a-err'; swMsg.textContent = e.message; } }
         swBtn.disabled = false;
       });
-      view.replaceChildren(
-        el('section', { class: 'a-card' },
-          el('h3', {}, '실명 글쓰기 전환'),
-          el('p', { class: 'a-muted' }, '개인 입장 코드로 입장한 회원은 한글 이름(실명, ✓)으로 글을 써요. 전환 기간에는 공용 비밀번호로도 글을 쓸 수 있고, 모두 개인 코드를 받으면 아래 버튼으로 막으면 돼요.'),
-          el('p', {}, '공용 비밀번호로 글쓰기: ', swState, typeof s.personalCount === 'number' ? el('span', { class: 'a-muted' }, ` · 개인 코드가 있는 회원 ${s.personalCount}명`) : ''),
-          swBtn, swMsg,
-          el('p', { style: 'margin-top:18px' }, '공용 비밀번호로 입장(읽기): ', enState),
-          el('p', { class: 'a-muted' }, '막으면 게시판에 들어가는 것 자체가 개인 입장 코드로만 돼요. 모두 개인 코드를 받은 뒤에 막아 주세요.'),
-          enBtn, enMsg),
-        el('section', { class: 'a-card' },
-          el('h3', {}, '회원 비밀번호'),
-          el('p', { class: 'a-muted' }, '게시판에 들어갈 때 쓰는 공용 비밀번호예요. 바꾸면 모든 회원이 다시 입력해야 해요.'),
-          secret(s.memberPassword),
-          s.memberLink ? el('div', { class: 'a-field' },
-            el('span', {}, '회원 바로가기 링크'),
-            el('p', { class: 'a-muted' }, '이 링크로 들어오면 비밀번호 없이 바로 입장해요. 카톡방 공지에 올려두면 편해요. 비밀번호를 바꾸면 링크도 바뀌어요.'),
-            (() => { const b = el('button', { class: 'a-btn ghost sm' }, '링크 복사'); b.addEventListener('click', () => copyText(s.memberLink, b)); return el('div', { class: 'a-secret' }, el('code', {}, s.memberLink), b); })()) : null,
-          el('label', { class: 'a-field' }, '새 비밀번호', mPw), mBtn, mMsg, shareBox),
+      view.replaceChildren(   // 공용 회원 비밀번호는 없앴음 → 관리자 비밀번호만
         el('section', { class: 'a-card' },
           el('h3', {}, '관리자 비밀번호'),
-          el('p', { class: 'a-muted' }, '이 관리자 페이지와 글 강제 삭제에 쓰여요. 회원 비밀번호와 다르게 정해 주세요.'),
+          el('p', { class: 'a-muted' }, '이 관리자 페이지와 글 강제 삭제에 쓰여요.'),
           el('label', { class: 'a-field' }, '새 비밀번호', aPw),
           el('label', { class: 'a-field' }, '비밀번호 확인', aPw2), aBtn, aMsg));
     }
