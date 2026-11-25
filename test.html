@@ -2290,8 +2290,10 @@
   }
 
   // 누구 이름으로 올라가는지: 익명 상담소 → 익명, 개인 코드 → 실명(고정), 공용 비밀번호 → 직접 입력
-  function asWho(board, what) {
+  function asWho(board, what, post) {
     const m = me();
+    // 1:1 상담: 상담 담당 회원이 남의 글에 다는 답변은 실명으로
+    if (board === ANON && post && !post.mine && m.anonViewer && m.type === 'personal') return el('p', { class: 'as-who' }, el('b', {}, m.name), vf(true), ` 이름(상담 담당)으로 ${what} 올라가요.`);
     if (board === ANON) return el('p', { class: 'as-who' }, el('b', {}, '익명'), `으로 ${what} 올라가요.`);
     if (m.type === 'personal') return el('p', { class: 'as-who' }, el('b', {}, m.name), vf(true), ` 이름(실명)으로 ${what} 올라가요.`);
     return null;
@@ -2396,7 +2398,7 @@
         el('div', { class: 'comments' },
           commentList(p),
           !m.canWrite ? needCode(CW + ' 달기')
-            : el('div', { class: 'form' }, asWho(p.board, CW + '이'),
+            : el('div', { class: 'form' }, asWho(p.board, CW + '이', p),
                 fixedName ? (anon ? el('div', { class: 'row' }, cPw) : null) : el('div', { class: 'row' }, cName, cPw),
                 replyBar, cBody, cBtn, cMsg))));
   }
