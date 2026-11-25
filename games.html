@@ -220,71 +220,6 @@
   // 남는 공간에 맞는 크기 (정사각형 판·캔버스용)
   const room = (box, extraH) => { const r = box.getBoundingClientRect(); return { w: Math.min(r.width, 520), h: Math.max(200, window.innerHeight - r.top - (extraH || 0) - 16) }; };
 
-  // ===== 1) 블록 퍼즐: 8×8 판에 아래 세 조각을 끌어다 놓기. 가로·세로 한 줄이 차면 사라짐 =====
-  G.blocks = { id: 'blocks', name: '블록 퍼즐', short: 'BLOCKS', icon: '🧱', bg: '#7C3AED', desc: '조각을 끌어다 놓아 줄을 채우면 사라져요',
-    start(box) {
-      const N = 8, COLS = ['#F87171', '#FB923C', '#FACC15', '#4ADE80', '#22D3EE', '#60A5FA', '#A78BFA', '#F472B6'];
-      const SH = [[[1]], [[1, 1]], [[1], [1]], [[1, 1, 1]], [[1], [1], [1]], [[1, 1], [1, 1]], [[1, 1, 1], [1, 1, 1], [1, 1, 1]], [[1, 0], [1, 1]], [[1, 1], [0, 1]], [[0, 1], [1, 1]], [[1, 1], [1, 0]],
-        [[1, 1, 1, 1]], [[1], [1], [1], [1]], [[1, 1, 1], [1, 0, 0]], [[1, 1, 1], [0, 0, 1]], [[1, 0, 0], [1, 1, 1]], [[0, 1, 0], [1, 1, 1]], [[1, 1, 1, 1, 1]], [[1], [1], [1], [1], [1]]];
-      const grid = Array.from({ length: N }, () => Array(N).fill(null));
-      const sz = room(box, 150), cs = Math.floor(Math.min(sz.w - 24, sz.h - 120, 400) / N) - 3;
-      const board = el('div', { class: 'bp-board', style: `grid-template-columns:repeat(${N},${cs}px)` });
-      const cells = []; for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { const d = el('div', { class: 'bp-c', style: `width:${cs}px;height:${cs}px` }); cells.push(d); board.append(d); }
-      const tray = el('div', { class: 'bp-tray' }), slots = [0, 1, 2].map(() => el('div', { class: 'bp-slot' }));
-      tray.append(...slots);
-      box.append(el('div', { class: 'bp' }, board, tray, el('p', { class: 'hint' }, '조각을 손가락으로 끌어서 판 위에 놓으세요')));
-      let hand = [], score = 0;
-      const fits = (sh, r0, c0) => sh.every((row, i) => row.every((v, j) => !v || (r0 + i >= 0 && c0 + j >= 0 && r0 + i < N && c0 + j < N && !grid[r0 + i][c0 + j])));
-      const anyFit = sh => { for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (fits(sh, r, c)) return true; return false; };
-      const draw = () => { for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { const d = cells[r * N + c], v = grid[r][c]; d.className = 'bp-c' + (v ? ' f' : ''); d.style.background = v || ''; } };
-      const pieceEl = (p, s, cls) => { const w = p.sh[0].length; const e = el('div', { class: cls, style: `grid-template-columns:repeat(${w},${s}px)` });
-        p.sh.forEach(row => row.forEach(v => e.append(el('i', { class: v ? '' : 'e', style: `width:${s}px;height:${s}px;background:${p.col}` })))); return e; };
-      const deal = () => { hand = [0, 1, 2].map(() => ({ sh: SH[rnd(SH.length)], col: COLS[rnd(COLS.length)] })); renderTray(); };
-      function renderTray() {
-        slots.forEach((s, i) => { s.replaceChildren(); const p = hand[i]; if (!p) return;
-          const e = pieceEl(p, Math.min(18, Math.floor(88 / Math.max(p.sh.length, p.sh[0].length)) - 2), 'bp-p' + (anyFit(p.sh) ? '' : ' dead'));
-          e.addEventListener('pointerdown', ev => grab(ev, i)); s.append(e); });
-        if (hand.some(Boolean) && !hand.some(p => p && anyFit(p.sh))) setTimeout(() => finish(false), 350);
-      }
-      let drag = null;
-      function grab(ev, i) {
-        ev.preventDefault(); const p = hand[i];
-        const fly = pieceEl(p, cs, 'bp-fly'); fly.style.gap = '3px'; document.body.append(fly);
-        drag = { i, p, fly, id: ev.pointerId, r: -99, c: -99 };
-        move(ev); buzz(8);
-        window.addEventListener('pointermove', move); window.addEventListener('pointerup', drop); window.addEventListener('pointercancel', drop);
-      }
-      function cellAt(x, y) { const b = board.getBoundingClientRect(); return { c: Math.round((x - b.left - 6) / (cs + 3)), r: Math.round((y - b.top - 6) / (cs + 3)) }; }
-      function move(ev) {
-        if (!drag) return; const p = drag.p, w = p.sh[0].length * (cs + 3), h = p.sh.length * (cs + 3);
-        const x = ev.clientX - w / 2, y = ev.clientY - h - 40;   // 손가락 위로 띄워서 보이게
-        drag.fly.style.left = x + 'px'; drag.fly.style.top = y + 'px';
-        const at = cellAt(x, y); drag.r = at.r; drag.c = at.c;
-        draw(); const ok = fits(p.sh, at.r, at.c);
-        p.sh.forEach((row, i) => row.forEach((v, j) => { const r = at.r + i, c = at.c + j; if (v && r >= 0 && c >= 0 && r < N && c < N && !grid[r][c]) cells[r * N + c].classList.add(ok ? 'g' : 'x'); }));
-      }
-      function drop() {
-        window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', drop); window.removeEventListener('pointercancel', drop);
-        if (!drag) return; const { p, i, r, c, fly } = drag; fly.remove(); drag = null;
-        if (!fits(p.sh, r, c)) { draw(); return; }
-        let n = 0; p.sh.forEach((row, a) => row.forEach((v, b) => { if (v) { grid[r + a][c + b] = p.col; n++; } }));
-        hand[i] = null; score += n; buzz(10);
-        const fr = [], fc = []; for (let k = 0; k < N; k++) { if (grid[k].every(Boolean)) fr.push(k); if (grid.every(row => row[k])) fc.push(k); }
-        const lines = fr.length + fc.length;
-        draw();
-        if (lines) {   // 찬 줄: 반짝이며 사라지고, 여러 줄을 한꺼번에 지우면 보너스
-          const kill = new Set(); fr.forEach(k => { for (let j = 0; j < N; j++) kill.add(k * N + j); }); fc.forEach(k => { for (let j = 0; j < N; j++) kill.add(j * N + k); });
-          kill.forEach(x => { cells[x].classList.add('clr'); grid[Math.floor(x / N)][x % N] = null; });
-          setTimeout(draw, 260);
-          score += lines * 10 * lines; buzz(lines > 1 ? [20, 30, 20] : 25);
-        }
-        setScore(score);
-        setTimeout(() => { if (!hand.some(Boolean)) deal(); else renderTray(); }, lines ? 280 : 0);
-      }
-      draw(); deal();
-      this.stop = () => { if (drag) { drag.fly.remove(); drag = null; } window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', drop); };
-    } };
-
   // ===== 2) 행거 점프: 층과 사다리를 오르내리며 물건을 다 모으기. 굴러오는 짐 카트는 점프로 넘기 =====
   G.hop = { id: 'hop', name: '행거 점프', short: 'HANGAR', icon: '🧳', bg: '#EA580C', desc: '사다리를 오르내리며 물건을 모으고 카트를 뛰어넘어요',
     start(box) {
@@ -491,6 +426,95 @@
       this.stop = () => window.removeEventListener('keydown', kd);
     } };
 
+
+  // ===== 짐 쌓기: 위에서 떨어지는 짐 3개 묶음. 같은 색 짐이 가로·세로·대각선으로 3개 이상 이어지면 터지고, 위 짐이 내려와 또 터지면 연쇄 보너스 =====
+  G.bag = { id: 'bag', name: '짐 쌓기', short: 'BAGS', icon: '🧳', bg: '#2563EB', desc: '떨어지는 짐의 색 순서를 바꿔 같은 색 3개를 이어요',
+    start(box) {
+      const C = 7, R = 13, COL = ['#EF4444', '#F59E0B', '#22C55E', '#3B82F6', '#A855F7', '#EC4899'];
+      const sz = room(box, 110), cs = Math.floor(Math.min((sz.w - 100) / C, (sz.h - 60) / R, 46));
+      const W = C * cs, H = R * cs;
+      const cv = el('canvas', { width: (W + 84) * 2, height: H * 2, style: `width:${W + 84}px;height:${H}px` }), g = cv.getContext('2d'); g.scale(2, 2);
+      const pad = el('div', { class: 'pad', style: 'grid-template-columns:repeat(5,1fr)' });
+      const act = {};
+      const mk = (k, t, cls) => { const b = el('button', { type: 'button', class: cls || '', 'aria-label': k }, t);
+        let rep = 0; const go = () => { act[k](); };
+        b.addEventListener('pointerdown', e => { e.preventDefault(); b.classList.add('on'); go(); if (k === 'left' || k === 'right' || k === 'down') rep = setInterval(go, k === 'down' ? 50 : 120); });
+        const off = () => { b.classList.remove('on'); clearInterval(rep); }; ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => b.addEventListener(t, off)); return b; };
+      pad.append(mk('left', '◀'), mk('spin', '⟳'), mk('down', '▼'), mk('drop', '⤓'), mk('right', '▶'));
+      box.append(cv, pad, el('p', { class: 'hint' }, '⟳ 색 순서 바꾸기 · ▼ 빨리 · ⤓ 바로 내리기 · 화면을 밀어도 돼요'));
+      let grid = Array.from({ length: R }, () => Array(C).fill(-1));
+      let ncol = 4, piece, next, score = 0, cleared = 0, level = 1, fallT = 0, raf = 0, last = 0, alive = true, busy = false, flash = null, chainTxt = null;
+      const rndP = () => [rnd(ncol), rnd(ncol), rnd(ncol)];
+      const spawn = () => { piece = { c: 3, r: -2, k: next || rndP() }; next = rndP(); if (grid[0][3] >= 0) { alive = false; setTimeout(() => finish(false), 300); } };
+      const free = (c, r) => c >= 0 && c < C && r < R && (r < 0 || grid[r][c] < 0);
+      const can = (c, r) => [0, 1, 2].every(i => free(c, r + i));
+      act.left = () => { if (alive && !busy && can(piece.c - 1, piece.r)) piece.c--; };
+      act.right = () => { if (alive && !busy && can(piece.c + 1, piece.r)) piece.c++; };
+      act.spin = () => { if (alive && !busy) { piece.k.unshift(piece.k.pop()); buzz(5); } };
+      act.down = () => { if (alive && !busy) { if (can(piece.c, piece.r + 1)) { piece.r++; score += 1; setScore(score); } else lock(); } };
+      act.drop = () => { if (!alive || busy) return; let n = 0; while (can(piece.c, piece.r + 1)) { piece.r++; n++; } score += n * 2; setScore(score); lock(); };
+      const kmap = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'spin', ArrowDown: 'down', ' ': 'drop' };
+      const kd = e => { const k = kmap[e.key]; if (k) { e.preventDefault(); act[k](); } }; window.addEventListener('keydown', kd);
+      // 화면 밀기: 좌우 = 이동, 톡 = 색 바꾸기, 아래로 휙 = 바로 내리기
+      let sx = 0, sy = 0, moved = 0;
+      cv.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; moved = 0; cv.setPointerCapture(e.pointerId); });
+      cv.addEventListener('pointermove', e => { if (!e.buttons && e.pointerType === 'mouse') return; const dx = e.clientX - sx; if (Math.abs(dx) > cs * .8) { act[dx > 0 ? 'right' : 'left'](); sx = e.clientX; moved = 1; } });
+      cv.addEventListener('pointerup', e => { const dy = e.clientY - sy; if (dy > cs * 2 && !moved) act.drop(); else if (!moved && Math.abs(dy) < 10) act.spin(); });
+      function lock() {
+        if (piece.r < 0 && [0, 1, 2].some(i => piece.r + i < 0)) { alive = false; setTimeout(() => finish(false), 300); return; }
+        piece.k.forEach((k, i) => { grid[piece.r + i][piece.c] = k; }); buzz(8); busy = true; resolve(1);
+      }
+      function resolve(chain) {
+        const kill = new Set();
+        for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) { const v = grid[r][c]; if (v < 0) continue;
+          [[0, 1], [1, 0], [1, 1], [1, -1]].forEach(([dr, dc]) => { let n = 1; while (r + dr * n < R && c + dc * n >= 0 && c + dc * n < C && grid[r + dr * n][c + dc * n] === v) n++;
+            if (n >= 3) for (let i = 0; i < n; i++) kill.add((r + dr * i) * C + c + dc * i); }); }
+        if (!kill.size) { busy = false; spawn(); return; }
+        flash = { set: kill, t: 0 };
+        const pts = kill.size * 10 * chain * level; score += pts; cleared += kill.size; setScore(score);
+        if (chain > 1) { chainTxt = { t: 0, s: chain + ' CHAIN! +' + pts }; buzz([20, 30, 20]); } else buzz(20);
+        level = 1 + Math.floor(cleared / 30); ncol = Math.min(6, 4 + Math.floor((level - 1) / 2));
+        setTimeout(() => {
+          kill.forEach(x => { grid[Math.floor(x / C)][x % C] = -1; }); flash = null;
+          for (let c = 0; c < C; c++) { const col = []; for (let r = R - 1; r >= 0; r--) if (grid[r][c] >= 0) col.push(grid[r][c]); for (let r = R - 1, i = 0; r >= 0; r--, i++) grid[r][c] = i < col.length ? col[i] : -1; }
+          setTimeout(() => resolve(chain + 1), 120);
+        }, 260);
+      }
+      function bag(x, y, k, a) {   // 짐 가방 하나 (손잡이·바퀴)
+        const m = cs * .08, w = cs - m * 2, h = cs - m * 2 - cs * .12;
+        g.globalAlpha = a == null ? 1 : a;
+        g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(x + cs * .38, y + m, cs * .24, cs * .06); g.fillRect(x + cs * .36, y + m, cs * .04, cs * .14); g.fillRect(x + cs * .6, y + m, cs * .04, cs * .14);
+        g.fillStyle = COL[k]; g.beginPath(); g.roundRect ? g.roundRect(x + m, y + m + cs * .12, w, h, cs * .14) : g.rect(x + m, y + m + cs * .12, w, h); g.fill();
+        g.fillStyle = 'rgba(255,255,255,.22)'; g.fillRect(x + m + w * .22, y + m + cs * .18, w * .1, h * .8); g.fillRect(x + m + w * .68, y + m + cs * .18, w * .1, h * .8);
+        g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(x + m + 2, y + cs - m - 3, w - 4, 3);
+        g.globalAlpha = 1;
+      }
+      function draw() {
+        g.clearRect(0, 0, W + 84, H);
+        g.fillStyle = '#08142E'; g.fillRect(0, 0, W, H);
+        g.strokeStyle = 'rgba(255,255,255,.05)'; for (let c = 1; c < C; c++) { g.beginPath(); g.moveTo(c * cs, 0); g.lineTo(c * cs, H); g.stroke(); }
+        for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) { const v = grid[r][c]; if (v < 0) continue;
+          const f = flash && flash.set.has(r * C + c); bag(c * cs, r * cs, v, f ? (Math.floor(performance.now() / 60) % 2 ? .25 : 1) : 1); }
+        if (alive && !busy && piece) {   // 떨어질 자리 미리 보기 + 지금 조각
+          let gr = piece.r; while (can(piece.c, gr + 1)) gr++;
+          g.strokeStyle = 'rgba(255,255,255,.25)'; g.setLineDash([3, 3]); g.strokeRect(piece.c * cs + 2, gr * cs + 2, cs - 4, cs * 3 - 4); g.setLineDash([]);
+          piece.k.forEach((k, i) => { if (piece.r + i >= 0) bag(piece.c * cs, (piece.r + i) * cs, k); });
+        }
+        // 오른쪽: 다음 · 레벨
+        const X = W + 12; g.fillStyle = '#8FA3C7'; g.font = '9px "Press Start 2P", monospace'; g.textAlign = 'left'; g.textBaseline = 'top';
+        g.fillText('NEXT', X, 4); if (next) { const s0 = cs; next.forEach((k, i) => bag(X + 4, 18 + i * s0 * .9, k)); }
+        g.fillStyle = '#8FA3C7'; g.font = '9px "Press Start 2P", monospace'; g.fillText('LV', X, 30 + cs * 3); g.fillStyle = '#FACC15'; g.font = '14px "Press Start 2P", monospace'; g.fillText(String(level), X, 44 + cs * 3);
+        g.fillStyle = '#8FA3C7'; g.font = '9px "Press Start 2P", monospace'; g.fillText('BAGS', X, 72 + cs * 3); g.fillStyle = '#fff'; g.font = '11px "Press Start 2P", monospace'; g.fillText(String(cleared), X, 86 + cs * 3);
+        if (chainTxt) { chainTxt.t++; g.fillStyle = '#FACC15'; g.font = '11px "Press Start 2P", monospace'; g.textAlign = 'center'; g.fillText(chainTxt.s, W / 2, H / 3 - chainTxt.t * .4); if (chainTxt.t > 70) chainTxt = null; }
+      }
+      function loop(t) {
+        const dt = Math.min(100, t - (last || t)); last = t;
+        if (alive && !busy && piece) { fallT += dt; const iv = Math.max(110, 800 - (level - 1) * 70); if (fallT >= iv) { fallT = 0; if (can(piece.c, piece.r + 1)) piece.r++; else lock(); } }
+        draw(); raf = requestAnimationFrame(loop);
+      }
+      spawn(); raf = requestAnimationFrame(loop);
+      this.stop = () => { cancelAnimationFrame(raf); alive = false; window.removeEventListener('keydown', kd); };
+    } };
 
   // ===== 90s-games(MIT, Prateek)에서 가져와 폰 조작·순위를 붙인 게임들 (g/ 폴더). 끝나면 점수를 이 화면으로 보내 옴 =====
   const EXT = [
