@@ -139,13 +139,16 @@
   const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (_) {} };
 
   // ===== KAPA 서버: 회원끼리 점수 경쟁 (입장 정보는 사이트와 같이 씀) =====
-  const API_URL = 'https://script.google.com/macros/s/AKfycbxM8aE3mSczAAv6SxyngKNPxyeY7q0Mw4QF1-F-GGvnxpNXEpURJsOaolXf7S1DHuU/exec';
+  // 테스트 앱에서 열면(?t=1) 테스트 서버, 그 밖에는 라이브 서버
+  const TEST_SRV = /[?&]t=1(&|$)/.test(location.search);
+  const API_URL = TEST_SRV ? 'https://script.google.com/macros/s/AKfycbxM8aE3mSczAAv6SxyngKNPxyeY7q0Mw4QF1-F-GGvnxpNXEpURJsOaolXf7S1DHuU/exec'
+    : 'https://script.google.com/macros/s/AKfycby_cDEdgHNx7PP_5s7dBLfNPRNkZ6OATtkhmPcPCxG2i3W_DXubtlhyZ5i2eS2yvAOQ/exec';
   let key = ls.get('pc_key') || '';
   // 앱 안에서 열리면 앱이 입장 정보를 넘겨줌 ('입장 유지'를 안 해서 저장돼 있지 않을 때)
   window.addEventListener('message', e => { if (e.origin === location.origin && e.data && e.data.kapaKey && e.data.kapaKey !== key) { key = e.data.kapaKey; loadRanks(); } });
   function call(fn, ...args) {
     const ac = typeof AbortController === 'function' ? new AbortController() : null, t = ac ? setTimeout(() => ac.abort(), 15000) : 0;
-    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, page: 'test' }), redirect: 'follow', signal: ac ? ac.signal : undefined })
+    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, page: TEST_SRV ? 'test' : '' }), redirect: 'follow', signal: ac ? ac.signal : undefined })
       .then(r => r.json()).then(j => { clearTimeout(t); if (!j || !j.ok) throw new Error((j && j.error) || '서버 오류'); return j.data; }, e => { clearTimeout(t); throw e; });
   }
   // 점수 표시: 시간 게임은 초, 횟수 게임은 단위, 나머지는 숫자. low = 낮을수록 좋음
