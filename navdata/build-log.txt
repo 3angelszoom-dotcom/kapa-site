@@ -1,19 +1,19 @@
-cycle 2026-10-29
-FIX https://nfdc.faa.gov/webContent/28DaySub/extra/29_Oct_2026_FIX_CSV.zip
+cycle 2026-11-26
+FIX https://nfdc.faa.gov/webContent/28DaySub/extra/26_Nov_2026_FIX_CSV.zip
    FIX_BASE.csv ['EFF_DATE', 'FIX_ID', 'ICAO_REGION_CODE', 'STATE_CODE', 'COUNTRY_CODE', 'LAT_DEG', 'LAT_MIN', 'LAT_SEC', 'LAT_HEMIS', 'LAT_DECIMAL', 'LONG_DEG', 'LONG_MIN', 'LONG_SEC', 'LONG_HEMIS', 'LONG_DECIMAL', 'FIX_ID_OLD', 'CHARTING_REMARK', 'FIX_USE_CODE', 'ARTCC_ID_HIGH', 'ARTCC_ID_LOW']
-  fixes 70060
-NAV https://nfdc.faa.gov/webContent/28DaySub/extra/29_Oct_2026_NAV_CSV.zip
+  fixes 70089
+NAV https://nfdc.faa.gov/webContent/28DaySub/extra/26_Nov_2026_NAV_CSV.zip
    NAV_BASE.csv ['EFF_DATE', 'NAV_ID', 'NAV_TYPE', 'STATE_CODE', 'CITY', 'COUNTRY_CODE', 'NAV_STATUS', 'NAME', 'STATE_NAME', 'REGION_CODE', 'COUNTRY_NAME', 'FAN_MARKER', 'OWNER', 'OPERATOR', 'NAS_USE_FLAG', 'PUBLIC_USE_FLAG', 'NDB_CLASS_CODE', 'OPER_HOURS', 'HIGH_ALT_ARTCC_ID', 'HIGH_ARTCC_NAME']
-  navaids 1608
-APT https://nfdc.faa.gov/webContent/28DaySub/extra/29_Oct_2026_APT_CSV.zip
+  navaids 1607
+APT https://nfdc.faa.gov/webContent/28DaySub/extra/26_Nov_2026_APT_CSV.zip
    APT_BASE.csv ['EFF_DATE', 'SITE_NO', 'SITE_TYPE_CODE', 'STATE_CODE', 'ARPT_ID', 'CITY', 'COUNTRY_CODE', 'REGION_CODE', 'ADO_CODE', 'STATE_NAME', 'COUNTY_NAME', 'COUNTY_ASSOC_STATE', 'ARPT_NAME', 'OWNERSHIP_TYPE_CODE', 'FACILITY_USE_CODE', 'LAT_DEG', 'LAT_MIN', 'LAT_SEC', 'LAT_HEMIS', 'LAT_DECIMAL', 'LONG_DEG', 'LONG_MIN', 'LONG_SEC', 'LONG_HEMIS']
   airports 2727
-AWY https://nfdc.faa.gov/webContent/28DaySub/extra/29_Oct_2026_AWY_CSV.zip
+AWY https://nfdc.faa.gov/webContent/28DaySub/extra/26_Nov_2026_AWY_CSV.zip
    AWY_BASE.csv ['EFF_DATE', 'REGULATORY', 'AWY_DESIGNATION', 'AWY_LOCATION', 'AWY_ID', 'UPDATE_DATE', 'REMARK', 'AIRWAY_STRING']
   airways 1503
-DP https://nfdc.faa.gov/webContent/28DaySub/extra/29_Oct_2026_DP_CSV.zip
+DP https://nfdc.faa.gov/webContent/28DaySub/extra/26_Nov_2026_DP_CSV.zip
    DP_RTE.csv ['EFF_DATE', 'DP_NAME', 'ARTCC', 'DP_COMPUTER_CODE', 'ROUTE_PORTION_TYPE', 'ROUTE_NAME', 'BODY_SEQ', 'TRANSITION_COMPUTER_CODE', 'POINT_SEQ', 'POINT', 'ICAO_REGION_CODE', 'POINT_TYPE', 'NEXT_POINT', 'ARPT_RWY_ASSOC']
   procedures 1043
-STAR https://nfdc.faa.gov/webContent/28DaySub/extra/29_Oct_2026_STAR_CSV.zip
+STAR https://nfdc.faa.gov/webContent/28DaySub/extra/26_Nov_2026_STAR_CSV.zip
    STAR_RTE.csv ['EFF_DATE', 'STAR_COMPUTER_CODE', 'ARTCC', 'ROUTE_PORTION_TYPE', 'ROUTE_NAME', 'BODY_SEQ', 'TRANSITION_COMPUTER_CODE', 'POINT_SEQ', 'POINT', 'ICAO_REGION_CODE', 'POINT_TYPE', 'NEXT_POINT', 'ARPT_RWY_ASSOC']
   procedures 692
