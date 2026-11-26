@@ -1714,7 +1714,7 @@
     const m = memberKey && ((feed && feed.me) || lastMe);
     av.className = 'me-av'; av.innerHTML = '';
     if (!memberKey) { av.innerHTML = PERSON_SVG; nm.textContent = '입장'; btn.setAttribute('aria-label', '입장하기'); return; }
-    if (m && m.type === 'personal' && m.name) { av.classList.add('on'); av.textContent = m.name.trim().charAt(0); nm.textContent = /^[A-Za-z]/.test(m.name.trim()) ? m.name.trim().split(/\s+/)[0] : m.name;   // 영어 이름은 앞 이름만 (Keunsang) btn.setAttribute('aria-label', m.name + '님 · 실명으로 입장 중'); }
+    if (m && m.type === 'personal' && m.name) { av.classList.add('on'); av.textContent = m.name.trim().charAt(0); nm.textContent = /^[A-Za-z]/.test(m.name.trim()) ? m.name.trim().split(/\s+/)[0] : m.name; btn.setAttribute('aria-label', m.name + '님 · 실명으로 입장 중'); }
     else if (m && m.type === 'admin') { av.classList.add('on'); av.textContent = '관'; nm.textContent = '관리자'; btn.setAttribute('aria-label', '관리자로 입장 중'); }
     else { av.classList.add('shared'); av.innerHTML = PERSON_SVG; nm.textContent = '회원'; btn.setAttribute('aria-label', '회원 비밀번호로 입장 중'); }
   }
