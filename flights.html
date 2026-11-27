@@ -192,7 +192,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1127-3</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-4</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -408,7 +408,7 @@
         // 서버가 궤적으로 찾은 출발지가 있으면 그것과 맞아야 함
         if (f.from && f.from !== best.from) return;
         const total = gcNm(best.A, best.B), toB = gcNm(here, best.B); let turn = Math.abs(brg(here, best.B) - (f.pos.trk || 0)); if (turn > 180) turn = 360 - turn;
-        if (best.d > Math.max(150, total * .35) || (toB > 60 && turn > 100)) return;
+        if (best.d > Math.max(100, total * .2) || (toB > 40 && turn > 60)) return;
         rtMem[f.callsign].v = { from: best.from, to: best.to }; changed = true;
       });
       if (changed) { applyRt(); draw(); }
