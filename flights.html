@@ -212,7 +212,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg><span>내 비행 공유</span></button><span class="rbtns"><button type="button" class="fit rf" id="rf" aria-label="새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5"/></svg></button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></span></div>
-  <p class="note"><span class="ver" data-noi18n>v1128-10</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1128-11</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -307,10 +307,16 @@
       const on = id === sel;
       if (!on) { L.polyline(pts.map(p => [p[0], p[1]]), { color: '#FBBF24', weight: 2, opacity: .35, interactive: false }).addTo(trails); return; }
       // 같은 색끼리 묶어서 선 하나로 (+ 어두운 테두리)
-      L.polyline(pts.map(p => [p[0], p[1]]), { color: '#020617', weight: 6, opacity: .7, interactive: false }).addTo(trails);
+      // 기록이 2분 넘게 빈 구간(수신 안 된 곳)은 실제 경로를 모르니 흐린 점선으로
+      const GAP = 120, gap = (a, b) => a[3] && b[3] && b[3] - a[3] > GAP;
+      { let run = [pts[0]]; const out = () => { if (run.length > 1) L.polyline(run.map(p => [p[0], p[1]]), { color: '#020617', weight: 6, opacity: .7, interactive: false }).addTo(trails); };
+        for (let i = 1; i < pts.length; i++) { if (gap(pts[i - 1], pts[i])) { out(); run = []; } run.push(pts[i]); } out(); }
       let seg = [pts[0]], col = altCol(pts[0][2]);
-      for (let i = 1; i < pts.length; i++) { const c = altCol(pts[i][2]); seg.push(pts[i]);
-        if (c !== col || i === pts.length - 1) { L.polyline(seg.map(p => [p[0], p[1]]), { color: col, weight: 3.5, opacity: .95, interactive: false }).addTo(trails); seg = [pts[i]]; col = c; } }
+      const flush = () => { if (seg.length > 1) L.polyline(seg.map(p => [p[0], p[1]]), { color: col, weight: 3.5, opacity: .95, interactive: false }).addTo(trails); };
+      for (let i = 1; i < pts.length; i++) {
+        if (gap(pts[i - 1], pts[i])) { flush(); L.polyline([[pts[i - 1][0], pts[i - 1][1]], [pts[i][0], pts[i][1]]], { color: '#CBD5E1', weight: 2, opacity: .55, dashArray: '2 6', lineCap: 'round', interactive: false }).addTo(trails); seg = [pts[i]]; col = altCol(pts[i][2]); continue; }
+        const c = altCol(pts[i][2]); seg.push(pts[i]);
+        if (c !== col || i === pts.length - 1) { flush(); seg = [pts[i]]; col = c; } }
     });
     $('altleg').classList.toggle('on', !!(sel && trk[sel] && trk[sel].length > 1));
   }
