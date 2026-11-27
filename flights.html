@@ -153,6 +153,8 @@
   .alt-leg i { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
   .leaflet-tooltip.fl-lbl { background: rgba(6,11,24,.88); color: #fff; border: 1px solid rgba(56,189,248,.45); border-radius: 8px; padding: 4px 7px 5px; font: 700 10.5px/1.2 var(--f); box-shadow: 0 4px 14px rgba(0,0,0,.4); white-space: nowrap; }
   .fl-lbl .l3 { display: flex; flex-direction: column; gap: 1px; }
+  .leaflet-tooltip.fl-lbl.mini { padding: 2px 6px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+  .leaflet-tooltip.fl-lbl.mini b { font-size: 10px; }
   .fl-lbl .l3 i { font: 600 9px/1.2 var(--f); color: #CBD5E1; }
   .leaflet-tooltip.fl-lbl b { font: 800 11.5px/1.15 var(--mono); color: var(--sky); letter-spacing: .02em; }
   .leaflet-tooltip.fl-lbl.me { border-color: var(--me); } .leaflet-tooltip.fl-lbl.me b { color: var(--me); }
@@ -194,7 +196,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1127-13</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-14</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -331,7 +333,11 @@
       const col = on ? '#F0ABFC' : f.mine ? '#FBBF24' : p.lost ? '#94A3B8' : '#E0F2FE', cls = (f.mine ? ' me' : p.lost ? ' lost' : '') + (on ? ' sel' : '');
       const sz = on ? 40 : 30;
       const m = L.marker([p.lat, p.lon], { icon: L.divIcon({ className: '', html: '<div class="pl' + cls + '" style="transform:rotate(' + (p.trk || 0) + 'deg)">' + PLANE(col) + '</div>', iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] }), zIndexOffset: on ? 2000 : f.mine ? 1000 : 0 });
-      m.bindTooltip(el('span', { class: 'l3' }, el('i', {}, who(f)), el('b', {}, f.flight), f.from || f.to ? el('small', {}, [f.from || '—'].concat(f.via || [], [f.to || '—']).join(' → ')) : null), { permanent: true, direction: 'right', offset: [14, 0], className: 'fl-lbl' + cls });
+      // 멀리서 볼 때는 콜사인만 작게. 고른 비행이나 많이 확대했을 때만 세 줄
+      const full = on || map.getZoom() >= FULL_Z;
+      const tip = full ? el('span', { class: 'l3' }, el('i', {}, who(f)), el('b', {}, f.flight), f.from || f.to ? el('small', {}, [f.from || '—'].concat(f.via || [], [f.to || '—']).join(' → ')) : null)
+        : el('b', {}, f.flight);
+      m.bindTooltip(tip, { permanent: true, direction: 'right', offset: [full ? 14 : 11, 0], className: 'fl-lbl' + cls + (full ? '' : ' mini') });
       m.on('click', () => pick(f.id, false));
       m.addTo(layer); markers[f.id] = m; m._kp = p;
     });
@@ -369,6 +375,9 @@
       if (!r.width || !r.height) return;                                  // 아직 자리 안 잡힌 이름표는 건너뜀
       if (!t.classList.contains('sel') && shown.some(q => r.left < q.right + 2 && r.right > q.left - 2 && r.top < q.bottom + 2 && r.bottom > q.top - 2)) t.style.visibility = 'hidden'; else shown.push(r); });
   }
+  const FULL_Z = 7;   // 이 확대 정도부터 모든 이름표를 세 줄로
+  let wasFull = null;
+  map.on('zoomend', () => { const f = map.getZoom() >= FULL_Z; if (wasFull !== null && f !== wasFull) redrawPlanes(); wasFull = f; });
   map.on('zoomend moveend', () => setTimeout(declutter, 0));
   map.on('click', () => { if (sel) { sel = ''; document.querySelectorAll('.card').forEach(c => c.classList.remove('sel')); redrawPlanes(); drawTrails(); } });
   // 받은 위치 사이: 속도·방향으로 앞으로 나아가게 (1초마다). 새 위치가 오면 그 위치로 맞춤
