@@ -109,7 +109,7 @@
   .msg:empty { display: none; }
   /* 아래: 비행 카드 */
   .dock { position: fixed; z-index: 500; left: 0; right: 0; bottom: 0; padding: 0 0 calc(10px + env(safe-area-inset-bottom)); pointer-events: none; }
-  .cards { pointer-events: auto; display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 12px 10px; scrollbar-width: none; }
+  .cards { position: relative; pointer-events: auto; display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 12px 10px; scrollbar-width: none; }
   .cards::-webkit-scrollbar { display: none; }
   .card { flex: 0 0 min(80vw, 320px); scroll-snap-align: center; text-align: left; cursor: pointer; border: 1px solid var(--line); border-radius: 20px;
     background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); padding: 12px 14px 11px; position: relative; }
@@ -192,7 +192,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1127-10</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-11</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -294,8 +294,13 @@
   function pick(id, pan) {
     const was = sel; sel = id; document.querySelectorAll('.card').forEach(c => c.classList.toggle('sel', c.dataset.id === id));
     if (was !== id) { redrawPlanes(); drawTrails(); loadTrack(id); }
-    const m = markers[id]; if (m && pan) map.flyTo(m.getLatLng(), Math.max(map.getZoom(), 6), { duration: .6 });
-    const c = document.querySelector('.card[data-id="' + id + '"]'); if (c && !pan) c.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    // 지도: 비행기를 카드 위쪽 보이는 칸의 가운데로
+    const m = markers[id];
+    if (m && pan) { const z = Math.max(map.getZoom(), 6), dock = document.querySelector('.dock').getBoundingClientRect().height;
+      const pt = map.project(m.getLatLng(), z).add([0, dock / 2]); map.flyTo(map.unproject(pt, z), z, { duration: .6 }); }
+    // 카드: 누른 카드를 가로 줄 가운데로 (지도에서 비행기를 눌렀을 때도)
+    const box = $('cards'), c = box.querySelector('.card[data-id="' + id + '"]');
+    if (c) box.scrollTo({ left: c.offsetLeft - (box.clientWidth - c.offsetWidth) / 2, behavior: 'smooth' });
   }
   function draw() {
     layer.clearLayers(); routes.clearLayers(); markers = {};
@@ -332,7 +337,7 @@
     setTimeout(declutter, 0);
   }
   function drawCards(fl, now) {
-    const box = $('cards'); box.innerHTML = '';
+    const box = $('cards'), keep = box.scrollLeft; box.innerHTML = '';
     $('cnt').textContent = fl.length ? fl.length + '편' : '';
     if (!fl.length) box.append(el('div', { class: 'empty' }, '지금 공유 중인 비행이 없어요. 첫 비행을 공유해 보세요!'));
     fl.forEach(f => {
@@ -345,6 +350,9 @@
       c.addEventListener('click', e => { if (e.target.classList.contains('stop')) { stop(f); return; } pick(f.id, true); });
       box.append(c);
     });
+    // 15초마다 새로 그려도 보던 자리 그대로 (고른 비행은 가운데)
+    const sc = sel && box.querySelector('.card[data-id="' + sel + '"]');
+    box.scrollLeft = sc ? sc.offsetLeft - (box.clientWidth - sc.offsetWidth) / 2 : keep;
   }
   // 이름표가 겹치면 뒤의 것은 숨김 (내 비행이 먼저). 비행기·카드를 누르면 언제든 볼 수 있음
   function declutter() {
