@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<!--I18N--><script>
+// 한/영 전환: 폰 언어가 한국어가 아니면 영어로, 고르면 기억 (localStorage kapa_lang)
+(function () {
+  var L;
+  try { L = localStorage.getItem('kapa_lang'); } catch (e) {}
+  if (L !== 'en' && L !== 'ko') L = /^ko\b/i.test(navigator.language || (navigator.languages || [])[0] || 'ko') ? 'ko' : 'en';
+  window.KAPA_LANG = L; window.KLOC = L === 'en' ? 'en-US' : 'ko-KR';
+  try { document.documentElement.lang = L; } catch (e) {}
+  window.kapaSetLang = function (l) { try { localStorage.setItem('kapa_lang', l); } catch (e) {} location.reload(); };
+  if (L !== 'en') { window.T = function (s) { return s; }; return; }
+  var D = {"실시간 비행 · KAPA": "Live Flights · KAPA", "✈️ 실시간 비행": "✈️ Live Flights", "실시간 비행": "Live Flights", "불러오는 중…": "Loading…", "비행기 위치는 ADS-B 신호(공개 데이터)로 30초마다 새로 받아요. 폰 위치는 쓰지 않아요.": "Aircraft positions come from ADS-B signals (public data), refreshed every 30 seconds. Phone location is not used.", "공유는 16시간 뒤 저절로 끝나요.": "Shares end automatically after 16 hours.", "서버 연결 실패 (": "Server connection failed (", "인터넷 연결을 확인해 주세요.": "Please check your internet connection.", "서버 오류": "Server error", "입장이 끝났어요. 다시 입장해 주세요.": "Your session ended. Please sign in again.", "개인 입장 코드": "Personal code", "입장": "Sign in", "코드가 맞지 않아요.": "That code doesn't match.", "KAPA 회원 입장": "KAPA member sign-in", "승인 메일로 받은 개인 입장 코드를 넣어 주세요.": "Enter the personal code from your approval email.", "방금": "just now", "분 전": " min ago", "시간": "h", "시간 ": "h ", "지상": "Ground", "신호 기다리는 중 · 이륙 전이거나 아직 ADS-B 신호가 없어요": "Waiting for signal · not departed yet or no ADS-B signal yet", "· 마지막 위치": "· last position", " · 마지막 위치 ": " · last position ", "지금 공유 중인 비행이 없어요. 첫 비행을 공유해 보세요!": "No flights shared right now. Share the first one!", "공유 중": "Sharing", "공유 중 ": "Sharing ", "공유 끝내기": "Stop sharing", "✏️ 다른 비행 공유": "✏️ Share another flight", "✈️ 내 비행 공유": "✈️ Share my flight", "새로 받지 못했어요:": "Couldn't update:", "새로 받지 못했어요: ": "Couldn't update: ", "불러오지 못했어요:": "Couldn't load:", "불러오지 못했어요: ": "Couldn't load: ", "공유를 끝낼까요?": "— stop sharing?", " 공유를 끝낼까요?": " — stop sharing?", "예: UA111": "e.g. UA111", "편명": "Flight number", "예: SKW5432": "e.g. SKW5432", "ATC 콜사인": "ATC callsign", "출발 공항": "Departure airport", "도착 공항": "Arrival airport", "편명을 넣어 주세요.": "Please enter a flight number.", "공유하기": "Share", "편명을 올리면 회원들이 지도에서 내 비행기를 볼 수 있어요. 위치는 비행기 ADS-B 신호로 받아서, 비행 중에 폰을 켜 둘 필요가 없어요.": "Post your flight number and members can see your aircraft on the map. Position comes from the aircraft's ADS-B signal, so you don't need your phone on in flight.", "ATC 콜사인 (편명과 다를 때만)": "ATC callsign (only if different from the flight number)", "지역 항공사로 운항하면 콜사인이 달라요. 예: UA5432를 SkyWest가 운항하면 SKW5432": "Regional flights use a different callsign. e.g. UA5432 operated by SkyWest is SKW5432", "출발 (선택)": "From (optional)", "도착 (선택)": "To (optional)", "취소": "Cancel", "편명을 확인해 주세요. 예: UA111": "Please check the flight number. e.g. UA111", "이 편명은 ATC 콜사인을 몰라요. 콜사인 칸에 넣어 주세요. 예: SKW5432": "We don't know the ATC callsign for this flight. Enter it in the callsign field, e.g. SKW5432", "비행 공유는 개인 입장 코드로 입장한 회원만 할 수 있어요.": "Only members signed in with a personal code can share a flight.", "내가 공유한 비행만 끝낼 수 있어요.": "You can only stop flights you shared.", "찾을 수 없어요.": "Not found.", "신호 기다리는 중": "Waiting for signal", "예정 ·": "Scheduled ·", "예정 · ": "Scheduled · ", "모든 비행 보기": "Show all flights", "날짜": "Date", "날짜를 골라 주세요.": "Please pick a date.", "위치: 비행기 ADS-B 신호 (공개 데이터) · 30초마다 · 폰 위치는 쓰지 않아요": "Positions: aircraft ADS-B (public data) · every 30 s · phone location not used", "이미 지난 날짜예요.": "That date has already passed.", "2주 안의 비행만 올릴 수 있어요.": "You can only share flights within the next 2 weeks."}, P = [["^([A-Za-z][A-Za-z .'-]{0,40})님([,.!]?)$", "{0}{1}"], ["^([\\uac00-\\ud7a3]{2,4})님([,.!]?)$", "{0}{1}"], ["^([\\s\\S]*?)\\ 공유를\\ 끝낼까요\\?$", "Stop sharing {0}?"], ["^공유\\ 중\\ ([\\s\\S]*?)편$", "{0} flights shared"], ["^([\\s\\S]*?)편$", "{0} flights"]], F = ["편명을 올리면 회원들이 지도에서 내 비행기를 볼 수 있어요. 위치는 비행기 ADS-B 신호로 받아서, 비행 중에 폰을 켜 둘 필요가 없어요.", "지역 항공사로 운항하면 콜사인이 달라요. 예: UA5432를 SkyWest가 운항하면 SKW5432", "비행기 위치는 ADS-B 신호(공개 데이터)로 30초마다 새로 받아요. 폰 위치는 쓰지 않아요.", "위치: 비행기 ADS-B 신호 (공개 데이터) · 30초마다 · 폰 위치는 쓰지 않아요", "이 편명은 ATC 콜사인을 몰라요. 콜사인 칸에 넣어 주세요. 예: SKW5432", "신호 기다리는 중 · 이륙 전이거나 아직 ADS-B 신호가 없어요", "비행 공유는 개인 입장 코드로 입장한 회원만 할 수 있어요.", "지금 공유 중인 비행이 없어요. 첫 비행을 공유해 보세요!", "승인 메일로 받은 개인 입장 코드를 넣어 주세요.", "입장이 끝났어요. 다시 입장해 주세요.", "편명을 확인해 주세요. 예: UA111", "내가 공유한 비행만 끝낼 수 있어요.", "공유는 16시간 뒤 저절로 끝나요.", "ATC 콜사인 (편명과 다를 때만)", "2주 안의 비행만 올릴 수 있어요.", "인터넷 연결을 확인해 주세요.", "실시간 비행 · KAPA", "새로 받지 못했어요: ", "코드가 맞지 않아요.", "✏️ 다른 비행 공유", "새로 받지 못했어요:", "불러오지 못했어요: ", "편명을 넣어 주세요.", "날짜를 골라 주세요.", "이미 지난 날짜예요.", "서버 연결 실패 (", "KAPA 회원 입장", " · 마지막 위치 ", "✈️ 내 비행 공유", "불러오지 못했어요:", " 공유를 끝낼까요?", "예: SKW5432", "✈️ 실시간 비행", "공유를 끝낼까요?", "찾을 수 없어요.", "신호 기다리는 중", "개인 입장 코드", "· 마지막 위치", "예: UA111", "모든 비행 보기", "불러오는 중…", "ATC 콜사인", "출발 (선택)", "도착 (선택)", "실시간 비행", "공유 끝내기", "서버 오류", "공유 중 ", "출발 공항", "도착 공항", "예정 · ", "공유 중", "공유하기", "예정 ·", "분 전", "시간 ", "입장", "방금", "시간", "지상", "편명", "취소", "날짜"];
+  P = P.map(function (p) { return [new RegExp(p[0]), p[1]]; });
+  var H = /[가-힣ㄱ-ㆎ]/, HG = /[가-힣ㄱ-ㆎ]/g, cache = new Map();
+  var hc = function (s) { var m = s.match(HG); return m ? m.length : 0; };
+  function tr(s, exact) {
+    var m = /^(\s*)([\s\S]*?)(\s*)$/.exec(s), a = m[1], core = m[2], z = m[3];
+    if (Object.prototype.hasOwnProperty.call(D, s)) return D[s];
+    if (Object.prototype.hasOwnProperty.call(D, core)) return a + D[core] + z;
+    if (exact) return s;
+    for (var i = 0; i < P.length; i++) {
+      var mm = P[i][0].exec(core);
+      if (mm) return a + P[i][1].replace(/\{(\d)\}/g, function (_, n) { return T(mm[+n + 1] || ''); }) + z;
+    }
+    if (core.indexOf('\n') >= 0) return a + core.split('\n').map(function (x) { return T(x); }).join('\n') + z;
+    var out = core, n0 = hc(core);
+    out = out.replace(/\((일|월|화|수|목|금|토)\)/g, function (_, d) { return ' (' + D[d] + ')'; });
+    for (var j = 0; j < F.length; j++) if (out.indexOf(F[j]) >= 0) out = out.split(F[j]).join(D[F[j]]);
+    out = out.replace(/(\d)\s?(대|명|개|편|장|회)(?![\uac00-\ud7a3])/g, '$1');
+    var n1 = hc(out);
+    if (n1 === 0) return a + out + z;
+    // 남은 한글이 이름 같은 짧은 덩어리뿐이고 영어 단어에 붙어 있지 않으면 OK (예: 조근상 — turn off…)
+    var runs = out.match(/[\uac00-\ud7a3]+/g) || [], ok = n1 * 3 <= n0 && runs.every(function (r) { return r.length <= 4; }) && !/[A-Za-z][\uac00-\ud7a3]|[\uac00-\ud7a3][A-Za-z]/.test(out);
+    return ok ? a + out + z : s;
+  }
+  function T(s, exact) {
+    if (!s || !H.test(s)) return s;
+    var k = (exact ? '1' : '0') + s;
+    if (cache.has(k)) return cache.get(k);
+    var r = tr(String(s), exact); cache.set(k, r); return r;
+  }
+  window.T = T;
+  // 회원이 쓴 글·이름은 번역하지 않음
+  var SKIP = 'script,style,textarea,code,pre,[data-noi18n],[contenteditable]';
+  var EXACT = '.meta,.post-card h3,.preview,.body,.a-title,.a-body,.ly-memo,.recent-main>b,.a-memo,.ugc';
+  var ATTRS = ['placeholder', 'aria-label', 'title', 'alt'];
+  function doText(n) {
+    var p = n.parentElement; if (!p || p.closest(SKIP)) return;
+    var v = n.nodeValue, t = T(v, !!p.closest(EXACT)); if (t !== v) n.nodeValue = t;
+  }
+  function doEl(e) {
+    if (e.closest && e.closest('[data-noi18n]')) return;
+    for (var i = 0; i < ATTRS.length; i++) { var v = e.getAttribute && e.getAttribute(ATTRS[i]); if (v && H.test(v)) { var t = T(v); if (t !== v) e.setAttribute(ATTRS[i], t); } }
+    if (e.tagName === 'INPUT' && /^(button|submit)$/i.test(e.type) && H.test(e.value)) e.value = T(e.value);
+  }
+  function walk(root) {
+    if (root.nodeType === 3) return doText(root);
+    if (root.nodeType !== 1 && root.nodeType !== 11) return;
+    if (root.nodeType === 1) { doEl(root); if (root.closest(SKIP)) return; }
+    var w = document.createTreeWalker(root, 5, { acceptNode: function (n) { if (n.nodeType === 1 && n.matches(SKIP)) { doEl(n); return 2; } return 1; } });
+    var n; while ((n = w.nextNode())) { if (n.nodeType === 3) doText(n); else doEl(n); }
+  }
+  window.kapaTr = walk;
+  new MutationObserver(function (ms) {
+    for (var i = 0; i < ms.length; i++) {
+      var m = ms[i];
+      if (m.type === 'childList') for (var j = 0; j < m.addedNodes.length; j++) walk(m.addedNodes[j]);
+      else if (m.type === 'characterData') doText(m.target);
+      else if (m.type === 'attributes') doEl(m.target);
+    }
+    if (H.test(document.title)) { var tt = T(document.title); if (tt !== document.title) document.title = tt; }
+  }).observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS.concat(['value']) });
+  var oc = window.confirm, oa = window.alert, op = window.prompt;
+  window.confirm = function (m) { return oc.call(window, T(String(m))); };
+  window.alert = function (m) { return oa.call(window, T(String(m))); };
+  window.prompt = function (m, d) { return op.call(window, T(String(m)), d); };
+  document.addEventListener('DOMContentLoaded', function () { walk(document.body); });
+})();
+</script><!--I18N-END-->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#060B18">
+<title>실시간 비행 · KAPA</title>
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root { --f: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif; --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --bg: #060B18; --panel: rgba(12,20,40,.86); --line: rgba(148,163,184,.18); --ink: #F1F5F9; --muted: #94A3B8; --sky: #38BDF8; --me: #FBBF24; --me-ink: #1C1300; --ok: #4ADE80; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--f); overflow: hidden; }
+  #map { position: fixed; inset: 0; background: #0B1220; z-index: 0; }
+  .leaflet-container { background: #0B1220; font-family: var(--f); }
+  .leaflet-control-zoom { display: none; }
+  .leaflet-control-attribution { background: rgba(6,11,24,.6) !important; color: #64748B !important; font-size: 9.5px; }
+  .leaflet-control-attribution a { color: #94A3B8 !important; }
+  .leaflet-top.leaflet-right { top: calc(56px + env(safe-area-inset-top)); }
+  /* 위쪽: 제목 알약 (오른쪽 위는 앱의 ✕ 자리라 비워 둠) */
+  .top { position: fixed; z-index: 500; top: calc(12px + env(safe-area-inset-top)); left: 12px; right: 64px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; pointer-events: none; }
+  .pill { pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font: 800 15px/1 var(--f); letter-spacing: .01em; }
+  .pill small { font: 700 12px/1 var(--f); color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px rgba(74,222,128,.18); animation: pulse 2s infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(74,222,128,0); } }
+  .msg { pointer-events: auto; font: 700 12px/1.3 var(--f); color: #FCA5A5; background: var(--panel); padding: 7px 10px; border-radius: 10px; }
+  .msg:empty { display: none; }
+  /* 아래: 비행 카드 */
+  .dock { position: fixed; z-index: 500; left: 0; right: 0; bottom: 0; padding: 0 0 calc(10px + env(safe-area-inset-bottom)); pointer-events: none; }
+  .cards { pointer-events: auto; display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 12px 10px; scrollbar-width: none; }
+  .cards::-webkit-scrollbar { display: none; }
+  .card { flex: 0 0 min(84vw, 340px); scroll-snap-align: center; text-align: left; cursor: pointer; border: 1px solid var(--line); border-radius: 20px;
+    background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); padding: 14px 16px 12px; position: relative; }
+  .card.sel { border-color: rgba(56,189,248,.7); box-shadow: 0 0 0 1px rgba(56,189,248,.5), 0 10px 30px rgba(0,0,0,.4); }
+  .card.me { background: linear-gradient(160deg, rgba(251,191,36,.20), rgba(12,20,40,.9) 55%); border-color: rgba(251,191,36,.45); }
+  .card.me.sel { border-color: var(--me); box-shadow: 0 0 0 1px var(--me), 0 10px 30px rgba(0,0,0,.4); }
+  .fn { font: 900 34px/1 var(--f); letter-spacing: -.01em; display: flex; align-items: baseline; gap: 10px; }
+  .fn small { font: 700 12px/1 var(--mono); color: var(--muted); letter-spacing: .04em; }
+  .rt { margin-top: 8px; display: flex; align-items: center; gap: 8px; font: 800 17px/1 var(--mono); letter-spacing: .06em; }
+  .rt i { flex: 1 1 auto; height: 2px; background: linear-gradient(90deg, var(--sky), rgba(56,189,248,.15)); border-radius: 2px; max-width: 120px; }
+  .card.me .rt i { background: linear-gradient(90deg, var(--me), rgba(251,191,36,.15)); }
+  .who2 { margin-top: 10px; font: 700 13.5px/1.3 var(--f); }
+  .who2 span { color: var(--muted); font-weight: 600; }
+  .st { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 10px; background: rgba(148,163,184,.12); font: 800 12.5px/1 var(--mono); letter-spacing: .03em; }
+  .st.live { background: rgba(74,222,128,.14); color: #BBF7D0; }
+  .st.live::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+  .st.wait { color: var(--muted); font-family: var(--f); font-weight: 700; }
+  .stop { position: absolute; right: 12px; bottom: 12px; padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(251,191,36,.5); background: transparent; color: var(--me); font: 800 11.5px/1 var(--f); cursor: pointer; }
+  .empty { flex: 0 0 min(84vw, 340px); padding: 18px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); color: var(--muted); font: 700 14px/1.5 var(--f); }
+  .bar { pointer-events: auto; display: flex; gap: 8px; padding: 0 12px; }
+  .share { flex: 1 1 auto; padding: 15px; border: 0; border-radius: 16px; background: var(--me); color: var(--me-ink); font: 900 16px/1 var(--f); cursor: pointer; box-shadow: 0 8px 24px rgba(251,191,36,.25); }
+  .fit { flex: 0 0 auto; width: 52px; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 20px; cursor: pointer; backdrop-filter: blur(12px); }
+  .note { pointer-events: auto; margin: 8px 12px 0; text-align: center; font: 600 10.5px/1.4 var(--f); color: #64748B; }
+  /* 지도 위 비행기 · 이름표 · 공항 */
+  .pl { width: 36px; height: 36px; display: grid; place-items: center; }
+  .pl svg { width: 30px; height: 30px; filter: drop-shadow(0 0 6px rgba(56,189,248,.55)) drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+  .pl.me svg { filter: drop-shadow(0 0 8px rgba(251,191,36,.75)) drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+  .pl.lost svg { filter: none; opacity: .7; }
+  .leaflet-tooltip.fl-lbl { background: rgba(6,11,24,.88); color: #fff; border: 1px solid rgba(56,189,248,.45); border-radius: 9px; padding: 5px 9px; font: 800 11.5px/1.2 var(--f); box-shadow: 0 4px 14px rgba(0,0,0,.4); white-space: nowrap; }
+  .leaflet-tooltip.fl-lbl b { font-family: var(--mono); color: var(--sky); margin-left: 5px; }
+  .leaflet-tooltip.fl-lbl.me { border-color: var(--me); } .leaflet-tooltip.fl-lbl.me b { color: var(--me); }
+  .leaflet-tooltip.fl-lbl.lost { border-color: rgba(148,163,184,.4); color: #CBD5E1; } .leaflet-tooltip.fl-lbl.lost b { color: #CBD5E1; }
+  .leaflet-tooltip.fl-lbl::before { display: none; }
+  .leaflet-tooltip.ap { background: none; border: 0; box-shadow: none; padding: 0; color: #CBD5E1; font: 800 11px/1 var(--mono); letter-spacing: .08em; text-shadow: 0 0 4px #000, 0 0 2px #000; }
+  .leaflet-tooltip.ap::before { display: none; }
+  /* 공유 창 */
+  .ov { position: fixed; inset: 0; background: rgba(2,6,16,.6); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; }
+  .sheet { width: 100%; max-width: 480px; max-height: 92vh; overflow: auto; background: #0E172E; border: 1px solid var(--line); border-radius: 24px 24px 0 0; padding: 20px 16px calc(18px + env(safe-area-inset-bottom)); }
+  @media (min-width: 560px) { .ov { align-items: center; } .sheet { border-radius: 24px; } }
+  .sheet h2 { margin: 0 0 4px; font: 900 20px/1.2 var(--f); }
+  .sheet p.h { margin: 0 0 8px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .sheet label { display: block; font: 800 11.5px/1.3 var(--f); color: var(--muted); letter-spacing: .04em; margin: 12px 0 5px; }
+  .sheet input { width: 100%; min-width: 0; height: 48px; padding: 0 12px; border: 1px solid #22324F; border-radius: 12px; background: #0A1224; color: #fff; font: 800 17px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .04em; color-scheme: dark; -webkit-appearance: none; appearance: none; }
+  .sheet input[type=date] { font: 700 15px/1.2 var(--f); letter-spacing: 0; text-transform: none; }
+  .sheet input::placeholder { text-transform: none; font: 600 15px/1.2 var(--f); color: #475569; letter-spacing: 0; }
+  .sheet input:focus { outline: none; border-color: var(--sky); }
+  .sheet .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sheet .sub { font: 500 11.5px/1.4 var(--f); color: #64748B; margin-top: 5px; }
+  .sheet .bt { display: flex; gap: 8px; margin-top: 18px; }
+  .sheet .bt button { flex: 1; padding: 14px; border-radius: 14px; font: 900 15px/1 var(--f); cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--ink); }
+  .sheet .bt .ok { background: var(--me); color: var(--me-ink); border-color: var(--me); }
+  .sheet .err { color: #FCA5A5; font: 700 13px/1.4 var(--f); margin: 10px 0 0; }
+  .sheet .err:empty { display: none; }
+  .login { position: fixed; z-index: 900; left: 12px; right: 12px; top: 28%; max-width: 420px; margin: 0 auto; padding: 18px; background: #0E172E; border: 1px solid var(--line); border-radius: 20px; }
+  .login h2 { margin: 0 0 6px; font-size: 18px; }
+  .login p { color: var(--muted); font-size: 13px; margin: 0; }
+  .login input { width: 100%; padding: 12px; border: 1px solid #22324F; border-radius: 12px; background: #0A1224; color: #fff; font: 700 16px/1.2 var(--f); margin: 12px 0; }
+  .login button { width: 100%; padding: 13px; border: 0; border-radius: 12px; background: var(--me); color: var(--me-ink); font: 900 15px/1 var(--f); cursor: pointer; }
+  .login .m { color: #FCA5A5; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="top"><div class="pill"><span class="dot"></span>실시간 비행 <small id="cnt"></small></div><div class="msg" id="msg"></div></div>
+<div class="dock">
+  <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
+  <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
+  <p class="note">위치: 비행기 ADS-B 신호 (공개 데이터) · 30초마다 · 폰 위치는 쓰지 않아요</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  // 테스트 앱에서 열면(?beta=1) 테스트 서버, 그 밖에는 라이브 서버. 입장은 사이트와 같은 저장소(pc_key)
+  const TEST_SRV = /[?&]beta=1(&|$)/.test(location.search);
+  const API_URL = TEST_SRV ? 'https://script.google.com/macros/s/AKfycbxM8aE3mSczAAv6SxyngKNPxyeY7q0Mw4QF1-F-GGvnxpNXEpURJsOaolXf7S1DHuU/exec'
+    : 'https://script.google.com/macros/s/AKfycby_cDEdgHNx7PP_5s7dBLfNPRNkZ6OATtkhmPcPCxG2i3W_DXubtlhyZ5i2eS2yvAOQ/exec';
+  const EN = window.KAPA_LANG === 'en';
+  const store = { get(k) { try { return localStorage.getItem(k) || ''; } catch (_) { return ''; } }, set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (_) {} } };
+  let key = store.get('pc_key');
+  const $ = id => document.getElementById(id);
+  function el(tag, attrs, ...kids) {
+    const e = document.createElement(tag);
+    Object.entries(attrs || {}).forEach(([k, v]) => { if (k === 'onclick') e.addEventListener('click', v); else if (v != null) e.setAttribute(k, v); });
+    kids.flat().forEach(c => { if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(String(c))); });
+    return e;
+  }
+  function call(fn, ...args) {
+    const ac = typeof AbortController === 'function' ? new AbortController() : null, t = ac ? setTimeout(() => ac.abort(), 25000) : 0;
+    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, page: TEST_SRV ? 'test' : '', lang: window.KAPA_LANG }), redirect: 'follow', signal: ac ? ac.signal : undefined })
+      .then(r => { clearTimeout(t); if (!r.ok) throw new Error('서버 연결 실패 (' + r.status + ')'); return r.json(); }, () => { clearTimeout(t); throw new Error('인터넷 연결을 확인해 주세요.'); })
+      .then(j => {
+        if (!j || !j.ok) { const m = (j && j.error) || '서버 오류'; if (/AUTH_REQUIRED/.test(m)) { store.set('pc_key', ''); key = ''; showLogin('입장이 끝났어요. 다시 입장해 주세요.'); throw new Error('__auth'); } throw new Error(m); }
+        return j.data;
+      });
+  }
+  // ---- 입장 (앱에서 열면 입장 정보를 넘겨받음) ----
+  window.addEventListener('message', e => { if (e.origin === location.origin && e.data && e.data.kapaKey && e.data.kapaKey !== key) { key = e.data.kapaKey; document.querySelectorAll('.login').forEach(x => x.remove()); load(); } });
+  function showLogin(note) {
+    document.querySelectorAll('.login').forEach(x => x.remove());
+    const inp = el('input', { type: 'password', placeholder: '개인 입장 코드', autocomplete: 'current-password', 'aria-label': '개인 입장 코드' });
+    const m = el('p', { class: 'm' }, note || ''), b = el('button', { type: 'button' }, '입장');
+    const go = async () => {
+      if (!inp.value.trim()) return; b.disabled = true; m.textContent = '';
+      try { const r = await call('enter', inp.value.trim(), ''); if (!r || r.error) throw new Error((r && r.error) || '코드가 맞지 않아요.');
+        key = r.token; store.set('pc_key', key); box.remove(); load(); }
+      catch (e) { if (e.message !== '__auth') m.textContent = e.message; b.disabled = false; }
+    };
+    b.addEventListener('click', go); inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    const box = el('div', { class: 'login' }, el('h2', {}, 'KAPA 회원 입장'), el('p', {}, '승인 메일로 받은 개인 입장 코드를 넣어 주세요.'), inp, b, m);
+    document.body.append(box);
+  }
+  // ---- 지도 (어두운 바탕) ----
+  const map = L.map('map', { zoomControl: false, worldCopyJump: true }).setView([38, -98], 4);
+  map.attributionControl.setPrefix(false).setPosition('topright');
+  const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 13, attribution: '&copy; Esri · ADS-B: adsb.lol (ODbL), airplanes.live' }).addTo(map);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 13, opacity: .7 }).addTo(map);
+  let baseErr = 0;
+  base.on('tileerror', () => { if (++baseErr === 4) { map.removeLayer(base); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 13, attribution: '&copy; OpenStreetMap contributors' }).addTo(map); } });
+  const routes = L.layerGroup().addTo(map), layer = L.layerGroup().addTo(map);
+  let airportsP = null;
+  const loadAirports = () => airportsP || (airportsP = fetch('airports.txt').then(r => { if (!r.ok) throw 0; return r.text(); })
+    .then(t => { const m = {}; t.split(';').filter(Boolean).forEach(x => { const [la, lo] = x.slice(3).split(','); m[x.slice(0, 3)] = [+la, +lo]; }); return m; }).catch(() => { airportsP = null; return {}; }));
+  const apKey = c => (c.length === 4 && /^[KPC]/.test(c)) ? c.slice(1) : c;
+  const PLANE = c => '<svg viewBox="0 0 24 24"><path fill="' + c + '" stroke="rgba(6,11,24,.9)" stroke-width=".7" d="M12 1.6c.8 0 1.3.9 1.3 2.1v5.2l7.9 4.6v2.1l-7.9-2.4v5l2.2 1.7v1.6L12 20.7l-3.5.8v-1.6l2.2-1.7v-5l-7.9 2.4v-2.1l7.9-4.6V3.7c0-1.2.5-2.1 1.3-2.1z"/></svg>';
+  const who = f => EN ? f.name + "'s flight" : f.name + ' 회원님의 비행';
+  const DOW = EN ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] : ['일', '월', '화', '수', '목', '금', '토'];
+  const dayTxt = d => { if (!/^\d{4}-\d{2}-\d{2}$/.test(d || '')) return ''; const [y, m, dd] = d.split('-').map(Number), w = new Date(y, m - 1, dd).getDay();
+    const t = new Date(), diff = Math.round((new Date(y, m - 1, dd) - new Date(t.getFullYear(), t.getMonth(), t.getDate())) / 86400e3);
+    return m + '/' + dd + ' (' + DOW[w] + ')' + (diff === 0 ? (EN ? ' · Today' : ' · 오늘') : diff === 1 ? (EN ? ' · Tomorrow' : ' · 내일') : ''); };
+  const ago = ms => { const m = Math.round(ms / 60000); return m < 1 ? '방금' : m < 60 ? m + '분 전' : Math.floor(m / 60) + '시간 ' + (m % 60) + '분 전'; };
+  const altTxt = p => p.ground ? 'GND' : p.alt >= 18000 ? 'FL' + String(Math.round(p.alt / 100)).padStart(3, '0') : p.alt.toLocaleString() + ' FT';
+  const stat = (f, now) => {
+    const p = f.pos;
+    if (f.later) return ['wait', '🗓 예정'];
+    if (!p) return ['wait', '신호 기다리는 중'];
+    const s = [altTxt(p), p.gs ? p.gs + ' KT' : '', p.type].filter(Boolean).join(' · ');
+    return p.lost ? ['wait', s + ' · ' + ago(now - p.at)] : ['live', s];
+  };
+  let data = null, fitted = false, markers = {}, sel = '';
+  function fitAll() { const pts = Object.values(markers).map(m => m.getLatLng()); if (pts.length === 1) map.setView(pts[0], 6); else if (pts.length) map.fitBounds(L.latLngBounds(pts), { paddingTopLeft: [40, 80], paddingBottomRight: [40, 260], maxZoom: 7 }); }
+  function pick(id, pan) {
+    sel = id; document.querySelectorAll('.card').forEach(c => c.classList.toggle('sel', c.dataset.id === id));
+    const m = markers[id]; if (m && pan) map.flyTo(m.getLatLng(), Math.max(map.getZoom(), 6), { duration: .6 });
+    const c = document.querySelector('.card[data-id="' + id + '"]'); if (c && !pan) c.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }
+  function draw() {
+    layer.clearLayers(); routes.clearLayers(); markers = {};
+    const fl = data.flights, now = data.now;
+    loadAirports().then(ap => { const seen = {};
+      fl.forEach(f => { const a = ap[apKey(f.from)], b = ap[apKey(f.to)];
+        if (a && b) L.polyline([a, b], { color: f.mine ? '#FBBF24' : '#38BDF8', weight: 1.6, opacity: .5, dashArray: '2 7', lineCap: 'round', interactive: false }).addTo(routes);
+        [[f.from, a], [f.to, b]].forEach(([c, ll]) => { if (!ll || seen[c]) return; seen[c] = 1;
+          L.circleMarker(ll, { radius: 3.5, color: '#CBD5E1', weight: 1.5, fillColor: '#0B1220', fillOpacity: 1, interactive: false }).bindTooltip(c, { permanent: true, direction: 'bottom', offset: [0, 4], className: 'ap' }).addTo(routes); }); });
+      setTimeout(declutter, 0); });
+    fl.forEach(f => {
+      const p = f.pos; if (!p) return;
+      const col = f.mine ? '#FBBF24' : p.lost ? '#94A3B8' : '#E0F2FE', cls = f.mine ? ' me' : p.lost ? ' lost' : '';
+      const m = L.marker([p.lat, p.lon], { icon: L.divIcon({ className: '', html: '<div class="pl' + cls + '" style="transform:rotate(' + (p.trk || 0) + 'deg)">' + PLANE(col) + '</div>', iconSize: [36, 36], iconAnchor: [18, 18] }), zIndexOffset: f.mine ? 1000 : 0 });
+      m.bindTooltip(el('span', {}, who(f), el('b', {}, f.flight)), { permanent: true, direction: 'right', offset: [14, 0], className: 'fl-lbl' + cls });
+      m.on('click', () => pick(f.id, false));
+      m.addTo(layer); markers[f.id] = m;
+    });
+    setTimeout(declutter, 0);
+    if (!fitted && Object.keys(markers).length) { fitted = true; fitAll(); }
+    // 카드
+    const box = $('cards'); box.innerHTML = '';
+    $('cnt').textContent = fl.length ? fl.length + '편' : '';
+    if (!fl.length) box.append(el('div', { class: 'empty' }, '지금 공유 중인 비행이 없어요. 첫 비행을 공유해 보세요!'));
+    fl.forEach(f => {
+      const [k, s] = stat(f, now);
+      const c = el('div', { class: 'card' + (f.mine ? ' me' : '') + (f.id === sel ? ' sel' : ''), 'data-id': f.id, role: 'button', tabindex: '0' },
+        el('div', { class: 'fn' }, f.flight, f.callsign !== f.flight ? el('small', {}, f.callsign) : null),
+        f.from || f.to ? el('div', { class: 'rt' }, f.from || '—', el('i', {}), f.to || '—') : null,
+        el('div', { class: 'who2' }, who(f), el('span', {}, ' · ' + dayTxt(f.date))),
+        el('div', { class: 'st ' + k }, s),
+        f.mine ? el('button', { type: 'button', class: 'stop' }, '공유 끝내기') : null);
+      c.addEventListener('click', e => { if (e.target.classList.contains('stop')) { stop(f); return; } pick(f.id, true); });
+      box.append(c);
+    });
+  }
+  // 이름표가 겹치면 뒤의 것은 숨김 (내 비행이 먼저). 비행기·카드를 누르면 언제든 볼 수 있음
+  function declutter() {
+    const tips = [...document.querySelectorAll('.leaflet-tooltip.fl-lbl, .leaflet-tooltip.ap')];
+    const rank = t => t.classList.contains('me') ? 0 : t.classList.contains('fl-lbl') ? 1 : 2;
+    tips.sort((x, y) => rank(x) - rank(y));
+    tips.forEach(t => { t.style.visibility = ''; });
+    const shown = [];
+    tips.forEach(t => { const r = t.getBoundingClientRect();
+      if (shown.some(q => r.left < q.right + 2 && r.right > q.left - 2 && r.top < q.bottom + 2 && r.bottom > q.top - 2)) t.style.visibility = 'hidden'; else shown.push(r); });
+  }
+  map.on('zoomend moveend', () => setTimeout(declutter, 0));
+  async function load(quiet) {
+    if (!key) { showLogin(); $('cards').innerHTML = ''; return; }
+    try { data = await call('getLiveFlights', key); $('msg').textContent = ''; draw(); }
+    catch (e) { if (e.message !== '__auth') $('msg').textContent = (quiet ? '새로 받지 못했어요: ' : '불러오지 못했어요: ') + e.message; }
+  }
+  async function stop(f) {
+    if (!confirm(f.flight + ' 공유를 끝낼까요?')) return;
+    try { data = await call('stopFlight', key, f.id); draw(); } catch (e) { if (e.message !== '__auth') $('msg').textContent = e.message; }
+  }
+  const pad = n => String(n).padStart(2, '0'), today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  function openShare() {
+    if (!key) { showLogin(); return; }
+    const inp = (ph, lab, max) => el('input', { placeholder: ph, 'aria-label': lab, maxlength: max, autocapitalize: 'characters', autocomplete: 'off', spellcheck: 'false' });
+    const fl = inp('예: UA111', '편명', 8), cs = inp('예: SKW5432', 'ATC 콜사인', 8), fr = inp('SFO', '출발 공항', 4), to = inp('ORD', '도착 공항', 4);
+    const dt = el('input', { type: 'date', 'aria-label': '날짜' }); dt.value = today(); dt.min = today();
+    const err = el('p', { class: 'err' }), ok = el('button', { type: 'button', class: 'ok' }, '공유하기');
+    const close = () => ov.remove();
+    const send = async () => {
+      if (!fl.value.trim()) { err.textContent = '편명을 넣어 주세요.'; return; }
+      if (!dt.value) { err.textContent = '날짜를 골라 주세요.'; return; }
+      const [y, m, d] = dt.value.split('-').map(Number);
+      ok.disabled = true; err.textContent = '';
+      try { data = await call('shareFlight', key, { flight: fl.value, callsign: cs.value, from: fr.value, to: to.value, date: dt.value, startAt: new Date(y, m - 1, d).getTime() }); close(); fitted = false; draw(); }
+      catch (e) { if (e.message !== '__auth') err.textContent = e.message; ok.disabled = false; }
+    };
+    const sheet = el('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' },
+      el('h2', {}, '✈️ 내 비행 공유'),
+      el('p', { class: 'h' }, '편명을 올리면 회원들이 지도에서 내 비행기를 볼 수 있어요. 위치는 비행기 ADS-B 신호로 받아서, 비행 중에 폰을 켜 둘 필요가 없어요.'),
+      el('div', { class: 'row' }, el('div', {}, el('label', {}, '편명'), fl), el('div', {}, el('label', {}, '날짜'), dt)),
+      el('label', {}, 'ATC 콜사인 (편명과 다를 때만)'), cs,
+      el('div', { class: 'sub' }, '지역 항공사로 운항하면 콜사인이 달라요. 예: UA5432를 SkyWest가 운항하면 SKW5432'),
+      el('div', { class: 'row' }, el('div', {}, el('label', {}, '출발 (선택)'), fr), el('div', {}, el('label', {}, '도착 (선택)'), to)),
+      err, el('div', { class: 'bt' }, el('button', { type: 'button', onclick: close }, '취소'), ok));
+    ok.addEventListener('click', send);
+    [fl, cs, fr, to].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') send(); }));
+    const ov = el('div', { class: 'ov' }, sheet);
+    ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    document.body.append(ov); setTimeout(() => fl.focus(), 50);
+  }
+  $('share').addEventListener('click', openShare);
+  $('fit').addEventListener('click', fitAll);
+  load();
+  // 30초마다 새로 (화면을 보고 있을 때만)
+  setInterval(() => { if (!document.hidden && key && !document.querySelector('.ov')) load(true); }, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && key) load(true); });
+})();
+</script>
+</body>
+</html>
