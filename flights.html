@@ -207,7 +207,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg><span>내 비행 공유</span></button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1128-3</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1128-4</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -357,7 +357,7 @@
     if (sel) loadTrack(sel);
     fl.filter(f => f.mine && f.pos && f.id !== sel).forEach(f => loadTrack(f.id));
     // 날고 있어야 할 비행인데 위치가 없으면 ADS-B 서버 응답을 작게 보여 줌 (진단용)
-    { const miss = fl.some(f => !f.later && !f.landed && !f.other && !f.pos); const st = $('adsbst'); if (st) st.textContent = miss && data.adsb ? data.adsb + ' · ' : ''; }
+    showSt();
     drawCards(fl, now);
   }
   function redrawPlanes() {
@@ -484,9 +484,49 @@
   async function load(quiet) {
     if (!key) { showLogin(); $('cards').innerHTML = ''; return; }
     lastLoad = Date.now();
-    try { data = await call('getLiveFlights', key); clockOff = (data.now || Date.now()) - Date.now(); $('msg').textContent = ''; draw(); }
+    try { data = await call('getLiveFlights', key); clockOff = (data.now || Date.now()) - Date.now(); $('msg').textContent = ''; draw(); phonePos(); }
     catch (e) { if (e.message !== '__auth') $('msg').textContent = (quiet ? '새로 받지 못했어요: ' : '불러오지 못했어요: ') + e.message; }
   }
+  // 서버(Google)가 ADS-B 서버에 막힐 때: 폰이 직접 물어보고 서버에 알려 줌 (회원마다 IP가 달라 한도에 덜 걸림)
+  let phoneSt = '', phoneBusy = false, phoneAt = 0;
+  const PSRC = [['airplanes.live', 'https://api.airplanes.live/v2/callsign/'], ['adsb.lol', 'https://api.adsb.lol/v2/callsign/']];
+  const toPos = (cs, j) => {
+    const list = ((j && (j.ac || j.aircraft)) || []).filter(a => String(a.flight || '').trim().toUpperCase() === cs && isFinite(a.lat) && isFinite(a.lon));
+    if (!list.length) return null;
+    list.sort((a, b) => (a.seen_pos || 0) - (b.seen_pos || 0));
+    const a = list[0], ground = a.alt_baro === 'ground';
+    return { lat: +(+a.lat).toFixed(4), lon: +(+a.lon).toFixed(4), alt: ground ? 0 : Math.round(+a.alt_baro || +a.alt_geom || 0), gs: Math.round(+a.gs || 0), trk: Math.round(+a.track || +a.true_heading || 0),
+      ground, type: String(a.t || ''), reg: String(a.r || ''), hex: String(a.hex || '').replace(/[^0-9a-f]/gi, '').toLowerCase(), at: Date.now() + clockOff - Math.round((+a.seen_pos || +a.seen || 0) * 1000) };
+  };
+  async function phonePos() {
+    if (phoneBusy || !data || Date.now() - phoneAt < 12000) return;
+    const fresh = p => p && !p.lost && (data.now - p.at) < 60e3;
+    const need = [...new Set(data.flights.filter(f => !f.later && !f.landed && !f.other && !fresh(f.pos)).map(f => f.callsign))].slice(0, 6);
+    if (!need.length) { phoneSt = ''; return; }
+    phoneBusy = true; phoneAt = Date.now();
+    const got = [], cnt = {};
+    try {
+      for (let i = 0; i < need.length; i++) {
+        if (i) await new Promise(r => setTimeout(r, 1100));   // 1초에 1번
+        const cs = need[i];
+        for (const [nm, u] of PSRC) {
+          let code;
+          try { const r = await fetch(u + encodeURIComponent(cs), { cache: 'no-store' }); code = r.status;
+            if (r.ok) { const p = toPos(cs, await r.json()); if (p) got.push(Object.assign({ cs }, p)); cnt[nm + ' ' + code] = (cnt[nm + ' ' + code] || 0) + 1; break; } }
+          catch (e) { code = '막힘'; }
+          cnt[nm + ' ' + code] = (cnt[nm + ' ' + code] || 0) + 1;
+        }
+      }
+      phoneSt = '폰: ' + Object.keys(cnt).map(k => k + (cnt[k] > 1 ? '×' + cnt[k] : '')).join(', ') + ' · 찾음 ' + got.length;
+      if (got.length) {
+        got.forEach(p => data.flights.forEach(f => { if (f.callsign === p.cs && !f.other && !f.later && !f.landed) f.pos = p; }));
+        draw();
+        try { await call('reportPos', key, got); } catch (_) {}
+      } else showSt();
+    } finally { phoneBusy = false; }
+  }
+  function showSt() { const st = $('adsbst'); if (!st || !data) return; const miss = data.flights.some(f => !f.later && !f.landed && !f.other && !f.pos);
+    st.textContent = (miss || phoneSt) ? [miss && data.adsb ? data.adsb : '', phoneSt].filter(Boolean).join(' · ') + ' · ' : ''; }
   async function stop(f) {
     if (!confirm(f.flight + ' 공유를 끝낼까요?')) return;
     try { data = await call('stopFlight', key, f.id); draw(); } catch (e) { if (e.message !== '__auth') $('msg').textContent = e.message; }
