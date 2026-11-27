@@ -151,12 +151,14 @@
   .alt-leg { position: fixed; z-index: 500; left: 12px; top: calc(52px + env(safe-area-inset-top)); display: none; gap: 2px; align-items: center; padding: 5px 7px; border-radius: 9px; background: var(--panel); border: 1px solid var(--line); font: 700 8.5px/1 var(--mono); color: var(--muted); }
   .alt-leg.on { display: flex; }
   .alt-leg i { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
-  .leaflet-tooltip.fl-lbl { background: rgba(6,11,24,.88); color: #fff; border: 1px solid rgba(56,189,248,.45); border-radius: 8px; padding: 4px 7px; font: 700 10.5px/1.2 var(--f); box-shadow: 0 4px 14px rgba(0,0,0,.4); white-space: nowrap; }
-  .leaflet-tooltip.fl-lbl b { font: 800 10.5px/1 var(--mono); color: var(--sky); margin-left: 4px; }
+  .leaflet-tooltip.fl-lbl { background: rgba(6,11,24,.88); color: #fff; border: 1px solid rgba(56,189,248,.45); border-radius: 8px; padding: 4px 7px 5px; font: 700 10.5px/1.2 var(--f); box-shadow: 0 4px 14px rgba(0,0,0,.4); white-space: nowrap; }
+  .fl-lbl .l3 { display: flex; flex-direction: column; gap: 1px; }
+  .fl-lbl .l3 i { font: 600 9px/1.2 var(--f); color: #CBD5E1; }
+  .leaflet-tooltip.fl-lbl b { font: 800 11.5px/1.15 var(--mono); color: var(--sky); letter-spacing: .02em; }
   .leaflet-tooltip.fl-lbl.me { border-color: var(--me); } .leaflet-tooltip.fl-lbl.me b { color: var(--me); }
   .leaflet-tooltip.fl-lbl.lost { border-color: rgba(148,163,184,.4); color: #CBD5E1; } .leaflet-tooltip.fl-lbl.lost b { color: #CBD5E1; }
   .leaflet-tooltip.fl-lbl::before { display: none; }
-  .leaflet-tooltip.fl-lbl small { margin-left: 6px; padding-left: 6px; border-left: 1px solid rgba(148,163,184,.4); font: 700 10px/1 var(--mono); letter-spacing: .03em; color: #E2E8F0; }
+  .leaflet-tooltip.fl-lbl small { font: 700 9px/1.2 var(--mono); letter-spacing: .03em; color: #E2E8F0; }
   .leaflet-tooltip.ap { background: none; border: 0; box-shadow: none; padding: 0; color: #CBD5E1; font: 800 9.5px/1 var(--mono); letter-spacing: .08em; text-shadow: 0 0 4px #000, 0 0 2px #000; }
   .leaflet-tooltip.ap::before { display: none; }
   /* 공유 창 */
@@ -192,7 +194,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1127-11</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-12</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -329,12 +331,12 @@
       const col = on ? '#F0ABFC' : f.mine ? '#FBBF24' : p.lost ? '#94A3B8' : '#E0F2FE', cls = (f.mine ? ' me' : p.lost ? ' lost' : '') + (on ? ' sel' : '');
       const sz = on ? 40 : 30;
       const m = L.marker([p.lat, p.lon], { icon: L.divIcon({ className: '', html: '<div class="pl' + cls + '" style="transform:rotate(' + (p.trk || 0) + 'deg)">' + PLANE(col) + '</div>', iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] }), zIndexOffset: on ? 2000 : f.mine ? 1000 : 0 });
-      m.bindTooltip(el('span', {}, who(f), el('b', {}, f.flight), f.from || f.to ? el('small', {}, [f.from || '—'].concat(f.via || [], [f.to || '—']).join(' → ')) : null), { permanent: true, direction: 'right', offset: [14, 0], className: 'fl-lbl' + cls });
+      m.bindTooltip(el('span', { class: 'l3' }, el('i', {}, who(f)), el('b', {}, f.flight), f.from || f.to ? el('small', {}, [f.from || '—'].concat(f.via || [], [f.to || '—']).join(' → ')) : null), { permanent: true, direction: 'right', offset: [14, 0], className: 'fl-lbl' + cls });
       m.on('click', () => pick(f.id, false));
       m.addTo(layer); markers[f.id] = m; m._kp = p;
     });
     if (typeof tick === 'function') tick();
-    setTimeout(declutter, 0);
+    setTimeout(declutter, 0); setTimeout(declutter, 400);
   }
   function drawCards(fl, now) {
     const box = $('cards'), keep = box.scrollLeft; box.innerHTML = '';
@@ -352,7 +354,9 @@
     });
     // 15초마다 새로 그려도 보던 자리 그대로 (고른 비행은 가운데)
     const sc = sel && box.querySelector('.card[data-id="' + sel + '"]');
+    box.style.scrollSnapType = 'none';
     box.scrollLeft = sc ? sc.offsetLeft - (box.clientWidth - sc.offsetWidth) / 2 : keep;
+    requestAnimationFrame(() => requestAnimationFrame(() => { box.style.scrollSnapType = ''; }));
   }
   // 이름표가 겹치면 뒤의 것은 숨김 (내 비행이 먼저). 비행기·카드를 누르면 언제든 볼 수 있음
   function declutter() {
@@ -362,7 +366,8 @@
     tips.forEach(t => { t.style.visibility = ''; });
     const shown = [];
     tips.forEach(t => { const r = t.getBoundingClientRect();
-      if (shown.some(q => r.left < q.right + 2 && r.right > q.left - 2 && r.top < q.bottom + 2 && r.bottom > q.top - 2)) t.style.visibility = 'hidden'; else shown.push(r); });
+      if (!r.width || !r.height) return;                                  // 아직 자리 안 잡힌 이름표는 건너뜀
+      if (!t.classList.contains('sel') && shown.some(q => r.left < q.right + 2 && r.right > q.left - 2 && r.top < q.bottom + 2 && r.bottom > q.top - 2)) t.style.visibility = 'hidden'; else shown.push(r); });
   }
   map.on('zoomend moveend', () => setTimeout(declutter, 0));
   map.on('click', () => { if (sel) { sel = ''; document.querySelectorAll('.card').forEach(c => c.classList.remove('sel')); redrawPlanes(); drawTrails(); } });
