@@ -207,7 +207,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg><span>내 비행 공유</span></button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1128-5</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1128-6</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -332,7 +332,8 @@
     if (!data) return; const fl = data.flights;
     loadAirports().then(ap => { const seen = {}; routes.clearLayers();
       rLines = {};
-      fl.forEach(f => { if (f.other) return; const a = ap[apKey(f.from)], b = ap[apKey(f.to)];
+      fl.forEach(f => { if (f.other) return; if (!f.pos && !f.landed && f.id !== sel) return;   // 예정된 비행: 골랐을 때만 점선
+        const a = ap[apKey(f.from)], b = ap[apKey(f.to)];
         // 점선: 출발 전엔 출발→도착 전체, 날고 있으면 지금 위치→도착만, 착륙하면 없음
         if (a && b && !f.landed) {
           const air = f.pos && !(f.pos.ground && !f.pos.lost && gcNm([f.pos.lat, f.pos.lon], a) < 15);
@@ -382,7 +383,7 @@
   }
   function drawCards(fl, now) {
     const box = $('cards'), keep = box.scrollLeft; box.innerHTML = '';
-    $('cnt').textContent = fl.length ? fl.length + '편' : '';
+    { const n = fl.filter(f => f.pos && !f.landed && !f.other).length; $('cnt').textContent = n ? n + '편' : ''; }   // 지금 위치가 잡힌 비행만
     if (!fl.length) box.append(el('div', { class: 'empty' }, '지금 공유 중인 비행이 없어요. 첫 비행을 공유해 보세요!'));
     fl.forEach(f => {
       const [k, s] = stat(f, now);
