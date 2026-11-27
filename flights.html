@@ -192,7 +192,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1127-6</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-7</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -394,12 +394,13 @@
     want.forEach(f => { rtMem[f.callsign] = { t: Date.now(), v: null }; });
     try {
       const body = JSON.stringify({ planes: want.map(f => ({ callsign: f.callsign, lat: f.pos.lat, lng: f.pos.lon })) });
-      let r = null;
-      try { r = await fetch('https://api.adsb.lol/api/0/routeset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }); rtDbg = 'json ' + r.status; }
-      catch (e) { rtDbg = 'json 실패(' + e.message + ')'; }
-      if (!r || !r.ok) { try { r = await fetch('https://api.adsb.lol/api/0/routeset', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body }); rtDbg += ' / text ' + r.status; } catch (e) { rtDbg += ' / text 실패(' + e.message + ')'; r = null; } }
-      if (!r || !r.ok) return;
-      const arr = await r.json();
+      let r = null; rtDbg = '';
+      for (const u of ['https://adsb.im/api/0/routeset', 'https://api.adsb.lol/api/0/routeset']) {
+        try { const x = await fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }); rtDbg += u.split('/')[2] + ' ' + x.status + ' '; if (x.ok) { r = x; break; } }
+        catch (e) { rtDbg += u.split('/')[2] + ' 실패(' + e.message + ') '; }
+      }
+      if (!r) return;
+      const jj = await r.json(); const arr = Array.isArray(jj) ? jj : (jj && jj.planes) || [];
       let changed = false;
       want.forEach(f => {
         const j = (arr || []).find(x => String(x.callsign || '').toUpperCase() === f.callsign); if (!j) return;
