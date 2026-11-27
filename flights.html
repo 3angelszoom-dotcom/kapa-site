@@ -135,6 +135,7 @@
   .fit { flex: 0 0 auto; width: 46px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 20px; cursor: pointer; backdrop-filter: blur(12px); }
   .note { pointer-events: auto; margin: 6px 12px 0; text-align: center; font: 600 10px/1.45 var(--f); color: #64748B; }
   .note .cr { font-size: 9px; color: #475569; }
+  .note .ver { font: 700 10px/1 var(--mono); color: #64748B; }
   /* 지도 위 비행기 · 이름표 · 공항 */
   .pl { width: 30px; height: 30px; display: grid; place-items: center; }
   .pl svg { width: 26px; height: 26px; filter: drop-shadow(0 0 6px rgba(56,189,248,.55)) drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
@@ -191,7 +192,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note">위치: 비행기 ADS-B 신호 (공개 데이터) · 30초마다 · 폰 위치는 쓰지 않아요<br><span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-1</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
