@@ -128,6 +128,8 @@
   .st.live { background: rgba(74,222,128,.14); color: #BBF7D0; }
   .st.live::before { content: ''; flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
   .st.wait { color: var(--muted); font-family: var(--f); font-weight: 700; }
+  .st.land { background: rgba(56,189,248,.14); color: #BAE6FD; font-family: var(--f); font-weight: 800; }
+  .pl.landed svg { opacity: .55; filter: none; }
   .stop { flex: 0 0 auto; margin-left: auto; padding: 5px 9px; border-radius: 999px; border: 1px solid rgba(251,191,36,.5); background: transparent; color: var(--me); font: 800 11px/1 var(--f); cursor: pointer; white-space: nowrap; }
   .empty { flex: 0 0 min(84vw, 340px); padding: 18px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); color: var(--muted); font: 700 14px/1.5 var(--f); }
   .bar { pointer-events: auto; display: flex; gap: 8px; padding: 0 12px; }
@@ -201,7 +203,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1127-16</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-17</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -272,6 +274,7 @@
   const altTxt = p => p.ground ? 'GND' : p.alt >= 18000 ? 'FL' + String(Math.round(p.alt / 100)).padStart(3, '0') : p.alt.toLocaleString() + ' FT';
   const stat = (f, now) => {
     const p = f.pos;
+    if (f.landed) return ['land', '🛬 ' + (EN ? 'Arrived' : '도착') + (f.landed.ap ? ' ' + f.landed.ap : '') + ' · ' + zTime(f.landed.at) + ' · ' + ago(now - f.landed.at)];
     if (f.etd && (f.later || (!p && f.etd > now))) return ['wait', '🗓 ETD ' + (f.etdL ? f.etdL.trim() + ' (' + zTime(f.etd) + ')' : zTime(f.etd)) + ' · ' + until(f.etd - now)];
     if (f.later) return ['wait', '🗓 예정'];
     if (!p) return ['wait', '신호 기다리는 중'];
@@ -339,7 +342,7 @@
     data.flights.forEach(f => {
       const p = f.pos; if (!p) return;
       const on = f.id === sel;
-      const col = on ? '#F0ABFC' : f.mine ? '#FBBF24' : p.lost ? '#94A3B8' : '#E0F2FE', cls = (f.mine ? ' me' : p.lost ? ' lost' : '') + (on ? ' sel' : '');
+      const col = on ? '#F0ABFC' : f.landed ? '#7DD3FC' : f.mine ? '#FBBF24' : p.lost ? '#94A3B8' : '#E0F2FE', cls = (f.landed ? ' landed' : f.mine ? ' me' : p.lost ? ' lost' : '') + (on ? ' sel' : '');
       const sz = on ? 40 : 30;
       const m = L.marker([p.lat, p.lon], { icon: L.divIcon({ className: '', html: '<div class="pl' + cls + '" style="transform:rotate(' + (p.trk || 0) + 'deg)">' + PLANE(col) + '</div>', iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] }), zIndexOffset: on ? 2000 : f.mine ? 1000 : 0 });
       // 멀리서 볼 때는 콜사인만 작게. 고른 비행이나 많이 확대했을 때만 세 줄
@@ -348,7 +351,7 @@
         : el('b', {}, f.flight);
       m.bindTooltip(tip, { permanent: true, direction: 'right', offset: [full ? 14 : 11, 0], className: 'fl-lbl' + cls + (full ? '' : ' mini') });
       m.on('click', () => pick(f.id, false));
-      m.addTo(layer); markers[f.id] = m; m._kp = p;
+      m.addTo(layer); markers[f.id] = m; m._kp = p; m._landed = !!f.landed;
     });
     if (typeof tick === 'function') tick();
     setTimeout(declutter, 0); setTimeout(declutter, 400);
@@ -405,7 +408,7 @@
       const m = markers[id], p = m._kp; if (!p) return;
       const dt = (now - p.at) / 1000;
       // 땅 위·느릴 때·너무 오래된 위치(3분 넘음)는 그대로
-      if (p.ground || !(p.gs > 60) || dt < 0 || dt > 180) return;
+      if (m._landed || p.ground || !(p.gs > 60) || dt < 0 || dt > 180) return;
       const ll = ahead(p.lat, p.lon, p.trk || 0, p.gs * dt / 3600);
       m.setLatLng(ll);
       const t = trk[id]; if (t && t.length) { const l = t[t.length - 1];
