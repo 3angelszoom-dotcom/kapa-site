@@ -12,7 +12,7 @@
   try { document.documentElement.lang = L; } catch (e) {}
   window.kapaSetLang = function (l) { try { localStorage.setItem('kapa_lang', l); } catch (e) {} location.reload(); };
   if (L !== 'en') { window.T = function (s) { return s; }; return; }
-  var D = {"실시간 비행 · KAPA": "Live Flights · KAPA", "✈️ 실시간 비행": "✈️ Live Flights", "실시간 비행": "Live Flights", "불러오는 중…": "Loading…", "비행기 위치는 ADS-B 신호(공개 데이터)로 30초마다 새로 받아요. 폰 위치는 쓰지 않아요.": "Aircraft positions come from ADS-B signals (public data), refreshed every 30 seconds. Phone location is not used.", "공유는 16시간 뒤 저절로 끝나요.": "Shares end automatically after 16 hours.", "서버 연결 실패 (": "Server connection failed (", "인터넷 연결을 확인해 주세요.": "Please check your internet connection.", "서버 오류": "Server error", "입장이 끝났어요. 다시 입장해 주세요.": "Your session ended. Please sign in again.", "개인 입장 코드": "Personal code", "입장": "Sign in", "코드가 맞지 않아요.": "That code doesn't match.", "KAPA 회원 입장": "KAPA member sign-in", "승인 메일로 받은 개인 입장 코드를 넣어 주세요.": "Enter the personal code from your approval email.", "방금": "just now", "분 전": " min ago", "시간": "h", "시간 ": "h ", "지상": "Ground", "신호 기다리는 중 · 이륙 전이거나 아직 ADS-B 신호가 없어요": "Waiting for signal · not departed yet or no ADS-B signal yet", "· 마지막 위치": "· last position", " · 마지막 위치 ": " · last position ", "지금 공유 중인 비행이 없어요. 첫 비행을 공유해 보세요!": "No flights shared right now. Share the first one!", "공유 중": "Sharing", "공유 중 ": "Sharing ", "공유 끝내기": "Stop sharing", "✏️ 다른 비행 공유": "✏️ Share another flight", "✈️ 내 비행 공유": "✈️ Share my flight", "새로 받지 못했어요:": "Couldn't update:", "새로 받지 못했어요: ": "Couldn't update: ", "불러오지 못했어요:": "Couldn't load:", "불러오지 못했어요: ": "Couldn't load: ", "공유를 끝낼까요?": "— stop sharing?", " 공유를 끝낼까요?": " — stop sharing?", "예: UA111": "e.g. UA111", "편명": "Flight number", "예: SKW5432": "e.g. SKW5432", "ATC 콜사인": "ATC callsign", "출발 공항": "Departure airport", "도착 공항": "Arrival airport", "편명을 넣어 주세요.": "Please enter a flight number.", "공유하기": "Share", "편명을 올리면 회원들이 지도에서 내 비행기를 볼 수 있어요. 위치는 비행기 ADS-B 신호로 받아서, 비행 중에 폰을 켜 둘 필요가 없어요.": "Post your flight number and members can see your aircraft on the map. Position comes from the aircraft's ADS-B signal, so you don't need your phone on in flight.", "ATC 콜사인 (편명과 다를 때만)": "ATC callsign (only if different from the flight number)", "지역 항공사로 운항하면 콜사인이 달라요. 예: UA5432를 SkyWest가 운항하면 SKW5432": "Regional flights use a different callsign. e.g. UA5432 operated by SkyWest is SKW5432", "출발 (선택)": "From (optional)", "도착 (선택)": "To (optional)", "취소": "Cancel", "편명을 확인해 주세요. 예: UA111": "Please check the flight number. e.g. UA111", "이 편명은 ATC 콜사인을 몰라요. 콜사인 칸에 넣어 주세요. 예: SKW5432": "We don't know the ATC callsign for this flight. Enter it in the callsign field, e.g. SKW5432", "비행 공유는 개인 입장 코드로 입장한 회원만 할 수 있어요.": "Only members signed in with a personal code can share a flight.", "내가 공유한 비행만 끝낼 수 있어요.": "You can only stop flights you shared.", "찾을 수 없어요.": "Not found.", "신호 기다리는 중": "Waiting for signal", "예정 ·": "Scheduled ·", "예정 · ": "Scheduled · ", "모든 비행 보기": "Show all flights", "날짜": "Date", "날짜를 골라 주세요.": "Please pick a date.", "위치: 비행기 ADS-B 신호 (공개 데이터) · 30초마다 · 폰 위치는 쓰지 않아요": "Positions: aircraft ADS-B (public data) · every 30 s · phone location not used", "이미 지난 날짜예요.": "That date has already passed.", "2주 안의 비행만 올릴 수 있어요.": "You can only share flights within the next 2 weeks."}, P = [["^([A-Za-z][A-Za-z .'-]{0,40})님([,.!]?)$", "{0}{1}"], ["^([\\uac00-\\ud7a3]{2,4})님([,.!]?)$", "{0}{1}"], ["^([\\s\\S]*?)\\ 공유를\\ 끝낼까요\\?$", "Stop sharing {0}?"], ["^공유\\ 중\\ ([\\s\\S]*?)편$", "{0} flights shared"], ["^([\\s\\S]*?)편$", "{0} flights"]], F = ["편명을 올리면 회원들이 지도에서 내 비행기를 볼 수 있어요. 위치는 비행기 ADS-B 신호로 받아서, 비행 중에 폰을 켜 둘 필요가 없어요.", "지역 항공사로 운항하면 콜사인이 달라요. 예: UA5432를 SkyWest가 운항하면 SKW5432", "비행기 위치는 ADS-B 신호(공개 데이터)로 30초마다 새로 받아요. 폰 위치는 쓰지 않아요.", "위치: 비행기 ADS-B 신호 (공개 데이터) · 30초마다 · 폰 위치는 쓰지 않아요", "이 편명은 ATC 콜사인을 몰라요. 콜사인 칸에 넣어 주세요. 예: SKW5432", "신호 기다리는 중 · 이륙 전이거나 아직 ADS-B 신호가 없어요", "비행 공유는 개인 입장 코드로 입장한 회원만 할 수 있어요.", "지금 공유 중인 비행이 없어요. 첫 비행을 공유해 보세요!", "승인 메일로 받은 개인 입장 코드를 넣어 주세요.", "입장이 끝났어요. 다시 입장해 주세요.", "편명을 확인해 주세요. 예: UA111", "내가 공유한 비행만 끝낼 수 있어요.", "공유는 16시간 뒤 저절로 끝나요.", "ATC 콜사인 (편명과 다를 때만)", "2주 안의 비행만 올릴 수 있어요.", "인터넷 연결을 확인해 주세요.", "실시간 비행 · KAPA", "새로 받지 못했어요: ", "코드가 맞지 않아요.", "✏️ 다른 비행 공유", "새로 받지 못했어요:", "불러오지 못했어요: ", "편명을 넣어 주세요.", "날짜를 골라 주세요.", "이미 지난 날짜예요.", "서버 연결 실패 (", "KAPA 회원 입장", " · 마지막 위치 ", "✈️ 내 비행 공유", "불러오지 못했어요:", " 공유를 끝낼까요?", "예: SKW5432", "✈️ 실시간 비행", "공유를 끝낼까요?", "찾을 수 없어요.", "신호 기다리는 중", "개인 입장 코드", "· 마지막 위치", "예: UA111", "모든 비행 보기", "불러오는 중…", "ATC 콜사인", "출발 (선택)", "도착 (선택)", "실시간 비행", "공유 끝내기", "서버 오류", "공유 중 ", "출발 공항", "도착 공항", "예정 · ", "공유 중", "공유하기", "예정 ·", "분 전", "시간 ", "입장", "방금", "시간", "지상", "편명", "취소", "날짜"];
+  var D = {"실시간 비행 · KAPA": "Live Flights · KAPA", "✈️ 실시간 비행": "✈️ Live Flights", "실시간 비행": "Live Flights", "불러오는 중…": "Loading…", "비행기 위치는 ADS-B 신호(공개 데이터)로 30초마다 새로 받아요. 폰 위치는 쓰지 않아요.": "Aircraft positions come from ADS-B signals (public data), refreshed every 30 seconds. Phone location is not used.", "공유는 16시간 뒤 저절로 끝나요.": "Shares end automatically after 16 hours.", "서버 연결 실패 (": "Server connection failed (", "인터넷 연결을 확인해 주세요.": "Please check your internet connection.", "서버 오류": "Server error", "입장이 끝났어요. 다시 입장해 주세요.": "Your session ended. Please sign in again.", "개인 입장 코드": "Personal code", "입장": "Sign in", "코드가 맞지 않아요.": "That code doesn't match.", "KAPA 회원 입장": "KAPA member sign-in", "승인 메일로 받은 개인 입장 코드를 넣어 주세요.": "Enter the personal code from your approval email.", "방금": "just now", "분 전": " min ago", "시간": "h", "시간 ": "h ", "지상": "Ground", "신호 기다리는 중 · 이륙 전이거나 아직 ADS-B 신호가 없어요": "Waiting for signal · not departed yet or no ADS-B signal yet", "· 마지막 위치": "· last position", " · 마지막 위치 ": " · last position ", "지금 공유 중인 비행이 없어요. 첫 비행을 공유해 보세요!": "No flights shared right now. Share the first one!", "공유 중": "Sharing", "공유 중 ": "Sharing ", "공유 끝내기": "Stop sharing", "✏️ 다른 비행 공유": "✏️ Share another flight", "✈️ 내 비행 공유": "✈️ Share my flight", "새로 받지 못했어요:": "Couldn't update:", "새로 받지 못했어요: ": "Couldn't update: ", "불러오지 못했어요:": "Couldn't load:", "불러오지 못했어요: ": "Couldn't load: ", "공유를 끝낼까요?": "— stop sharing?", " 공유를 끝낼까요?": " — stop sharing?", "예: UA111": "e.g. UA111", "편명": "Flight number", "예: SKW5432": "e.g. SKW5432", "ATC 콜사인": "ATC callsign", "출발 공항": "Departure airport", "도착 공항": "Arrival airport", "편명을 넣어 주세요.": "Please enter a flight number.", "공유하기": "Share", "편명을 올리면 회원들이 지도에서 내 비행기를 볼 수 있어요. 위치는 비행기 ADS-B 신호로 받아서, 비행 중에 폰을 켜 둘 필요가 없어요.": "Post your flight number and members can see your aircraft on the map. Position comes from the aircraft's ADS-B signal, so you don't need your phone on in flight.", "ATC 콜사인 (편명과 다를 때만)": "ATC callsign (only if different from the flight number)", "지역 항공사로 운항하면 콜사인이 달라요. 예: UA5432를 SkyWest가 운항하면 SKW5432": "Regional flights use a different callsign. e.g. UA5432 operated by SkyWest is SKW5432", "출발 (선택)": "From (optional)", "도착 (선택)": "To (optional)", "취소": "Cancel", "편명을 확인해 주세요. 예: UA111": "Please check the flight number. e.g. UA111", "이 편명은 ATC 콜사인을 몰라요. 콜사인 칸에 넣어 주세요. 예: SKW5432": "We don't know the ATC callsign for this flight. Enter it in the callsign field, e.g. SKW5432", "비행 공유는 개인 입장 코드로 입장한 회원만 할 수 있어요.": "Only members signed in with a personal code can share a flight.", "내가 공유한 비행만 끝낼 수 있어요.": "You can only stop flights you shared.", "찾을 수 없어요.": "Not found.", "신호 기다리는 중": "Waiting for signal", "예정 ·": "Scheduled ·", "예정 · ": "Scheduled · ", "모든 비행 보기": "Show all flights", "날짜": "Date", "날짜를 골라 주세요.": "Please pick a date.", "위치: 비행기 ADS-B 신호 (공개 데이터) · 30초마다 · 폰 위치는 쓰지 않아요": "Positions: aircraft ADS-B (public data) · every 30 s · phone location not used", "이미 지난 날짜예요.": "That date has already passed.", "2주 안의 비행만 올릴 수 있어요.": "You can only share flights within the next 2 weeks.", "출발": "From", "도착": "To", "출발·도착을 넣으면 정확하게 보여요. 비워 두면 비행기 궤적으로 확인한 공항만 보여 줘요.": "Enter From/To for accurate display. If left empty, only airports confirmed from the aircraft track are shown."}, P = [["^([A-Za-z][A-Za-z .'-]{0,40})님([,.!]?)$", "{0}{1}"], ["^([\\uac00-\\ud7a3]{2,4})님([,.!]?)$", "{0}{1}"], ["^([\\s\\S]*?)\\ 공유를\\ 끝낼까요\\?$", "Stop sharing {0}?"], ["^공유\\ 중\\ ([\\s\\S]*?)편$", "{0} flights shared"], ["^([\\s\\S]*?)편$", "{0} flights"]], F = ["편명을 올리면 회원들이 지도에서 내 비행기를 볼 수 있어요. 위치는 비행기 ADS-B 신호로 받아서, 비행 중에 폰을 켜 둘 필요가 없어요.", "지역 항공사로 운항하면 콜사인이 달라요. 예: UA5432를 SkyWest가 운항하면 SKW5432", "비행기 위치는 ADS-B 신호(공개 데이터)로 30초마다 새로 받아요. 폰 위치는 쓰지 않아요.", "출발·도착을 넣으면 정확하게 보여요. 비워 두면 비행기 궤적으로 확인한 공항만 보여 줘요.", "위치: 비행기 ADS-B 신호 (공개 데이터) · 30초마다 · 폰 위치는 쓰지 않아요", "이 편명은 ATC 콜사인을 몰라요. 콜사인 칸에 넣어 주세요. 예: SKW5432", "신호 기다리는 중 · 이륙 전이거나 아직 ADS-B 신호가 없어요", "비행 공유는 개인 입장 코드로 입장한 회원만 할 수 있어요.", "지금 공유 중인 비행이 없어요. 첫 비행을 공유해 보세요!", "승인 메일로 받은 개인 입장 코드를 넣어 주세요.", "입장이 끝났어요. 다시 입장해 주세요.", "편명을 확인해 주세요. 예: UA111", "내가 공유한 비행만 끝낼 수 있어요.", "공유는 16시간 뒤 저절로 끝나요.", "ATC 콜사인 (편명과 다를 때만)", "2주 안의 비행만 올릴 수 있어요.", "인터넷 연결을 확인해 주세요.", "실시간 비행 · KAPA", "새로 받지 못했어요: ", "코드가 맞지 않아요.", "✏️ 다른 비행 공유", "새로 받지 못했어요:", "불러오지 못했어요: ", "편명을 넣어 주세요.", "날짜를 골라 주세요.", "이미 지난 날짜예요.", "서버 연결 실패 (", "KAPA 회원 입장", " · 마지막 위치 ", "✈️ 내 비행 공유", "불러오지 못했어요:", " 공유를 끝낼까요?", "예: SKW5432", "✈️ 실시간 비행", "공유를 끝낼까요?", "찾을 수 없어요.", "신호 기다리는 중", "개인 입장 코드", "· 마지막 위치", "예: UA111", "모든 비행 보기", "불러오는 중…", "ATC 콜사인", "출발 (선택)", "도착 (선택)", "실시간 비행", "공유 끝내기", "서버 오류", "공유 중 ", "출발 공항", "도착 공항", "예정 · ", "공유 중", "공유하기", "예정 ·", "분 전", "시간 ", "입장", "방금", "시간", "지상", "편명", "취소", "날짜", "출발", "도착"];
   P = P.map(function (p) { return [new RegExp(p[0]), p[1]]; });
   var H = /[가-힣ㄱ-ㆎ]/, HG = /[가-힣ㄱ-ㆎ]/g, cache = new Map();
   var hc = function (s) { var m = s.match(HG); return m ? m.length : 0; };
@@ -192,7 +192,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1127-1</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-2</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -265,7 +265,8 @@
     const s = [altTxt(p), p.gs ? p.gs + ' KT' : '', p.type].filter(Boolean).join(' · ');
     return p.lost && now - p.at > 120e3 ? ['wait', s + ' · ' + ago(now - p.at)] : ['live', s];
   };
-  let data = null, fitted = false, markers = {}, sel = '';
+  let data = null, fitted = false, markers = {}, sel = '', clockOff = 0;
+  let lastLoad = 0;   // clockOff: 서버 시각 - 내 폰 시각
   function fitAll() { const pts = Object.values(markers).map(m => m.getLatLng()); if (pts.length === 1) map.setView(pts[0], 6); else if (pts.length) map.fitBounds(L.latLngBounds(pts), { paddingTopLeft: [40, 80], paddingBottomRight: [40, 260], maxZoom: 7 }); }
   // 궤적: 고도에 따라 색 (지상 초록 → 높을수록 보라)
   const ALT = [[0, '#4ADE80'], [10000, '#FACC15'], [20000, '#FB923C'], [30000, '#F472B6'], [38000, '#A78BFA']];
@@ -323,10 +324,11 @@
       const col = on ? '#F0ABFC' : f.mine ? '#FBBF24' : p.lost ? '#94A3B8' : '#E0F2FE', cls = (f.mine ? ' me' : p.lost ? ' lost' : '') + (on ? ' sel' : '');
       const sz = on ? 40 : 30;
       const m = L.marker([p.lat, p.lon], { icon: L.divIcon({ className: '', html: '<div class="pl' + cls + '" style="transform:rotate(' + (p.trk || 0) + 'deg)">' + PLANE(col) + '</div>', iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] }), zIndexOffset: on ? 2000 : f.mine ? 1000 : 0 });
-      m.bindTooltip(el('span', {}, who(f), el('b', {}, f.flight), f.from && f.to ? el('small', {}, f.from + ' → ' + f.to) : null), { permanent: true, direction: 'right', offset: [14, 0], className: 'fl-lbl' + cls });
+      m.bindTooltip(el('span', {}, who(f), el('b', {}, f.flight), f.from || f.to ? el('small', {}, (f.from || '—') + ' → ' + (f.to || '—')) : null), { permanent: true, direction: 'right', offset: [14, 0], className: 'fl-lbl' + cls });
       m.on('click', () => pick(f.id, false));
-      m.addTo(layer); markers[f.id] = m;
+      m.addTo(layer); markers[f.id] = m; m._kp = p;
     });
+    if (typeof tick === 'function') tick();
     setTimeout(declutter, 0);
   }
   function drawCards(fl, now) {
@@ -356,9 +358,34 @@
   }
   map.on('zoomend moveend', () => setTimeout(declutter, 0));
   map.on('click', () => { if (sel) { sel = ''; document.querySelectorAll('.card').forEach(c => c.classList.remove('sel')); redrawPlanes(); drawTrails(); } });
+  // 받은 위치 사이: 속도·방향으로 앞으로 나아가게 (1초마다). 새 위치가 오면 그 위치로 맞춤
+  const R_NM = 3440.065, toR = d => d * Math.PI / 180, toD = r => r * 180 / Math.PI;
+  function ahead(lat, lon, trk, nm) {
+    const d = nm / R_NM, b = toR(trk), la = toR(lat), lo = toR(lon);
+    const la2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(b));
+    const lo2 = lo + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(la2));
+    return [toD(la2), toD(lo2)];
+  }
+  const cons = L.layerGroup().addTo(map);   // 궤적 끝 → 움직이는 비행기를 잇는 짧은 선
+  function tick() {
+    if (document.hidden) return;
+    const now = Date.now() + clockOff; cons.clearLayers();
+    Object.keys(markers).forEach(id => {
+      const m = markers[id], p = m._kp; if (!p) return;
+      const dt = (now - p.at) / 1000;
+      // 땅 위·느릴 때·너무 오래된 위치(3분 넘음)는 그대로
+      if (p.ground || !(p.gs > 60) || dt < 0 || dt > 180) return;
+      const ll = ahead(p.lat, p.lon, p.trk || 0, p.gs * dt / 3600);
+      m.setLatLng(ll);
+      const t = trk[id]; if (t && t.length) { const l = t[t.length - 1];
+        L.polyline([[l[0], l[1]], ll], { color: id === sel ? '#E879F9' : '#FBBF24', weight: id === sel ? 3 : 2, opacity: id === sel ? .9 : .35, interactive: false }).addTo(cons); }
+    });
+  }
+  setInterval(tick, 1000);
   async function load(quiet) {
     if (!key) { showLogin(); $('cards').innerHTML = ''; return; }
-    try { data = await call('getLiveFlights', key); $('msg').textContent = ''; draw(); }
+    lastLoad = Date.now();
+    try { data = await call('getLiveFlights', key); clockOff = (data.now || Date.now()) - Date.now(); $('msg').textContent = ''; draw(); }
     catch (e) { if (e.message !== '__auth') $('msg').textContent = (quiet ? '새로 받지 못했어요: ' : '불러오지 못했어요: ') + e.message; }
   }
   async function stop(f) {
@@ -385,9 +412,10 @@
       el('h2', {}, '✈️ 내 비행 공유'),
       el('p', { class: 'h' }, '편명을 올리면 회원들이 지도에서 내 비행기를 볼 수 있어요. 위치는 비행기 ADS-B 신호로 받아서, 비행 중에 폰을 켜 둘 필요가 없어요.'),
       el('div', { class: 'row' }, el('div', {}, el('label', {}, '편명'), fl), el('div', {}, el('label', {}, '날짜'), dt)),
+      el('div', { class: 'row' }, el('div', {}, el('label', {}, '출발'), fr), el('div', {}, el('label', {}, '도착'), to)),
+      el('div', { class: 'sub' }, '출발·도착을 넣으면 정확하게 보여요. 비워 두면 비행기 궤적으로 확인한 공항만 보여 줘요.'),
       el('label', {}, 'ATC 콜사인 (편명과 다를 때만)'), cs,
       el('div', { class: 'sub' }, '지역 항공사로 운항하면 콜사인이 달라요. 예: UA5432를 SkyWest가 운항하면 SKW5432'),
-      el('div', { class: 'row' }, el('div', {}, el('label', {}, '출발 (선택)'), fr), el('div', {}, el('label', {}, '도착 (선택)'), to)),
       err, el('div', { class: 'bt' }, el('button', { type: 'button', onclick: close }, '취소'), ok));
     ok.addEventListener('click', send);
     [fl, cs, fr, to].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') send(); }));
@@ -398,8 +426,10 @@
   $('share').addEventListener('click', openShare);
   $('fit').addEventListener('click', fitAll);
   load();
-  // 30초마다 새로 (화면을 보고 있을 때만)
-  setInterval(() => { if (!document.hidden && key && !document.querySelector('.ov')) load(true); }, 30000);
+
+  // 15초마다 새로 (화면을 보고 있을 때만). 서버가 그날 요청을 많이 썼으면(slow) 60초마다
+  setInterval(() => { const gap = data && data.slow ? 60000 : 15000;
+    if (!document.hidden && key && !document.querySelector('.ov') && Date.now() - lastLoad >= gap - 500) { lastLoad = Date.now(); load(true); } }, 5000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && key) load(true); });
 })();
 </script>
