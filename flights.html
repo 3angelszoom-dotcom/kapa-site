@@ -132,9 +132,12 @@
   .pl.landed svg { opacity: .55; filter: none; }
   .stop { flex: 0 0 auto; margin-left: auto; padding: 5px 9px; border-radius: 999px; border: 1px solid rgba(251,191,36,.5); background: transparent; color: var(--me); font: 800 11px/1 var(--f); cursor: pointer; white-space: nowrap; }
   .empty { flex: 0 0 min(84vw, 340px); padding: 18px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); color: var(--muted); font: 700 14px/1.5 var(--f); }
-  .bar { pointer-events: auto; display: flex; gap: 8px; padding: 0 12px; }
-  .share { flex: 1 1 auto; padding: 13px; border: 0; border-radius: 14px; background: var(--me); color: var(--me-ink); font: 900 15px/1 var(--f); cursor: pointer; box-shadow: 0 8px 24px rgba(251,191,36,.25); }
-  .fit { flex: 0 0 auto; width: 46px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 20px; cursor: pointer; backdrop-filter: blur(12px); }
+  .bar { pointer-events: none; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0 12px; }
+  .bar > * { pointer-events: auto; }
+  .share { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 10px 16px; border: 1px solid rgba(251,191,36,.55); border-radius: 999px; background: rgba(251,191,36,.14); color: #FDE68A; font: 800 13.5px/1 var(--f); letter-spacing: .01em; cursor: pointer;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+  .share:active { background: rgba(251,191,36,.26); }
+  .fit { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 999px; font-size: 17px !important; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 20px; cursor: pointer; backdrop-filter: blur(12px); }
   .note { pointer-events: auto; margin: 6px 12px 0; text-align: center; font: 600 10px/1.45 var(--f); color: #64748B; }
   .note .cr { font-size: 9px; color: #475569; }
   .note .ver { font: 700 10px/1 var(--mono); color: #64748B; }
@@ -203,7 +206,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1127-18</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-19</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -310,31 +313,40 @@
   }
   function pick(id, pan) {
     const was = sel; sel = id; document.querySelectorAll('.card').forEach(c => c.classList.toggle('sel', c.dataset.id === id));
-    if (was !== id) { redrawPlanes(); drawTrails(); loadTrack(id); }
+    if (was !== id) { redrawPlanes(); drawTrails(); drawRoutes(); loadTrack(id); }
     // 지도: 비행기를 카드 위쪽 보이는 칸의 가운데로
     const m = markers[id];
     if (m && pan) { const z = Math.max(map.getZoom(), 6), dock = document.querySelector('.dock').getBoundingClientRect().height;
       const pt = map.project(m.getLatLng(), z).add([0, dock / 2]); map.flyTo(map.unproject(pt, z), z, { duration: .6 }); }
+    else if (!m && pan && data) { const f = data.flights.find(x => x.id === id);
+      if (f) loadAirports().then(ap => { const a = ap[apKey(f.from)], b = ap[apKey(f.to)]; if (!a || !b) return;
+        const dock = document.querySelector('.dock').getBoundingClientRect().height;
+        map.flyToBounds(L.latLngBounds([a, b]), { paddingTopLeft: [40, 90], paddingBottomRight: [40, dock + 30], maxZoom: 7, duration: .6 }); }); }
     // 카드: 누른 카드를 가로 줄 가운데로 (지도에서 비행기를 눌렀을 때도)
     const box = $('cards'), c = box.querySelector('.card[data-id="' + id + '"]');
     if (c) box.scrollTo({ left: c.offsetLeft - (box.clientWidth - c.offsetWidth) / 2, behavior: 'smooth' });
   }
-  function draw() {
-    layer.clearLayers(); routes.clearLayers(); markers = {};
-    const fl = data.flights, now = data.now;
-    loadAirports().then(ap => { const seen = {};
+  function drawRoutes() {
+    if (!data) return; const fl = data.flights;
+    loadAirports().then(ap => { const seen = {}; routes.clearLayers();
       rLines = {};
       fl.forEach(f => { const a = ap[apKey(f.from)], b = ap[apKey(f.to)];
         // 점선: 출발 전엔 출발→도착 전체, 날고 있으면 지금 위치→도착만, 착륙하면 없음
         if (a && b && !f.landed) {
           const air = f.pos && !(f.pos.ground && !f.pos.lost && gcNm([f.pos.lat, f.pos.lon], a) < 15);
           const st = air ? (markers[f.id] ? markers[f.id].getLatLng() : [f.pos.lat, f.pos.lon]) : a;
-          const ln = L.polyline([st, b], { color: f.mine ? '#FBBF24' : '#38BDF8', weight: 1.6, opacity: .5, dashArray: '2 7', lineCap: 'round', interactive: false }).addTo(routes);
+          const on = f.id === sel;   // 고른 비행 점선은 진하게
+          const ln = L.polyline([st, b], { color: on ? '#E879F9' : f.mine ? '#FBBF24' : '#38BDF8', weight: on ? 2.4 : 1.6, opacity: on ? .95 : .5, dashArray: on ? '3 7' : '2 7', lineCap: 'round', interactive: false }).addTo(routes);
           if (air) rLines[f.id] = ln;
         }
         [[f.from, a], [f.to, b]].forEach(([c, ll]) => { if (!ll || seen[c]) return; seen[c] = 1;
           L.circleMarker(ll, { radius: 3.5, color: '#CBD5E1', weight: 1.5, fillColor: '#0B1220', fillOpacity: 1, interactive: false }).bindTooltip(c, { permanent: true, direction: 'bottom', offset: [0, 4], className: 'ap' }).addTo(routes); }); });
       setTimeout(declutter, 0); });
+  }
+  function draw() {
+    layer.clearLayers(); routes.clearLayers(); markers = {};
+    const fl = data.flights, now = data.now;
+    drawRoutes();
     if (sel && !fl.some(f => f.id === sel)) sel = '';
     if (!sel) { const m = fl.find(f => f.mine && f.pos); if (m) sel = m.id; }   // 처음엔 내 비행을 골라 둠
     redrawPlanes();
@@ -399,7 +411,7 @@
   let wasFull = null;
   map.on('zoomend', () => { const f = map.getZoom() >= FULL_Z; if (wasFull !== null && f !== wasFull) redrawPlanes(); wasFull = f; });
   map.on('zoomend moveend', () => setTimeout(declutter, 0));
-  map.on('click', () => { if (sel) { sel = ''; document.querySelectorAll('.card').forEach(c => c.classList.remove('sel')); redrawPlanes(); drawTrails(); } });
+  map.on('click', () => { if (sel) { sel = ''; document.querySelectorAll('.card').forEach(c => c.classList.remove('sel')); redrawPlanes(); drawTrails(); drawRoutes(); } });
   // 받은 위치 사이: 속도·방향으로 앞으로 나아가게 (1초마다). 새 위치가 오면 그 위치로 맞춤
   const R_NM = 3440.065, toR = d => d * Math.PI / 180, toD = r => r * 180 / Math.PI;
   function ahead(lat, lon, trk, nm) {
