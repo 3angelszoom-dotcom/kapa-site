@@ -203,7 +203,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1127-17</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-18</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -256,6 +256,7 @@
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 13, opacity: .7 }).addTo(map);
   let baseErr = 0;
   base.on('tileerror', () => { if (++baseErr === 4) { map.removeLayer(base); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 13, attribution: '&copy; OpenStreetMap contributors' }).addTo(map); } });
+  let rLines = {};   // 날고 있는 비행: 비행기 → 도착 점선 (비행기가 움직이면 같이)
   const routes = L.layerGroup().addTo(map), trails = L.layerGroup().addTo(map), layer = L.layerGroup().addTo(map);
   let airportsP = null;
   const loadAirports = () => airportsP || (airportsP = fetch('airports.txt').then(r => { if (!r.ok) throw 0; return r.text(); })
@@ -322,8 +323,15 @@
     layer.clearLayers(); routes.clearLayers(); markers = {};
     const fl = data.flights, now = data.now;
     loadAirports().then(ap => { const seen = {};
+      rLines = {};
       fl.forEach(f => { const a = ap[apKey(f.from)], b = ap[apKey(f.to)];
-        if (a && b) L.polyline([a, b], { color: f.mine ? '#FBBF24' : '#38BDF8', weight: 1.6, opacity: .5, dashArray: '2 7', lineCap: 'round', interactive: false }).addTo(routes);
+        // 점선: 출발 전엔 출발→도착 전체, 날고 있으면 지금 위치→도착만, 착륙하면 없음
+        if (a && b && !f.landed) {
+          const air = f.pos && !(f.pos.ground && !f.pos.lost && gcNm([f.pos.lat, f.pos.lon], a) < 15);
+          const st = air ? (markers[f.id] ? markers[f.id].getLatLng() : [f.pos.lat, f.pos.lon]) : a;
+          const ln = L.polyline([st, b], { color: f.mine ? '#FBBF24' : '#38BDF8', weight: 1.6, opacity: .5, dashArray: '2 7', lineCap: 'round', interactive: false }).addTo(routes);
+          if (air) rLines[f.id] = ln;
+        }
         [[f.from, a], [f.to, b]].forEach(([c, ll]) => { if (!ll || seen[c]) return; seen[c] = 1;
           L.circleMarker(ll, { radius: 3.5, color: '#CBD5E1', weight: 1.5, fillColor: '#0B1220', fillOpacity: 1, interactive: false }).bindTooltip(c, { permanent: true, direction: 'bottom', offset: [0, 4], className: 'ap' }).addTo(routes); }); });
       setTimeout(declutter, 0); });
@@ -411,6 +419,7 @@
       if (m._landed || p.ground || !(p.gs > 60) || dt < 0 || dt > 180) return;
       const ll = ahead(p.lat, p.lon, p.trk || 0, p.gs * dt / 3600);
       m.setLatLng(ll);
+      const rl = rLines[id]; if (rl) { const q = rl.getLatLngs(); rl.setLatLngs([ll, q[q.length - 1]]); }
       const t = trk[id]; if (t && t.length) { const l = t[t.length - 1];
         L.polyline([[l[0], l[1]], ll], { color: id === sel ? '#E879F9' : '#FBBF24', weight: id === sel ? 3 : 2, opacity: id === sel ? .9 : .35, interactive: false }).addTo(cons); }
     });
