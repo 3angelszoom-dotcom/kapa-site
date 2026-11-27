@@ -207,7 +207,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg><span>내 비행 공유</span></button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1128-1</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1128-2</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -530,7 +530,7 @@
       if (fr.value.trim().toUpperCase() !== tzFor) await findTz();   // 출발 공항 시간대를 먼저
       const [y, m, d] = dt.value.split('-').map(Number), etd = etdMs(), etdL = et.value.replace(':', '') + ' ' + (tz ? tz.abbr : '');
       if (etd + 20 * 3600e3 < Date.now()) { err.textContent = '이미 지난 시각이에요.'; busy(false); return; }
-      try { data = await call('shareFlight', key, { flight: fl.value, callsign: '', from: fr.value, to: to.value, date: dt.value, startAt: new Date(y, m - 1, d).getTime(), etd, etdL }); close(); fitted = false; draw(); }
+      try { data = await call('shareFlight', key, { flight: fl.value, callsign: '', from: fr.value, to: to.value, date: dt.value, startAt: Date.UTC(y, m - 1, d) - offMin() * 60000, etd, etdL }); close(); fitted = false; draw(); }
       catch (e) { if (e.message !== '__auth') err.textContent = e.message; busy(false); }
     };
     const sheet = el('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' },
