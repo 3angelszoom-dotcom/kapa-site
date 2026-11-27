@@ -192,7 +192,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1127-2</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-3</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -382,10 +382,42 @@
     });
   }
   setInterval(tick, 1000);
+  // 서버가 출발·도착을 못 찾은 비행: 폰이 adsb.lol 노선 서버에 직접 물어봄 (adsb.lol 지도와 같은 정보). 10분 기억
+  const rtMem = {};
+  const gcNm = (a, b) => { const r = Math.PI / 180, la1 = a[0] * r, la2 = b[0] * r; return 2 * R_NM * Math.asin(Math.min(1, Math.sqrt(Math.sin((la2 - la1) / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin((b[1] - a[1]) * r / 2) ** 2))); };
+  const brg = (a, b) => { const r = Math.PI / 180, y = Math.sin((b[1] - a[1]) * r) * Math.cos(b[0] * r), x = Math.cos(a[0] * r) * Math.sin(b[0] * r) - Math.sin(a[0] * r) * Math.cos(b[0] * r) * Math.cos((b[1] - a[1]) * r); return (Math.atan2(y, x) / r + 360) % 360; };
+  function applyRt() { if (!data) return; data.flights.forEach(f => { const m = rtMem[f.callsign]; if (m && m.v && !f.to) { f.from = f.from || m.v.from; f.to = m.v.to; } }); }
+  async function askRoutes() {
+    if (!data) return;
+    const want = data.flights.filter(f => f.pos && !f.pos.ground && !f.to && !f.later && !(rtMem[f.callsign] && Date.now() - rtMem[f.callsign].t < 600000));
+    if (!want.length) return;
+    want.forEach(f => { rtMem[f.callsign] = { t: Date.now(), v: null }; });
+    try {
+      const r = await fetch('https://api.adsb.lol/api/0/routeset', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planes: want.map(f => ({ callsign: f.callsign, lat: f.pos.lat, lng: f.pos.lon })) }) });
+      if (!r.ok) return;
+      const arr = await r.json();
+      let changed = false;
+      want.forEach(f => {
+        const j = (arr || []).find(x => String(x.callsign || '').toUpperCase() === f.callsign); if (!j || j.plausible === false || j.plausible === 0) return;
+        const aps = (j._airports || []).filter(a => isFinite(+a.lat) && isFinite(+a.lon)); if (aps.length < 2) return;
+        const code = a => String(a.iata || a.icao || '').toUpperCase(), here = [f.pos.lat, f.pos.lon];
+        let best = null;
+        for (let i = 0; i < aps.length - 1; i++) { const A = [+aps[i].lat, +aps[i].lon], B = [+aps[i + 1].lat, +aps[i + 1].lon], d = gcNm(A, here) + gcNm(here, B) - gcNm(A, B); if (!best || d < best.d) best = { d, A, B, from: code(aps[i]), to: code(aps[i + 1]) }; }
+        if (!best) return;
+        // 서버가 궤적으로 찾은 출발지가 있으면 그것과 맞아야 함
+        if (f.from && f.from !== best.from) return;
+        const total = gcNm(best.A, best.B), toB = gcNm(here, best.B); let turn = Math.abs(brg(here, best.B) - (f.pos.trk || 0)); if (turn > 180) turn = 360 - turn;
+        if (best.d > Math.max(150, total * .35) || (toB > 60 && turn > 100)) return;
+        rtMem[f.callsign].v = { from: best.from, to: best.to }; changed = true;
+      });
+      if (changed) { applyRt(); draw(); }
+    } catch (_) { /* 폰에서 직접 못 물어보면 그냥 둠 */ }
+  }
   async function load(quiet) {
     if (!key) { showLogin(); $('cards').innerHTML = ''; return; }
     lastLoad = Date.now();
-    try { data = await call('getLiveFlights', key); clockOff = (data.now || Date.now()) - Date.now(); $('msg').textContent = ''; draw(); }
+    try { data = await call('getLiveFlights', key); clockOff = (data.now || Date.now()) - Date.now(); $('msg').textContent = ''; applyRt(); draw(); askRoutes(); }
     catch (e) { if (e.message !== '__auth') $('msg').textContent = (quiet ? '새로 받지 못했어요: ' : '불러오지 못했어요: ') + e.message; }
   }
   async function stop(f) {
@@ -405,7 +437,7 @@
       if (!dt.value) { err.textContent = '날짜를 골라 주세요.'; return; }
       const [y, m, d] = dt.value.split('-').map(Number);
       ok.disabled = true; err.textContent = '';
-      try { data = await call('shareFlight', key, { flight: fl.value, callsign: cs.value, from: fr.value, to: to.value, date: dt.value, startAt: new Date(y, m - 1, d).getTime() }); close(); fitted = false; draw(); }
+      try { data = await call('shareFlight', key, { flight: fl.value, callsign: cs.value, from: fr.value, to: to.value, date: dt.value, startAt: new Date(y, m - 1, d).getTime() }); close(); fitted = false; applyRt(); draw(); askRoutes(); }
       catch (e) { if (e.message !== '__auth') err.textContent = e.message; ok.disabled = false; }
     };
     const sheet = el('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' },
