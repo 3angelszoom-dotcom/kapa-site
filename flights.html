@@ -192,7 +192,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share">✈️ 내 비행 공유</button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></div>
-  <p class="note"><span class="ver" data-noi18n>v1127-5</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1127-6</span> · <span class="cr">Map © Esri · ADS-B: adsb.lol (ODbL), airplanes.live</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -383,7 +383,7 @@
   }
   setInterval(tick, 1000);
   // 서버가 출발·도착을 못 찾은 비행: 폰이 adsb.lol 노선 서버에 직접 물어봄 (adsb.lol 지도와 같은 정보). 10분 기억
-  const rtMem = {};
+  const rtMem = {}; let rtDbg = '';
   const gcNm = (a, b) => { const r = Math.PI / 180, la1 = a[0] * r, la2 = b[0] * r; return 2 * R_NM * Math.asin(Math.min(1, Math.sqrt(Math.sin((la2 - la1) / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin((b[1] - a[1]) * r / 2) ** 2))); };
   const brg = (a, b) => { const r = Math.PI / 180, y = Math.sin((b[1] - a[1]) * r) * Math.cos(b[0] * r), x = Math.cos(a[0] * r) * Math.sin(b[0] * r) - Math.sin(a[0] * r) * Math.cos(b[0] * r) * Math.cos((b[1] - a[1]) * r); return (Math.atan2(y, x) / r + 360) % 360; };
   function applyRt() { if (!data) return; data.flights.forEach(f => { const m = rtMem[f.callsign]; if (m && m.v && !f.to) { f.from = m.v.from; f.to = m.v.to; f.via = m.v.via || []; } }); }
@@ -393,9 +393,12 @@
     if (!want.length) return;
     want.forEach(f => { rtMem[f.callsign] = { t: Date.now(), v: null }; });
     try {
-      const r = await fetch('https://api.adsb.lol/api/0/routeset', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planes: want.map(f => ({ callsign: f.callsign, lat: f.pos.lat, lng: f.pos.lon })) }) });
-      if (!r.ok) return;
+      const body = JSON.stringify({ planes: want.map(f => ({ callsign: f.callsign, lat: f.pos.lat, lng: f.pos.lon })) });
+      let r = null;
+      try { r = await fetch('https://api.adsb.lol/api/0/routeset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }); rtDbg = 'json ' + r.status; }
+      catch (e) { rtDbg = 'json 실패(' + e.message + ')'; }
+      if (!r || !r.ok) { try { r = await fetch('https://api.adsb.lol/api/0/routeset', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body }); rtDbg += ' / text ' + r.status; } catch (e) { rtDbg += ' / text 실패(' + e.message + ')'; r = null; } }
+      if (!r || !r.ok) return;
       const arr = await r.json();
       let changed = false;
       want.forEach(f => {
@@ -448,6 +451,10 @@
     document.body.append(ov); setTimeout(() => fl.focus(), 50);
   }
   $('share').addEventListener('click', openShare);
+  document.querySelector('.note .ver').addEventListener('click', () => {
+    const n = (data && data.flights || []).map(f => f.callsign + ':' + (f.from || '-') + '>' + (f.to || '-')).join(' ');
+    alert('노선 상태\n서버: ' + ((data && data.rtdbg) || '아직 없음') + '\n폰: ' + (rtDbg || '아직 안 물어봄') + '\n' + n);
+  });
   $('fit').addEventListener('click', fitAll);
   load();
 
