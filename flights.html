@@ -104,14 +104,20 @@
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font: 800 13.5px/1 var(--f); letter-spacing: .01em; }
   .pill small { font: 700 11.5px/1 var(--f); color: var(--muted); }
   button.pill { color: var(--ink); cursor: pointer; }
-  .pill .chev { font-size: 11px; color: var(--muted); transition: transform .2s; }
+  .pill .chev { font-size: 17px; line-height: 1; color: var(--ink); margin-left: 2px; transition: transform .2s; }
   .pill[aria-expanded="true"] .chev { transform: rotate(180deg); }
   /* 비행 목록 (알약을 누르면 열림): 예정 · 운항 중 · 도착 */
   .fmenu { position: fixed; z-index: 600; top: calc(52px + env(safe-area-inset-top)); left: 12px; width: min(340px, calc(100vw - 24px)); max-height: min(62vh, 520px); overflow-y: auto;
     background: rgba(11,18,32,.94); border: 1px solid var(--line); border-radius: 16px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 14px 34px rgba(0,0,0,.45); padding: 6px 0; }
   .fmenu[hidden] { display: none; }
-  .fmenu h4 { margin: 8px 14px 4px; font: 800 11px/1 var(--f); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
-  .fmenu h4 span { color: #64748B; }
+  .fmenu h4 { margin: 10px 12px 4px; font: 800 11px/1 var(--f); letter-spacing: .08em; text-transform: uppercase; }
+  .fmenu h4 em { font-style: normal; display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px; border-radius: 8px; border: 1px solid; }
+  .fmenu h4 em span { font: 800 10.5px/1 var(--mono); padding: 2px 6px; border-radius: 999px; background: rgba(255,255,255,.12); }
+  .fmenu h4.g-air em { color: #4ADE80; border-color: rgba(74,222,128,.45); background: rgba(74,222,128,.12); }
+  .fmenu h4.g-sched em { color: #93C5FD; border-color: rgba(147,197,253,.45); background: rgba(147,197,253,.12); }
+  .fmenu h4.g-land em { color: #CBD5E1; border-color: rgba(203,213,225,.35); background: rgba(203,213,225,.08); }
+  .fmenu h4 + .frow { margin-top: 2px; }
+  .fmenu .frow + h4 { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 6px; }
   .frow { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; width: 100%; text-align: left; padding: 9px 14px; border: 0; background: none; color: var(--ink); cursor: pointer; font: inherit; }
   .frow:active, .frow.on { background: rgba(232,121,249,.12); }
   .frow b { font: 800 15px/1.15 var(--mono); letter-spacing: .02em; }
@@ -230,7 +236,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg><span>내 비행 공유</span></button><span class="rbtns"><button type="button" class="fit rf" id="rf" aria-label="새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5"/></svg></button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></span></div>
-  <p class="note"><span class="ver" data-noi18n>v1128-14</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1128-15</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -436,13 +442,13 @@
   }
   // 위 알약을 누르면 여는 비행 목록: 예정 · 운항 중 · 도착
   const groupOf = f => f.landed ? 'land' : (f.pos && !f.other) ? 'air' : 'sched';
-  const GROUPS = [['sched', EN ? 'Scheduled' : '예정'], ['air', EN ? 'En route' : '운항 중'], ['land', EN ? 'Landed' : '도착']];
+  const GROUPS = [['air', EN ? 'En route' : '운항 중'], ['sched', EN ? 'Scheduled' : '예정'], ['land', EN ? 'Landed' : '도착']];
   function drawMenu(fl, now) {
     const box = $('fmenu'); if (!box) return; const top = box.scrollTop; box.innerHTML = '';
     if (!fl.length) { box.append(el('div', { class: 'none' }, '지금 공유 중인 비행이 없어요.')); return; }
     GROUPS.forEach(([g, name]) => {
       const list = fl.filter(f => groupOf(f) === g); if (!list.length) return;
-      box.append(el('h4', { 'data-noi18n': '' }, name, el('span', {}, String(list.length))));
+      box.append(el('h4', { 'data-noi18n': '', class: 'g-' + g }, el('em', {}, name, el('span', {}, String(list.length)))));
       list.forEach(f => {
         const r = el('button', { type: 'button', class: 'frow' + (f.mine ? ' me' : '') + (f.id === sel ? ' on' : '') },
           el('b', {}, f.flight), el('span', { class: 'r' }, (f.from || '—') + ' → ' + (f.to || '—')),
