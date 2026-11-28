@@ -813,6 +813,11 @@
   .a-ok { color: var(--ok-fg); font-size: 13px; margin: 0; }
   .a-field { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
   .a-field textarea { min-height: 110px; resize: vertical; }
+  .a-dec { display: grid; gap: 10px; width: 100%; margin-top: 12px; padding: 14px; border: 1px solid var(--line); background: var(--soft); }
+  .a-dec .a-field textarea { min-height: 150px; }
+  .a-decsent { width: 100%; font-size: 13px; }
+  .a-decsent summary { cursor: pointer; color: var(--muted); }
+  .a-decbody { white-space: pre-wrap; margin: 8px 0; padding: 10px 12px; border: 1px solid var(--line); font-size: 14px; line-height: 1.6; }
   .a-secret { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .a-secret code { font: 500 16px var(--mono, monospace); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; user-select: all; }
   .a-preview { background: var(--note); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 14px; white-space: pre-wrap; }
@@ -1379,7 +1384,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small id="ver-tag" style="opacity:.45;margin-left:10px">v1126-1</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><small id="ver-tag" style="opacity:.45;margin-left:10px">v1128-L1</small></span></div>
 </footer>
 
 <script>
@@ -2194,7 +2199,7 @@
           }
           markStale(); after();
         }
-        catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; ok.disabled = false; } }
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.textContent = e.message; ok.disabled = false; } }
       });
       box.replaceChildren(el('div', { class: 'confirm' }, pw, ok, el('button', { class: 'ghost', onclick: () => box.replaceChildren(open) }, '취소')), msg);
       if (pw) pw.focus();
@@ -2354,7 +2359,7 @@
         if (shots.length) await sendShots(id, shots.map(file => ({ file })), t => { numBtn.textContent = t; }, cBody.value, hasNum ? nums : null);
         else await sendLoadsNums(id, nums, cBody.value);
         showPost(id);
-      } catch (e) { if (e.message !== '__auth') { numMsg.textContent = e.message; numBtn.disabled = attBtn.disabled = false; numBtn.textContent = '답하기'; } }
+      } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { numMsg.textContent = e.message; numBtn.disabled = attBtn.disabled = false; numBtn.textContent = '답하기'; } }
     });
     cBtn.addEventListener('click', async () => {
       cBtn.disabled = true; cMsg.textContent = '';
@@ -2370,7 +2375,7 @@
         if (mine) mine.comments = mine.comments.concat([{ id: 'tmp', author: author.trim(), body: body.trim(), createdAt: new Date().toISOString(), parentId }]);
         markStale();
         showPost(id);
-      } catch (e) { if (e.message !== '__auth') { cMsg.textContent = e.message; cBtn.disabled = false; } }
+      } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { cMsg.textContent = e.message; cBtn.disabled = false; } }
     });
     put(
       el('button', { class: 'ghost', onclick: showList }, '← 목록으로'),
@@ -2510,7 +2515,7 @@
           password: pw.value, files: ids, links: linkList, key: memberKey, device: dev() });
         if (sh.length) shareItems = [];
         done(id);
-      } catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; status.textContent = ''; btn.disabled = false; } }
+      } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.textContent = e.message; status.textContent = ''; btn.disabled = false; } }
     });
     if (edit) {
       pw.placeholder = '글 쓸 때 넣은 비밀번호';
@@ -2603,7 +2608,7 @@
         const id = await call('createPost', { board: LOADS, meta: metas[0], metas: many ? metas : undefined,
           body: memo.value, files: [], links: [], key: memberKey, device: dev() });
         done(many ? null : id);   // 여러 편이면 목록으로
-      } catch (e) { if (e.message !== '__auth') { msg.textContent = e.message; btn.disabled = false; btn.textContent = label; } }
+      } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.textContent = e.message; btn.disabled = false; btn.textContent = label; } }
     });
     return el('div', { class: 'form ld-form' },
       asWho(LOADS, '요청이'),
@@ -2765,15 +2770,22 @@
     const nav = el('div', { class: 'a-tabs', role: 'tablist', 'aria-label': '관리 메뉴' });
     const view = el('div', { class: 'a-view' });
 
+    // 탭을 바꾸면 세대(gen)가 올라감 → 그 전에 보낸 요청의 답은 버림 (늦게 온 답이 새로 고른 탭 화면을 덮지 않게)
+    let gen = 0;
     async function api(fn, ...args) {
-      try { return await call(fn, key, ...args); }
+      const g = gen;
+      let r;
+      try { r = await call(fn, key, ...args); }
       catch (e) {
         if (String(e && e.message || e).includes('AUTH_REQUIRED')) { setKey(''); login('비밀번호가 바뀌었거나 로그인이 끝났어요. 다시 로그인해 주세요.'); throw new Error('__auth'); }
+        if (g !== gen) throw new Error('__stale');
         throw e;
       }
+      if (g !== gen) throw new Error('__stale');
+      return r;
     }
     function fail(e, target) {
-      if (e && e.message === '__auth') return;
+      if (e && (e.message === '__auth' || e.message === '__stale')) return;
       (target || view).replaceChildren(el('p', { class: 'a-err' }, '오류: ' + (e && e.message || e)),
         el('button', { class: 'a-link', onclick: shell }, '다시 시도'));
     }
@@ -2818,6 +2830,7 @@
     }
 
     function shell() {
+      gen++;
       nav.replaceChildren(...TABS.filter(t => !t.hidden || t.id === tab).map(t => el('button', {
         class: 'a-tab' + (t.id === tab ? ' on' : ''), role: 'tab', 'aria-selected': String(t.id === tab),
         onclick: () => { tab = t.id; shell(); } }, t.label, t.id === 'apply' ? pendBadge() : null)),
@@ -2890,7 +2903,7 @@
       const box = el('div', { class: 'a-actions' });
       const msg = el('span', { class: 'a-err' });
       const sm = small ? ' sm' : '';
-      const run = async d => { try { await fn(d); } catch (e) { if (e.message !== '__auth') msg.textContent = e.message; } };
+      const run = async d => { try { await fn(d); } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) msg.textContent = e.message; } };
       if (deleted) { box.append(el('button', { class: 'a-btn ghost' + sm, onclick: () => run(false) }, '복구'), msg); return box; }
       const del = el('button', { class: 'a-btn ghost' + sm }, '삭제');
       del.addEventListener('click', () => box.replaceChildren(
@@ -2947,7 +2960,7 @@
           cp.addEventListener('click', () => copyText(text, cp));
           shareBox.replaceChildren(cp);
           mPw.value = '';
-        } catch (e) { if (e.message !== '__auth') { mMsg.className = 'a-err'; mMsg.textContent = e.message; } }
+        } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { mMsg.className = 'a-err'; mMsg.textContent = e.message; } }
         mBtn.disabled = false;
       });
 
@@ -2964,7 +2977,7 @@
           setKey(aPw.value);
           aMsg.className = 'a-ok'; aMsg.textContent = '바꿨어요. 다음 로그인부터 새 비밀번호를 쓰세요.';
           aPw.value = aPw2.value = '';
-        } catch (e) { if (e.message !== '__auth') aMsg.textContent = e.message; }
+        } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) aMsg.textContent = e.message; }
         aBtn.disabled = false;
       });
 
@@ -2985,14 +2998,14 @@
         if (!next && !window.confirm('공용 회원 비밀번호로는 아무도 입장할 수 없게 돼요. 개인 입장 코드가 없는 회원은 게시판을 볼 수 없어요. 막을까요?')) return;
         enBtn.disabled = true; enMsg.className = 'a-ok'; enMsg.textContent = '';
         try { drawEn(await api('adminSetSharedEnter', next)); enMsg.textContent = next ? '공용 비밀번호로도 다시 입장할 수 있어요.' : '이제 개인 입장 코드로만 입장할 수 있어요. 공용 비밀번호로 들어와 있던 기기도 다음 접속 때 코드를 다시 물어봐요.'; }
-        catch (e) { if (e.message !== '__auth') { enMsg.className = 'a-err'; enMsg.textContent = e.message; } }
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { enMsg.className = 'a-err'; enMsg.textContent = e.message; } }
         enBtn.disabled = false;
       });
       swBtn.addEventListener('click', async () => {
         const next = !swBtn.dataset.on;
         swBtn.disabled = true; swMsg.className = 'a-ok'; swMsg.textContent = '';
         try { drawSw(await api('adminSetSharedWrite', next)); swMsg.textContent = next ? '공용 비밀번호로도 다시 글을 쓸 수 있어요.' : '이제 글과 댓글은 개인 입장 코드로 입장한 회원만 쓸 수 있어요. (읽기는 공용 비밀번호로도 가능)'; }
-        catch (e) { if (e.message !== '__auth') { swMsg.className = 'a-err'; swMsg.textContent = e.message; } }
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { swMsg.className = 'a-err'; swMsg.textContent = e.message; } }
         swBtn.disabled = false;
       });
       view.replaceChildren(   // 공용 회원 비밀번호는 없앴음 → 관리자 비밀번호만
@@ -3029,7 +3042,7 @@
       const now = el('button', { class: 'a-btn ghost sm', onclick: async () => {
         expMsg.className = 'a-ok'; expMsg.textContent = '복사 중…';
         try { await api('adminExportNow'); expMsg.textContent = '지금 복사했어요.'; load(); }
-        catch (e) { if (e.message !== '__auth') { expMsg.className = 'a-err'; expMsg.textContent = e.message; } }
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { expMsg.className = 'a-err'; expMsg.textContent = e.message; } }
       } }, '지금 복사');
       const load = () => api('adminGetApplicantsSheet').then(r => {
         open.href = typeof r === 'string' ? r : r.url; open.hidden = false;
@@ -3047,7 +3060,7 @@
         el('div', { class: 'a-actions' }, el('button', { class: 'a-btn sm', onclick: async () => {
           expMsg.className = 'a-ok'; expMsg.textContent = '연결하고 복사하는 중…';
           try { await api('adminSetExportSheet', xIn.value.trim()); expMsg.textContent = '연결하고 복사했어요. 그 시트의 "큰방 명부" / "작은방 명부" 탭을 확인해 보세요.'; xForm.hidden = true; load(); }
-          catch (e) { if (e.message !== '__auth') { expMsg.className = 'a-err'; expMsg.textContent = e.message; } }
+          catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { expMsg.className = 'a-err'; expMsg.textContent = e.message; } }
         } }, '이 시트로 연결')));
       xForm.hidden = true;
       const change = el('button', { class: 'a-btn ghost sm', onclick: () => { xForm.hidden = !xForm.hidden; } }, '사본 시트 바꾸기');
@@ -3085,7 +3098,7 @@
           appFlash[a.id] = ['a-ok', a.email + ' 주소로 개인 입장 코드를 보냈어요.'];
           box.replaceWith(appCard(a)); refreshPending(true);
         } catch (e) {
-          if (e.message === '__auth') return;
+          if (/^__(auth|stale)$/.test(e.message)) return;
           appFlash[a.id] = ['a-err', e.message];
           applicants();   // 승인은 됐는데 메일만 실패했을 수도 있어서 목록을 새로 받아 옴
         }
@@ -3093,11 +3106,40 @@
       async function approve() {
         msg.className = 'a-ok'; msg.textContent = '코드 만드는 중…';
         try { const r = await api('adminApprove', a.id, roomSel.value); Object.assign(a, r, { status: '승인', redeemCount: 0, siteOn: true }); box.replaceWith(appCard(a)); refreshPending(true); }
-        catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.className = 'a-err'; msg.textContent = e.message; } }
       }
       async function setStatus(st) {
         try { await api('adminSetApplicantStatus', a.id, st); a.status = st; a.code = ''; a.siteOn = false; a.siteCode = ''; box.replaceWith(appCard(a)); refreshPending(true); }
-        catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.className = 'a-err'; msg.textContent = e.message; } }
+      }
+      // 보류·거절: 관리자가 직접 안내 메시지를 써서 보냄 (이메일이 없으면 저장 → 복사해서 문자·카톡으로)
+      function openDecision(st) {
+        if (box.querySelector('.a-dec')) return;
+        const en = a.lang === 'en';
+        const subj = el('input', { value: en ? '[KAPA] About your membership application' : '[KAPA] 가입 신청 안내', maxlength: '120', 'aria-label': '제목' });
+        const ta = el('textarea', { maxlength: '3000', 'aria-label': '메시지',
+          placeholder: st === '보류' ? `예) ${a.ko}님, 안녕하세요. KAPA 가입 신청 감사합니다. 확인이 필요한 부분이 있어 잠시 보류되었어요. …` : `예) ${a.ko}님, 안녕하세요. KAPA 가입 신청 감사합니다. 아쉽게도 이번에는 …` });
+        const dmsg = el('p', { class: 'a-muted' }, a.email ? `받는 사람: ${a.email}${en ? ' · 영어로 신청한 분이에요' : ''}` : '이메일이 없어서 메시지는 저장만 돼요. 저장한 뒤 "메시지 복사"로 문자나 카톡으로 보내 주세요.');
+        const send = el('button', { class: 'a-btn sm' }, a.email ? `${st}하고 이메일 보내기` : `${st}하고 메시지 저장`);
+        const panel = el('div', { class: 'a-dec' },
+          el('b', {}, st === '보류' ? '보류 안내 메시지' : '거절 안내 메시지'),
+          a.email ? el('label', { class: 'a-field' }, '제목', subj) : '',
+          el('label', { class: 'a-field' }, '메시지', ta), dmsg,
+          el('div', { class: 'a-actions' }, send,
+            el('button', { class: 'a-link', onclick: () => { panel.remove(); setStatus(st); } }, '메시지 없이 상태만 바꾸기'),
+            el('button', { class: 'a-link', onclick: () => panel.remove() }, '취소')));
+        send.addEventListener('click', async () => {
+          if (!ta.value.trim()) { dmsg.className = 'a-err'; dmsg.textContent = '보낼 메시지를 써 주세요.'; ta.focus(); return; }
+          if (a.email && !window.confirm(a.email + ' 주소로 이 메시지를 보내고 ' + st + ' 처리할까요?')) return;
+          send.disabled = true; dmsg.className = 'a-ok'; dmsg.textContent = a.email ? '보내는 중…' : '저장하는 중…';
+          try {
+            const r = await api('adminSendDecision', a.id, st, subj.value, ta.value);
+            Object.assign(a, { status: st, code: '', siteOn: false, siteCode: '', decMsg: r.decMsg, decAt: r.decAt });
+            appFlash[a.id] = ['a-ok', r.sent ? `${st} 처리하고 ${r.email} 주소로 안내 메시지를 보냈어요.` : `${st} 처리하고 메시지를 저장했어요. "메시지 복사"로 직접 보내 주세요.`];
+            box.replaceWith(appCard(a)); refreshPending(true);
+          } catch (e) { send.disabled = false; if (!/^__(auth|stale)$/.test(e.message)) { dmsg.className = 'a-err'; dmsg.textContent = e.message; } }
+        });
+        box.append(panel); ta.focus();
       }
       if (a.status === '승인' && a.code) {
         const copyCode = el('button', { class: 'a-btn ghost sm' }, '코드 복사');
@@ -3110,12 +3152,12 @@
           if (a.siteOn && !window.confirm(a.ko + '님의 개인 입장 코드를 새로 만들까요?\n예전 코드와 그 코드로 로그인한 기기는 바로 안 돼요.')) return;
           msg.className = 'a-ok'; msg.textContent = '개인 코드 만드는 중…';
           try { const r = await api('adminIssueSiteCode', a.id); Object.assign(a, r, { siteOn: true }); appFlash[a.id] = ['a-ok', '새 개인 입장 코드를 만들었어요. 이 화면을 벗어나면 다시 볼 수 없으니 복사해서 보내 주세요.']; box.replaceWith(appCard(a)); }
-          catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
+          catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.className = 'a-err'; msg.textContent = e.message; } }
         };
         const offSite = async () => {
           if (!window.confirm(a.ko + '님의 개인 입장 코드를 끌까요? 그 코드로는 더 이상 입장할 수 없어요.')) return;
           try { await api('adminDisableSiteCode', a.id); a.siteOn = false; a.siteCode = ''; box.replaceWith(appCard(a)); }
-          catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
+          catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.className = 'a-err'; msg.textContent = e.message; } }
         };
         if (a.siteCode) {
           const cpSite = el('button', { class: 'a-btn ghost sm' }, '개인 코드 복사');
@@ -3132,18 +3174,22 @@
           el('span', { class: 'a-muted' }, `${roomName(a.room)} · ${CODE_DAYS_TXT(a.codeExpires)}까지 · 사용 ${a.redeemCount}회${sentTxt}`),
           a.email ? el('button', { class: 'a-btn sm', onclick: sendMail }, a.sentAt ? '이메일 다시 보내기' : '이메일로 코드 보내기') : '',
           el('button', { class: 'a-link', onclick: approve }, '새 코드로 바꾸기'),
-          el('button', { class: 'a-link', onclick: () => setStatus('보류') }, '승인 취소(보류)'),
+          el('button', { class: 'a-link', onclick: () => openDecision('보류') }, '승인 취소(보류)'),
           siteRow);
       } else {
         actions.append(roomSel,
           a.email ? el('button', { class: 'a-btn sm', onclick: sendMail }, '승인하고 코드 전송') : '',
           el('button', { class: a.email ? 'a-btn ghost sm' : 'a-btn sm', onclick: approve }, a.email ? '코드만 만들기' : '승인하고 입장 코드 만들기'),
-          a.status !== '보류' ? el('button', { class: 'a-btn ghost sm', onclick: () => setStatus('보류') }, '보류') : '',
-          a.status !== '거절' ? el('button', { class: 'a-btn ghost sm', onclick: () => setStatus('거절') }, '거절') : '',
+          a.status !== '보류' ? el('button', { class: 'a-btn ghost sm', onclick: () => openDecision('보류') }, '보류') : '',
+          a.status !== '거절' ? el('button', { class: 'a-btn ghost sm', onclick: () => openDecision('거절') }, '거절') : '',
           a.status !== '대기' ? el('button', { class: 'a-btn ghost sm', onclick: () => setStatus('대기') }, '대기로') : '');
       }
       const copyLine = el('button', { class: 'a-link' }, '인적사항 복사');
       copyLine.addEventListener('click', () => copyText(a.line, copyLine));
+      if (a.decMsg && (a.status === '보류' || a.status === '거절')) {
+        const cp = el('button', { class: 'a-link' }, '메시지 복사'); cp.addEventListener('click', () => copyText(a.decMsg, cp));
+        actions.append(el('details', { class: 'a-decsent' }, el('summary', {}, `보낸 ${a.status} 안내 · ${a.decAt ? fmt(a.decAt) : ''}`), el('div', { class: 'a-decbody' }, a.decMsg), cp));
+      }
       box.append(
         el('div', { class: 'a-row-between' },
           el('b', {}, `${a.ko} · ${a.en}`),
@@ -3192,11 +3238,11 @@
           Object.assign(a, r);
           appFlash[a.id] = ['a-ok', send ? a.email + ' 주소로 개인 입장 코드를 보냈어요.' : '개인 입장 코드를 만들었어요. 이 화면을 벗어나면 다시 볼 수 없으니 복사해 두세요.'];
           box.replaceWith(exCard(a));
-        } catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
+        } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.className = 'a-err'; msg.textContent = e.message; } }
       };
       const setSt = async st => {
         try { await api('adminSetApplicantStatus', a.id, st); a.status = st; a.siteOn = false; a.siteCode = ''; box.replaceWith(exCard(a)); }
-        catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.className = 'a-err'; msg.textContent = e.message; } }
       };
       const actions = el('div', { class: 'a-actions' });
       if (a.status === '승인') {
@@ -3292,7 +3338,7 @@
         try { const r = await api('adminSetNotice', text, pushOn.checked && !!text); ta.value = text; sync();
           msg.textContent = text ? '저장했어요. 게시판 상단에 바로 보여요.' + (pushOn.checked ? (r && r.sent != null ? ' 폰 알림 ' + r.sent + '대에 보냈어요.' : '') : '') : '공지를 내렸어요.';
           pushOn.checked = false; }
-        catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } }
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.className = 'a-err'; msg.textContent = e.message; } }
       };
       view.replaceChildren(el('section', { class: 'a-card' },
         el('h3', {}, '게시판 공지'),
@@ -3317,7 +3363,7 @@
             const saved = await api('adminSetKakaoUrl', v, which);
             kIn.value = saved || ''; kTest.href = saved || '#'; kTest.hidden = !saved;
             kMsg.textContent = saved ? '저장했어요. 이제 이 방으로 승인된 회원이 입장하면 이 링크가 보여요.' : '링크를 지웠어요.';
-          } catch (e) { if (e.message !== '__auth') { kMsg.className = 'a-err'; kMsg.textContent = e.message; } }
+          } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { kMsg.className = 'a-err'; kMsg.textContent = e.message; } }
         };
         return el('section', { class: 'a-card' },
           el('h3', {}, title), el('p', { class: 'a-muted' }, desc),
@@ -3353,10 +3399,10 @@
           r.canEdit ? el('div', { class: 'a-actions' }, el('button', { class: 'a-btn', onclick: async () => {
             msg.className = 'a-ok'; msg.textContent = '저장 중…';
             try { const r2 = await api('adminSetAdminMembers', picked); msg.textContent = '저장했어요. ' + r2.admins.length + '명이 비밀번호 없이 관리자 페이지에 들어올 수 있어요.'; }
-            catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } } } }, '저장'))
+            catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.className = 'a-err'; msg.textContent = e.message; } } } }, '저장'))
           : el('p', { class: 'a-muted' }, '관리자 지정은 관리자 비밀번호로 들어온 경우에만 바꿀 수 있어요.'), msg);
       };
-      api('adminGetAdminMembers').then(draw, e => { if (e.message !== '__auth') box.replaceChildren(el('p', { class: 'a-err' }, e.message)); });
+      api('adminGetAdminMembers').then(draw, e => { if (!/^__(auth|stale)$/.test(e.message)) box.replaceChildren(el('p', { class: 'a-err' }, e.message)); });
       return el('section', { class: 'a-card' },
         el('h3', {}, '관리자 지정 회원'),
         el('p', { class: 'a-muted' }, '체크한 회원은 개인 입장 코드로 입장해 있으면 관리자 비밀번호 없이 관리자 페이지에 들어와요. 지정된 회원도 이 목록을 바꿀 수 있어요. (관리자 비밀번호 바꾸기는 비밀번호로 들어온 경우에만 할 수 있어요.)'),
@@ -3384,9 +3430,9 @@
             try { const r2 = await api('adminSetAnonViewers', picked); msg.textContent = '저장했어요. ' + r2.viewers.length + '명이 모든 상담 글을 볼 수 있어요.'
               + (r2.mailed && r2.mailed.length ? ' 새로 지정된 ' + r2.mailed.join(', ') + '님에게 안내 메일을 보냈어요.' : '')
               + (r2.noMail && r2.noMail.length ? ' (' + r2.noMail.join(', ') + '님은 이메일 주소가 없거나 보내지 못했어요. 직접 알려 주세요.)' : ''); }
-            catch (e) { if (e.message !== '__auth') { msg.className = 'a-err'; msg.textContent = e.message; } } } }, '저장')), msg);
+            catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { msg.className = 'a-err'; msg.textContent = e.message; } } } }, '저장')), msg);
       };
-      api('adminGetAnonViewers').then(draw, e => { if (e.message !== '__auth') box.replaceChildren(el('p', { class: 'a-err' }, e.message)); });
+      api('adminGetAnonViewers').then(draw, e => { if (!/^__(auth|stale)$/.test(e.message)) box.replaceChildren(el('p', { class: 'a-err' }, e.message)); });
       return el('section', { class: 'a-card' },
         el('h3', {}, '1:1 상담 담당 회원'),
         el('p', { class: 'a-muted' }, '체크한 회원이 개인 입장 코드로 들어오면 1:1 상담의 모든 글을 볼 수 있어요. 새로 체크하고 저장하면 그 회원에게 안내 메일이 가요. 다른 회원은 자기가 쓴 글과 그 답변만 보여요. 관리자 비밀번호로 들어오면 항상 볼 수 있어요. 글쓴이 이름은 담당 회원에게도 보이지 않아요.'),
@@ -3404,7 +3450,7 @@
       const m1 = el('p', { class: 'a-ok' }), m2 = el('p', { class: 'a-ok' });
       const run = async (fn, args, m, after) => { m.className = 'a-ok'; m.textContent = '저장 중…';
         try { const p = await api(fn, ...args); showStat(p); m.textContent = '저장했어요.'; if (after) after(); }
-        catch (e) { if (e.message !== '__auth') { m.className = 'a-err'; m.textContent = e.message; } } };
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { m.className = 'a-err'; m.textContent = e.message; } } };
       return el('section', { class: 'a-card' },
         el('h3', {}, '폰 앱 알림 설정 (Firebase)'),
         el('p', { class: 'a-muted' }, '회원이 체크인 화면에서 "폰 알림 켜기"를 누르면 커피 한잔 요청 같은 소식이 폰으로 바로 가요. 아래 세 가지를 넣으면 켜져요.'),
@@ -3424,7 +3470,7 @@
       const save = async v => {
         sMsg.className = 'a-ok'; sMsg.textContent = '';
         try { const u = await api('adminSetSiteUrl', v); sIn.value = u || ''; sMsg.textContent = u ? '저장했어요. 이제 승인 메일과 회원 링크가 이 주소로 나가요.' : '지웠어요. Apps Script 주소로 나가요.'; }
-        catch (e) { if (e.message !== '__auth') { sMsg.className = 'a-err'; sMsg.textContent = e.message; } }
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { sMsg.className = 'a-err'; sMsg.textContent = e.message; } }
       };
       return el('section', { class: 'a-card' },
         el('h3', {}, '사이트 주소 (내 도메인)'),
@@ -3486,8 +3532,8 @@
       drawWx(r);
       if (st) { st.className = 'wx-st'; st.title = ''; st.removeAttribute('aria-label'); }
     } catch (e) {
-      if (st) { const bad = e.message !== '__auth'; st.className = 'wx-st' + (bad ? ' err' : ''); st.title = bad ? '새로 받지 못했어요. 지난번 정보예요.' : ''; bad ? st.setAttribute('aria-label', st.title) : st.removeAttribute('aria-label'); }
-      if (e.message !== '__auth' && !box.querySelector('.wx-card')) box.replaceChildren(el('p', { class: 'muted' }, '날씨를 불러오지 못했어요.'));
+      if (st) { const bad = !/^__(auth|stale)$/.test(e.message); st.className = 'wx-st' + (bad ? ' err' : ''); st.title = bad ? '새로 받지 못했어요. 지난번 정보예요.' : ''; bad ? st.setAttribute('aria-label', st.title) : st.removeAttribute('aria-label'); }
+      if (!/^__(auth|stale)$/.test(e.message) && !box.querySelector('.wx-card')) box.replaceChildren(el('p', { class: 'muted' }, '날씨를 불러오지 못했어요.'));
     }
   }
   const CAT_KO = { VFR: 'VFR', MVFR: 'MVFR', IFR: 'IFR', LIFR: 'LIFR' };
@@ -3692,7 +3738,7 @@
       let t = null;
       const save = () => { clearTimeout(t); note.textContent = '저장 중…'; t = setTimeout(async () => {
         try { await call('setPushPrefs', memberKey, { notice: nI.checked, comments: cI.checked, checkins: kI.checked, applicants: aI.checked, boards: bs.filter(b => b.c[0].checked).map(b => b.id) }); note.textContent = '저장됨 ✓'; }
-        catch (e) { if (e.message !== '__auth') note.textContent = e.message; } }, 500); };
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) note.textContent = e.message; } }, 500); };
       [nI, cI, kI, aI, ...bs.map(b => b.c[0])].forEach(i => i.addEventListener('change', save));
       box.replaceChildren(el('b', { class: 'ly-prefs-h' }, '받을 알림', note), el('div', { class: 'ly-sw-list' }, nL, cL, kL, p.isAdmin ? aL : null),
         el('b', { class: 'ly-prefs-h' }, '새 글 알림 받을 게시판'), el('div', { class: 'ly-prefs-boards' }, bs.map(b => b.c[1])));
@@ -3724,7 +3770,7 @@
         const test = el('button', { class: 'ly-link', type: 'button' }, '시험 알림 보내기');
         test.addEventListener('click', async () => { test.disabled = true; msg.textContent = ''; msg.className = 'msg';
           try { const r = await call('testMyPush', memberKey, lyPage()); if (r && r.sent) { msg.className = 'msg ok'; msg.textContent = '✓ 보냈어요. 몇 초 안에 알림이 와요.'; } else msg.textContent = '보내지 못했어요. 끄고 다시 켜 주세요.'; }
-          catch (e) { if (e.message !== '__auth') msg.textContent = e.message; } test.disabled = false; });
+          catch (e) { if (!/^__(auth|stale)$/.test(e.message)) msg.textContent = e.message; } test.disabled = false; });
         const off = el('button', { class: 'ly-link danger', type: 'button' }, '알림 끄기');
         off.addEventListener('click', async () => { off.disabled = true; await disablePush(); draw(); });
         // 켜진 뒤에는 한 줄로 접어 두고, 누르면 받을 알림 고르기·시험 알림을 펼침
@@ -3736,7 +3782,7 @@
       } else {
         const on = el('button', { class: 'primary small' }, '폰 알림 켜기');
         on.addEventListener('click', async () => { on.disabled = true; on.textContent = '켜는 중…'; msg.textContent = '';
-          try { await enablePush(); draw(); } catch (e) { if (e.message !== '__auth') msg.textContent = e.message || String(e); on.disabled = false; on.textContent = '폰 알림 켜기'; } });
+          try { await enablePush(); draw(); } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) msg.textContent = e.message || String(e); on.disabled = false; on.textContent = '폰 알림 켜기'; } });
         body = [el('p', {}, '커피 한잔 요청이 오거나 내 요청이 수락되면 이 기기로 바로 알림이 와요.'), on];
       }
       box.replaceChildren(el('div', { class: 'ly-card' }, head, body, msg));
@@ -3862,7 +3908,7 @@
         from = r.from; to = r.to; label = f + ' · ' + from.code + ' → ' + to.code;
         document.getElementById('rt-from').value = from.code; document.getElementById('rt-to').value = to.code;
       }
-    } catch (e) { if (e.message !== '__auth') msg.textContent = e.message; return; }
+    } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) msg.textContent = e.message; return; }
     const gc = gcPoints([from.lat, from.lon], [to.lat, to.lon], 96);
     rtLayers.route.clearLayers();
     L.polyline(gc.pts, { color: '#1F5FD6', weight: 3, dashArray: '6 6' }).addTo(rtLayers.route);
@@ -3874,7 +3920,7 @@
     const lats = gc.pts.map(p => p[0]), lons = gc.pts.map(p => p[1]);
     const norm = x => ((x + 540) % 360) - 180;
     const box = [Math.max(-90, Math.min(...lats) - 5), norm(Math.min(...lons) - 8), Math.min(90, Math.max(...lats) + 5), norm(Math.max(...lons) + 8)];
-    let wx; try { wx = await call('getRouteWx', memberKey, box); } catch (e) { if (e.message !== '__auth') msg.textContent += ' · 터뷸런스 정보를 불러오지 못했어요'; return; }
+    let wx; try { wx = await call('getRouteWx', memberKey, box); } catch (e) { if (!/^__(auth|stale)$/.test(e.message)) msg.textContent += ' · 터뷸런스 정보를 불러오지 못했어요'; return; }
     const mid = gc.pts[Math.floor(gc.pts.length / 2)][1];
     rtLayers.area.clearLayers(); rtLayers.pirep.clearLayers();
     wx.areas.forEach(z => {
@@ -3995,7 +4041,7 @@
           r.meets = r.meets.filter(x => x.id !== m.id);
           try { store.set('pc_ly', JSON.stringify({ k: memberKey, r: r })); } catch (_) {}
           drawLayover(r);
-          call('doneMeet', memberKey, m.id).catch(e => { if (e.message !== '__auth') reload(); });
+          call('doneMeet', memberKey, m.id).catch(e => { if (!/^__(auth|stale)$/.test(e.message)) reload(); });
         } }, '삭제'),
         el('button', { class: 'ghost del-no', type: 'button', onclick: ask }, '아니요'));
       ask();
@@ -4262,7 +4308,7 @@
         if (join) c.joinPending = true; else c.meet = '요청';
         lyReq++; drawLayover(r);
         try { await layCall('requestMeet', memberKey, '', c.id, lyPage(), { contact: ct, notify: on.checked ? em : '' }); }
-        catch (e) { if (e.message !== '__auth') { lyToast(e.message); reload(); } }
+        catch (e) { if (!/^__(auth|stale)$/.test(e.message)) { lyToast(e.message); reload(); } }
       });
       btn.hidden = true;
       row.append(box);   // 키보드가 저절로 뜨지 않게 칸을 자동 선택하지 않음
