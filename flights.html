@@ -249,7 +249,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg><span>내 비행 공유</span></button><span class="rbtns"><button type="button" class="fit rf" id="rf" aria-label="새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5"/></svg></button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></span></div>
-  <p class="note"><span class="ver" data-noi18n>v1128-20</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1128-21</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -329,8 +329,8 @@
     if (f.etd && (f.later || (!p && f.etd > now))) return ['wait', '🗓 ETD ' + (f.etdL ? f.etdL.trim() + ' (' + zTime(f.etd) + ')' : zTime(f.etd)) + ' · ' + until(f.etd - now)];
     if (f.later) return ['wait', '🗓 예정'];
     if (!p) return ['wait', '신호 기다리는 중'];
-    const s = [altTxt(p), p.gs ? p.gs + ' KT' : '', p.type].filter(Boolean).join(' · ');
-    if (p.lost && now - p.at > 120e3) return !p.ground && p.gs > 60 ? ['wait', '📍 추정 위치 · ' + s + ' · 마지막 신호 ' + ago(now - p.at)] : ['wait', s + ' · ' + ago(now - p.at)];
+    const s = [altTxt(p), p.gs && (p.ground || p.gs > 60) ? p.gs + ' KT' : '', p.type].filter(Boolean).join(' · ');
+    if (p.lost && now - p.at > 120e3) return !p.ground && p.alt > 1000 ? ['wait', '📍 추정 위치 · ' + s + ' · 마지막 신호 ' + ago(now - p.at)] : ['wait', s + ' · ' + ago(now - p.at)];
     return ['live', s];
   };
   let data = null, fitted = false, markers = {}, sel = '', clockOff = 0;
@@ -509,16 +509,17 @@
     Object.keys(markers).forEach(id => {
       const m = markers[id], p = m._kp; if (!p) return;
       const dt = (now - p.at) / 1000;
-      // 땅 위·느린 비행기는 그대로
-      if (m._landed || p.ground || !(p.gs > 60) || dt < 0) return;
+      // 땅 위는 그대로. 공중인데 속도가 이상하게 낮으면(지상 택시 속도가 남은 경우 등) 고도로 대략
+      const gs = p.gs > 60 ? p.gs : (!p.ground && p.alt > 1000 ? (p.alt > 20000 ? 450 : p.alt > 10000 ? 350 : 250) : 0);
+      if (m._landed || p.ground || !gs || dt < 0) return;
       let ll, est = false;
-      if (dt <= 180 && !p.lost) ll = ahead(p.lat, p.lon, p.trk || 0, p.gs * dt / 3600);   // 방금 받은 위치: 가던 방향으로
+      if (dt <= 180 && !p.lost) ll = ahead(p.lat, p.lon, p.trk || 0, gs * dt / 3600);   // 방금 받은 위치: 가던 방향으로
       else {
         // 신호가 끊김 → 마지막 속도로 도착 공항 쪽으로 간 만큼 '추정 위치' (도착 공항 10nm 앞에서 멈춤). 도착지를 모르면 가던 방향으로 30분까지
         est = true;
-        const B = apMap && m._to && apMap[apKey(m._to)], go = p.gs * Math.min(dt, 12 * 3600) / 3600;
+        const B = apMap && m._to && apMap[apKey(m._to)], go = gs * Math.min(dt, 12 * 3600) / 3600;
         if (B) { const rem = gcNm([p.lat, p.lon], B); ll = rem > 10 ? ahead(p.lat, p.lon, brg([p.lat, p.lon], B), Math.min(go, rem - 10)) : [p.lat, p.lon]; }
-        else ll = ahead(p.lat, p.lon, p.trk || 0, p.gs * Math.min(dt, 1800) / 3600);
+        else ll = ahead(p.lat, p.lon, p.trk || 0, gs * Math.min(dt, 1800) / 3600);
       }
       m.setLatLng(ll);
       const ic = m.getElement && m.getElement(); if (ic) ic.classList.toggle('est', est);
