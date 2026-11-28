@@ -248,7 +248,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg><span>내 비행 공유</span></button><span class="rbtns"><button type="button" class="fit rf" id="rf" aria-label="새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5"/></svg></button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></span></div>
-  <p class="note"><span class="ver" data-noi18n>v1128-18</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1128-19</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -304,7 +304,7 @@
   let rLines = {};   // 날고 있는 비행: 비행기 → 도착 점선 (비행기가 움직이면 같이)
   const routes = L.layerGroup().addTo(map), trails = L.layerGroup().addTo(map), layer = L.layerGroup().addTo(map);
   let airportsP = null;
-  const loadAirports = () => airportsP || (airportsP = fetch('airports.txt').then(r => { if (!r.ok) throw 0; return r.text(); })
+  const loadAirports = () => airportsP || (airportsP = fetch('airports2.txt').then(r => { if (!r.ok) throw 0; return r.text(); })
     .then(t => { const m = {}; t.split(';').filter(Boolean).forEach(x => { const [la, lo] = x.slice(3).split(','); m[x.slice(0, 3)] = [+la, +lo]; }); return m; }).catch(() => { airportsP = null; return {}; }));
   const apKey = c => (c.length === 4 && /^[KPC]/.test(c)) ? c.slice(1) : c;
   const PLANE = c => '<svg viewBox="0 0 24 24"><path fill="' + c + '" stroke="rgba(6,11,24,.9)" stroke-width=".7" d="M12 1.6c.8 0 1.3.9 1.3 2.1v5.2l7.9 4.6v2.1l-7.9-2.4v5l2.2 1.7v1.6L12 20.7l-3.5.8v-1.6l2.2-1.7v-5l-7.9 2.4v-2.1l7.9-4.6V3.7c0-1.2.5-2.1 1.3-2.1z"/></svg>';
