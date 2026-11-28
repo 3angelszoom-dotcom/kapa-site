@@ -167,6 +167,7 @@
   .rf svg { width: 19px; height: 19px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .rf.busy svg { animation: rfspin .8s linear infinite; }
   @keyframes rfspin { to { transform: rotate(360deg); } }
+  .card .etd2 { font: 700 12px/1.3 var(--mono); color: #93C5FD; margin-top: 3px; }
   .note { pointer-events: auto; margin: 6px 12px 0; text-align: center; font: 600 10px/1.45 var(--f); color: #64748B; }
   .note .cr { font-size: 9px; color: #475569; }
   .note .ver { font: 700 10px/1 var(--mono); color: #64748B; }
@@ -247,7 +248,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg><span>내 비행 공유</span></button><span class="rbtns"><button type="button" class="fit rf" id="rf" aria-label="새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5"/></svg></button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></span></div>
-  <p class="note"><span class="ver" data-noi18n>v1128-17</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1128-18</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -312,6 +313,8 @@
   const dayTxt = d => { if (!/^\d{4}-\d{2}-\d{2}$/.test(d || '')) return ''; const [y, m, dd] = d.split('-').map(Number), w = new Date(y, m - 1, dd).getDay();
     const t = new Date(), diff = Math.round((new Date(y, m - 1, dd) - new Date(t.getFullYear(), t.getMonth(), t.getDate())) / 86400e3);
     return m + '/' + dd + ' (' + DOW[w] + ')' + (diff === 0 ? (EN ? ' · Today' : ' · 오늘') : diff === 1 ? (EN ? ' · Tomorrow' : ' · 내일') : ''); };
+  // 공유할 때 넣은 ETD: '1730 PST · 0130Z' (현지 시각이 없으면 Zulu만)
+  const etdTxt = f => f.etd ? 'ETD ' + (f.etdL ? f.etdL.trim() + ' · ' : '') + zTime(f.etd) : '';
   const zTime = ms => { const d = new Date(ms); return String(d.getUTCHours()).padStart(2, '0') + String(d.getUTCMinutes()).padStart(2, '0') + 'Z'; };
   const until = ms => { const m = Math.max(0, Math.round(ms / 60000)), h = Math.floor(m / 60), r = m % 60;
     return EN ? (h ? h + 'h ' : '') + r + 'm' : (h ? h + '시간 ' : '') + r + '분 후'; };
@@ -441,6 +444,7 @@
         el('div', { class: 'fn' }, f.flight, f.callsign !== f.flight ? el('small', {}, f.callsign) : null),
         f.from || f.to ? el('div', { class: 'rt' }, f.from || '—', el('i', {}), (f.via && f.via.length ? f.via.join(' · ') + ' · ' : '') + (f.to || '—')) : null,
         el('div', { class: 'who2' }, who(f), el('span', {}, ' · ' + dayTxt(f.date))),
+        f.etd && !/ETD/.test(s) ? el('div', { class: 'etd2', 'data-noi18n': '' }, etdTxt(f)) : null,   // 상태 칸에 ETD가 있으면(출발 전) 한 번만
         el('div', { class: 'foot' }, el('div', { class: 'st ' + k }, s), f.mine ? el('button', { type: 'button', class: 'stop' }, '공유 끝내기') : null));
       c.addEventListener('click', e => { if (e.target.classList.contains('stop')) { stop(f); return; } pick(f.id, true); });
       box.append(c);
@@ -463,7 +467,7 @@
       list.forEach(f => {
         const r = el('button', { type: 'button', class: 'frow' + (f.mine ? ' me' : '') + (f.id === sel ? ' on' : '') },
           el('b', {}, f.flight), el('span', { class: 'r' }, (f.from || '—') + ' → ' + (f.to || '—')),
-          el('span', { class: 'w' }, who(f), ' · ' + dayTxt(f.date)), el('span', { class: 's' }, stat(f, now)[1]));
+          el('span', { class: 'w' }, who(f), ' · ' + dayTxt(f.date) + (f.etd && !/ETD/.test(stat(f, now)[1]) ? ' · ' + etdTxt(f) : '')), el('span', { class: 's' }, stat(f, now)[1]));
         r.addEventListener('click', () => { menu(false); pick(f.id, true); });
         box.append(r);
       });
