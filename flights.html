@@ -210,9 +210,9 @@
   .sheet input:focus { outline: none; border-color: var(--sky); }
   .sheet .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   /* 콜사인 조회 → 노선 고르기 */
-  .csw { position: relative; }
-  .csw input { padding-right: 62px; }
-  .look { position: absolute; right: 6px; top: 6px; height: 36px; padding: 0 11px; border: 0; border-radius: 9px; background: var(--sky); color: #0B1220; font: 800 13px/1 var(--f); cursor: pointer; }
+  .sheet .row3 { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, .95fr); gap: 7px; align-items: end; }
+  .sheet .row3 input[type=date] { padding: 0 6px; font-size: 13px; }
+  .look { height: 48px; padding: 0 12px; border: 0; border-radius: 12px; background: var(--sky); color: #0B1220; font: 800 14px/1 var(--f); cursor: pointer; white-space: nowrap; }
   .look:disabled { opacity: .55; }
   .legs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .legs:empty { display: none; }
@@ -247,7 +247,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg><span>내 비행 공유</span></button><span class="rbtns"><button type="button" class="fit rf" id="rf" aria-label="새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5"/></svg></button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></span></div>
-  <p class="note"><span class="ver" data-noi18n>v1128-16</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1128-17</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -669,7 +669,7 @@
     };
     const sheet = el('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' },
       el('h2', {}, '✈️ 내 비행 공유'),
-      el('div', { class: 'row' }, el('div', {}, el('label', {}, 'ATC 콜사인'), el('div', { class: 'csw' }, fl, look)), el('div', {}, el('label', {}, '날짜'), dt)),
+      el('div', { class: 'row3' }, el('div', {}, el('label', {}, 'ATC 콜사인'), fl), look, el('div', {}, el('label', {}, '날짜'), dt)),
       legs,
       el('div', { class: 'row' }, el('div', {}, el('label', {}, '출발'), fr), el('div', {}, el('label', {}, '도착'), to)),
       el('div', { class: 'row' }, el('div', {}, el('label', { id: 'etd-l' }, 'ETD'), et), el('div', { class: 'zbox' }, el('label', {}, 'Zulu'), zOut)),
