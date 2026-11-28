@@ -134,7 +134,7 @@
   .dock { position: fixed; z-index: 500; left: 0; right: 0; bottom: 0; padding: 0 0 calc(10px + env(safe-area-inset-bottom)); pointer-events: none; }
   .cards { position: relative; pointer-events: auto; display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 12px 10px; scrollbar-width: none; }
   .cards::-webkit-scrollbar { display: none; }
-  .card { flex: 0 0 min(80vw, 320px); scroll-snap-align: center; text-align: left; cursor: pointer; border: 1px solid var(--line); border-radius: 20px;
+  .card { flex: 0 0 min(calc(100vw - 24px), 420px); min-width: 0; box-sizing: border-box; scroll-snap-align: center; text-align: left; cursor: pointer; border: 1px solid var(--line); border-radius: 20px;
     background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); padding: 12px 14px 11px; position: relative; }
   .card.sel { border-color: rgba(56,189,248,.7); box-shadow: 0 0 0 1px rgba(56,189,248,.5), 0 10px 30px rgba(0,0,0,.4); }
   .card.me { background: linear-gradient(160deg, rgba(251,191,36,.20), rgba(12,20,40,.9) 55%); border-color: rgba(251,191,36,.45); }
@@ -146,8 +146,8 @@
   .card.me .rt i { background: linear-gradient(90deg, var(--me), rgba(251,191,36,.15)); }
   .who2 { margin-top: 8px; font: 700 12.5px/1.3 var(--f); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .who2 span { color: var(--muted); font-weight: 600; }
-  .foot { margin-top: 8px; display: flex; align-items: center; gap: 8px; min-width: 0; }
-  .st { min-width: 0; flex: 0 1 auto; display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 9px; background: rgba(148,163,184,.12); font: 800 11.5px/1.1 var(--mono); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .foot { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+  .st { min-width: 0; flex: 0 1 auto; display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 9px; background: rgba(148,163,184,.12); font: 800 11.5px/1.3 var(--mono); letter-spacing: .02em; white-space: normal; overflow-wrap: anywhere; }
   .st.live { background: rgba(74,222,128,.14); color: #BBF7D0; }
   .st.live::before { content: ''; flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
   .st.wait { color: var(--muted); font-family: var(--f); font-weight: 700; }
@@ -249,7 +249,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg><span>내 비행 공유</span></button><span class="rbtns"><button type="button" class="fit rf" id="rf" aria-label="새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5"/></svg></button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></span></div>
-  <p class="note"><span class="ver" data-noi18n>v1128-21</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1128-22</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -380,7 +380,7 @@
         map.flyToBounds(L.latLngBounds([a, b]), { paddingTopLeft: [40, 90], paddingBottomRight: [40, dock + 30], maxZoom: 7, duration: .6 }); }); }
     // 카드: 누른 카드를 가로 줄 가운데로 (지도에서 비행기를 눌렀을 때도)
     const box = $('cards'), c = box.querySelector('.card[data-id="' + id + '"]');
-    if (c) box.scrollTo({ left: c.offsetLeft - (box.clientWidth - c.offsetWidth) / 2, behavior: 'smooth' });
+    box.scrollLeft = 0;   // 카드는 고른 비행 하나뿐 → 늘 맨 앞
   }
   function drawRoutes() {
     if (!data) return; const fl = data.flights;
@@ -455,7 +455,7 @@
     // 15초마다 새로 그려도 보던 자리 그대로 (고른 비행은 가운데)
     const sc = sel && box.querySelector('.card[data-id="' + sel + '"]');
     box.style.scrollSnapType = 'none';
-    box.scrollLeft = sc ? sc.offsetLeft - (box.clientWidth - sc.offsetWidth) / 2 : keep;
+    box.scrollLeft = 0;
     requestAnimationFrame(() => requestAnimationFrame(() => { box.style.scrollSnapType = ''; }));
   }
   // 위 알약을 누르면 여는 비행 목록: 예정 · 운항 중 · 도착
