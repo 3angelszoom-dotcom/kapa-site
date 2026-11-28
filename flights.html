@@ -212,7 +212,7 @@
 <div class="dock">
   <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
   <div class="bar"><button type="button" class="share" id="share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg><span>내 비행 공유</span></button><span class="rbtns"><button type="button" class="fit rf" id="rf" aria-label="새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5"/></svg></button><button type="button" class="fit" id="fit" aria-label="모든 비행 보기">⤢</button></span></div>
-  <p class="note"><span class="ver" data-noi18n>v1128-12</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
+  <p class="note"><span class="ver" data-noi18n>v1128-13</span> · <span id="adsbst" data-noi18n style="color:#F59E0B"></span><span class="cr">Map © Esri · ADS-B: adsb.fi, adsb.lol (ODbL)</span></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -293,7 +293,7 @@
     return p.lost && now - p.at > 120e3 ? ['wait', s + ' · ' + ago(now - p.at)] : ['live', s];
   };
   let data = null, fitted = false, markers = {}, sel = '', clockOff = 0;
-  let lastLoad = 0;   // clockOff: 서버 시각 - 내 폰 시각
+  let lastLoad = 0, autoPicked = false;   // clockOff: 서버 시각 - 내 폰 시각
   function fitAll() { const pts = Object.values(markers).map(m => m.getLatLng()); if (pts.length === 1) map.setView(pts[0], 6); else if (pts.length) map.fitBounds(L.latLngBounds(pts), { paddingTopLeft: [40, 80], paddingBottomRight: [40, 260], maxZoom: 7 }); }
   // 궤적: 고도에 따라 색 (지상 초록 → 높을수록 보라)
   const ALT = [[0, '#4ADE80'], [10000, '#FACC15'], [20000, '#FB923C'], [30000, '#F472B6'], [38000, '#A78BFA']];
@@ -363,7 +363,7 @@
     const fl = data.flights, now = data.now;
     drawRoutes();
     if (sel && !fl.some(f => f.id === sel)) sel = '';
-    if (!sel) { const m = fl.find(f => f.mine && f.pos); if (m) sel = m.id; }   // 처음엔 내 비행을 골라 둠
+    if (!autoPicked) { autoPicked = true; if (!sel) { const m = fl.find(f => f.mine && f.pos); if (m) sel = m.id; } }   // 처음 열 때 한 번만 내 비행을 골라 둠
     redrawPlanes();
     if (!fitted && Object.keys(markers).length) { fitted = true; fitAll(); }
     Object.keys(trk).forEach(id => { if (!fl.some(f => f.id === id)) delete trk[id]; });
