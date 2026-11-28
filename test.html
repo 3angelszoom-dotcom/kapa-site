@@ -1461,7 +1461,7 @@
 </div>
 
 <footer class="site-foot">
-  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><button type="button" class="lang-ft" data-noi18n onclick="kapaSetLang(KAPA_LANG==='en'?'ko':'en')">🌐 <span id="lang-ft-t">English</span></button><small id="ver-tag" style="opacity:.45;margin-left:10px">v1126-2</small></span></div>
+  <div class="container"><b class="fit1" data-min="10">KAPA · Korean American Pilots Association</b><span><span id="contact"></span><a href="#admin">관리자</a><button type="button" class="lang-ft" data-noi18n onclick="kapaSetLang(KAPA_LANG==='en'?'ko':'en')">🌐 <span id="lang-ft-t">English</span></button><small id="ver-tag" style="opacity:.45;margin-left:10px">v1128-1</small></span></div>
 </footer>
 
 <script>
@@ -1793,7 +1793,7 @@
   function openFlightsFull() {
     if (document.getElementById('route-ov')) return;
     const ov = el('div', { id: 'route-ov', role: 'dialog', 'aria-modal': 'true', 'aria-label': '실시간 비행' });
-    const fr = el('iframe', { src: 'flights.html' + (IS_TEST ? '?beta=1' : ''), title: '실시간 비행' });
+    const fr = el('iframe', { src: 'flights.html?' + (IS_TEST ? 'beta=1&' : '') + 'v=' + Date.now(), title: '실시간 비행' });
     fr.addEventListener('load', () => { try { fr.contentWindow.postMessage({ kapaKey: memberKey }, location.origin); } catch (_) {} });
     const x = el('button', { class: 'route-x', type: 'button', 'aria-label': '닫기' }, '✕');
     const y = window.scrollY;
